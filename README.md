@@ -11,4 +11,6 @@ My own OS, based on the work of nanobyte.
 
 ## Building/Running
 
-Use `make` to build. Use `qemu-system-i386 -fda build/main_floppy.img` to run.
+Use `make` to build.
+
+For running the application, call `./run.sh`. For debugging, call `./debug.sh`.

@@ -1,3 +1,14 @@
+# Information about the OS
+
+## Main Addresses
+- The bootloader loads the OS into memory at `0x2000:0000` which is `0x20000` in real terms. 
+- The stack begins at position `0x07C0:0000` which is `0x07C00` in real terms.
+
+
+
+
+# Understanding Assembly
+
 ## Memory segmentation
 Wacky old stuff means we use a system of `segment:offset`. Since this isn't actually the form we want, we need to understand some basics.
 `real_address = segment * 16 + offset`, as the segment is stored as a hex value one row below the actual value.
