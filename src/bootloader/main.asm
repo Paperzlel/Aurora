@@ -42,30 +42,18 @@ start:
     mov es, ax              ; Both registers might have data in them so we clear first
 
     ; Setup stack
-    cli                             ; Disable interrupts from bug on early 8088 CPUs
     mov ss, ax                      ; Stack segment is 0x0000 (reading the offset, remember?)
     mov sp, 0x7c00                  ; Stack pointer is at the start of the program
                                     ; sp grows downwards (from 7c00 towards 0x0000) so we define it just before our application otherwise it overwrites
                                     ; our program
-    sti                             ; Re-enable interrupts
 
     
     mov [bpb_drive_number], dl      ; dl contains the current drive number, which should still be 0.
 
-    mov ah, 0x02
-    mov al, 1       ; sectors to read
-    mov ch, 0       ; tracks to read
-    mov cl, 2       ; sector no.
-    mov dh, 0       ; head no.
-
-    mov bx, 0x2000      ; Move to kernel space
-    mov es, bx          ; es = 0x2000
-    xor bx, bx          ; bx = 0 ==> ES:BX = 0x2000:0x0000
-
-    stc                 ; Set carry flag (some BIOSes don't)
-    int 13h             ; Call to read sector
-
-
+    mov ax, 1
+    mov cl, 1
+    mov bx, 0x7E00
+    call read_disk
 
     ; Move the message into the SI register
     mov si, msg_hello
@@ -74,22 +62,126 @@ start:
     cli
     hlt
 
-.halt:
-    jmp .halt
+
+;
+;   File reading/writing
+;
+
+;
+;   Converts Logic Block Addressing to Cylinder/Head/Sector addressing since floppy disks are numbered in LBA and CHS is for the interrupt.
+;   Params:
+;   - ax is the sector to read
+;   - cx [bits 0-5]: sector no.
+;   - cx [bits 6-15]: cylinder no.
+;   - dh: head
+;
+lba_to_chs:
+
+    push ax
+    push dx
+
+    xor dx, dx                              ; clear dx for operation
+    div word [bpb_sectors_per_track]        ; ax = LBA / sectors_per_track (runs from [ax:dx] )
+                                            ; dx = LBA % sectors_per_track
+    
+    inc dx                                  ; dx = (LBA % sectors_per_track) + 1 = sector
+    mov cx, dx
+    
+    xor dx, dx
+    div word [bpb_heads]                    ; ax = (LBA / sectors_per_track) / Heads = cylinder
+                                            ; dx = (LBA / sectors_per_track) % Heads = head
+    mov dh, dl                              ; dh = head
+    mov ch, al                              ; ch = cylinder (lower 8 bits)
+    shl ah, 6
+    or cl, ah                               ; put upper 2 bits of cylinder in cl
+
+    pop ax
+    mov dl, al                              ; Restore dl
+    pop ax
+    ret
+
+;
+; Reads an LBA value from disk 
+; Params:
+; - ax contains the LBA value to use
+; - cl contains the sector read count
+; - dl contains the drive number
+; - es:bx contains the address to store data at
+read_disk:
+
+    push ax
+    push bx
+    push cx
+    push dx
+    push di
+
+    push cx                     ; Save cl
+    call lba_to_chs             ; Compute CHS
+    pop ax                      ; al = no. of sectors to read
+
+    mov ah, 0x02                ; Save BIOS instruction
+    mov di, 3                   ; Save retry count
+
+.retry:
+    pusha                       ; Panic-save all to stack
+    stc                         ; Set carry flag
+    int 0x13
+    jnc .done                   ; Jump if no error
+
+    popa
+    call disk_reset
+
+    dec di
+    test di, di
+    jnz .retry
+
+.failed:
+    jmp disk_read_error
+
+.done:
+    popa 
+    pop di
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
 
 
 ;
 ;   Disk read errors
+;
+
+; 
+; Reboots if a disk reading error occurs
 ;
 disk_read_error:
     mov si, msg_read_failed
     call puts
     jmp wait_and_reboot
 
+;
+; Resets disk controller
+; Params:
+; - dl contains drive number
+;
+disk_reset:
+    pusha
+    mov ah, 0
+    stc
+    int 0x13
+    jc disk_read_error
+    popa
+    ret
+
 wait_and_reboot:
     mov ah, 0
     int 16h
     jmp 0FFFFh:0            ; Jump to beginning of bios, which reboots.
+
+.halt:
+    cli
+    hlt
 
 ; 
 ; Prints a string to the screen

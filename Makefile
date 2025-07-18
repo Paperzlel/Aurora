@@ -5,6 +5,8 @@ BUILD_DIR=build
 
 all: scaffold bootloader kernel floppy_image
 
+.PHONY: all scaffold bootloader kernel floppy_image clean
+
 scaffold:
 	mkdir -p $(BUILD_DIR)
 
@@ -31,3 +33,6 @@ kernel: $(BUILD_DIR)/kernel.bin
 
 $(BUILD_DIR)/kernel.bin:
 	$(ASM) $(SRC_DIR)/kernel/main.asm -f bin -o $(BUILD_DIR)/kernel.bin
+
+clean:
+	rm -rf $(BUILD_DIR)/*
