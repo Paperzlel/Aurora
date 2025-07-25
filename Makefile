@@ -24,14 +24,14 @@ $(BUILD_DIR)/main_floppy.img: bootloader kernel
 
 bootloader: $(BUILD_DIR)/bootloader.bin
 
-$(BUILD_DIR)/bootloader.bin:
+$(BUILD_DIR)/bootloader.bin: $(SRC_DIR)/bootloader/main.asm
 	$(ASM) $(SRC_DIR)/bootloader/main.asm -f bin -o $(BUILD_DIR)/bootloader.bin
 
 # Kernel
 
 kernel: $(BUILD_DIR)/kernel.bin
 
-$(BUILD_DIR)/kernel.bin:
+$(BUILD_DIR)/kernel.bin: $(SRC_DIR)/kernel/main.asm
 	$(ASM) $(SRC_DIR)/kernel/main.asm -f bin -o $(BUILD_DIR)/kernel.bin
 
 clean:

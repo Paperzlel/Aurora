@@ -7,14 +7,14 @@ bits 16
 ;   FAT12 header file
 ;
 jmp short start                 ; First 3 bytes need to be EB 3C 90 (3c can be different) and this gets us to skip the
-nop                             ;
+nop                             ; Bootloader Parameter Block (BPB) below.
 
 bpb_oem: db 'MSWIN4.1'                  ; OEM identifier, 8 bytes 
 bpb_bytes_per_sector: dw 512            ; No. of bytes per sector
 bpb_sectors_per_cluster: db 1           ; No. of sectors per cluster
 bpb_reserved_sectors: dw 1              ; No. of reserved sectors
-bpb_fat_no: db 2                        ; No. of File Allocation Tables (FAT's) on the media.
-bpb_dir_entry_count: dw 0e0h            ; No. of root directory entries
+bpb_fat_count: db 2                     ; No. of File Allocation Tables (FAT's) on the media.
+bpb_root_entry_count: dw 0e0h           ; No. of root directory entries
 bpb_total_sectors: dw 2880              ; Total number of sectors (a 3.5" floppy has 1.44MB which is this in kB)
 bpb_media_descriptor_type: db 0f0h      ; Media descriptor type (0x0f0 is 3.5" floppy disk)
 bpb_sectors_per_fat: dw 9               ; No. of sectors per FAT disk (only FAT12, 9 sectors/fat on this disk model)
@@ -25,7 +25,7 @@ bpb_large_sector_count: dd 0            ; No. of logical sectors (leave blank fo
 
 ; Extended boot record for BPB
 bpb_drive_number: db 0                  ; Physical drive number, is zero as the drive is the first removable media.
-bpb_reserved: db 0                      ; Reserved value in some instances
+bpb_reserved: db 0                      ; Reserved value
 bpb_extended_boot_signature: db 29h     ; Boot signature, needs to be 0x29 for the next 3 entries to exist.
 bpb_volume_id: db 12h, 24h, 36h, 48h    ; Volunme ID (serial number), can be anything we want :)
 bpb_volume_label: db 'AURORA      '     ; Partition label, 11 bytes and needs to be padded for space
@@ -47,13 +47,92 @@ start:
                                     ; sp grows downwards (from 7c00 towards 0x0000) so we define it just before our application otherwise it overwrites
                                     ; our program
 
-    
-    mov [bpb_drive_number], dl      ; dl contains the current drive number, which should still be 0.
+    mov [bpb_drive_number], dl      ; dl (drive number) set by BIOS
 
-    mov ax, 1
+    push es
+    mov ah, 0x08
+    int 0x13                        ; Get drive information (the format may not be 100% correct)
+    jc disk_read_error              ; cx now contains the cylinder and sector count
+    pop es
+
+    and cl, 0x3f                        ; Remove top 2 bits (we only want sector count)
+    xor ch, ch
+    mov [bpb_sectors_per_track], cx     ; Correct value
+
+    inc dh                              ; last index of heads = head_count - 1, so increment
+    mov [bpb_heads], dh
+    xor dx, dx
+
+
+    ; Calculate root directory sector count
+    mov al, [bpb_root_entry_count]      ; Setup for multiplying root entry count
+    mov ah, 32 
+    mul ah
+
+    mov bx, [bpb_bytes_per_sector]
+    dec bx
+    add ax, bx
+
+    inc bx                              ; bx still has 511 as its value
+    div bx                              ; ax now contains the needed value
+
+    mov bx, ax                          ; Send value to bx as we need ax for the next step
+
+    xor dx, dx                          ; Clear dx of quotient (it contains 511 after this operation and this messes up the CHS read later)
+
+
+    ; Calculate the first data sector number (where non-root directories and files are stored)
+    mov ah, [bpb_fat_count]
+    mov al, [bpb_sectors_per_fat]
+    mul ah
+
+    add ax, [bpb_reserved_sectors]
+
+    ; ax is the sector for the root directory, bx is the number of sectors in the root directory.
+    
+    push ax
+    push bx                         ; Save values for later
+
     mov cl, 1
-    mov bx, 0x7E00
+    mov bx, buffer                  ; Move the next place to read file data into (this is at 0x0000:0x7e00)
+    mov dl, [bpb_drive_number]      ; Restore drive number if changed
     call read_disk
+
+    pop bx
+
+    ; Reading our drive information is one of the steps
+    ; First, read the file name (which is the first thing in the list, 11 bytes) from the memory.
+    ; If filename is not equal to the input value, move to the next entry (increment di to 11 and move 21 bytes to the next file entry)
+    ; If filename is equal, then read the file attributes (or not, we don't need them). What you want is the cluster number
+    ; (offset 26) for the entry's first cluster number and the file size (offset 28).
+
+    ; Set string offset to start of the buffer
+    xor bx, bx
+    mov di, buffer
+
+; Compare si and di and se if they are equal. When ch == cl, the two strings are equal and we have found the kernel.
+.compare_value:
+    mov si, kernel_name
+    mov cx, 11                      ; Get length of the string
+    push di
+    repe cmpsb                      ; REPE = repeat while equal, CMPSB = compare matching bytes in es:di and ds:si. Increments SI and DI
+    pop di
+    je .found_kernel                ; Strings were equal, move to the next step
+
+    ; String was not equal
+    add di, 32
+    inc bx
+    cmp bx, [bpb_root_entry_count]
+    jl .compare_value
+
+    jmp kernel_not_found            ; If bx > root_entry_count, then we ran out of root directories. Move to error message
+
+.found_kernel:
+
+    ; Add 26 bytes to di and read the sector number into cx
+    mov ax, [di + 26]
+    mov [kernel_cluster], ax                ; Entry's first cluster number
+    pop ax
 
     ; Move the message into the SI register
     mov si, msg_hello
@@ -149,7 +228,7 @@ read_disk:
 
 
 ;
-;   Disk read errors
+;   Error handling
 ;
 
 ; 
@@ -174,6 +253,9 @@ disk_reset:
     popa
     ret
 
+;
+; Force-jumps to the beginning of the BIOS and attempts to re-boot the PC
+;
 wait_and_reboot:
     mov ah, 0
     int 16h
@@ -182,6 +264,15 @@ wait_and_reboot:
 .halt:
     cli
     hlt
+
+;
+; Prints an error message when the kernel cannot be found at any point
+;
+kernel_not_found:
+    mov si, msg_kernel_not_found
+    call puts
+    jmp wait_and_reboot
+
 
 ; 
 ; Prints a string to the screen
@@ -212,6 +303,11 @@ puts:
 
 msg_hello: db 'Hello, World!', ENDL, 0
 msg_read_failed: db 'Reading from disk failed!', ENDL, 0
+msg_kernel_not_found: db 'Could not find the kernel!', ENDL, 0
+kernel_name: db 'KERNEL  BIN'
+kernel_cluster: dw 0
 
 times 510-($-$$) db 0
 dw 0aa55h
+
+buffer:
