@@ -32,7 +32,7 @@ bpb_volume_label: db 'AURORA      '     ; Partition label, 11 bytes and needs to
 bpb_file_system_type: db 'FAT12   '     ; File system type, 8 bytes and padded with space
 
 
-; Beginning of bootloader
+; BOOTLOADER
 
 start:
 
@@ -89,22 +89,17 @@ start:
     add ax, [bpb_reserved_sectors]
 
     ; ax is the sector for the root directory, bx is the number of sectors in the root directory.
-    
-    push ax
-    push bx                         ; Save values for later
+    ; Save first kernel cluster in code
+    mov cx, ax
+    add ax, bx
+    sub ax, 2                           ; cluster = reserved + FAT + root_dir = ax + bx = 33, first_kernel_cluster_offset = 2
+    mov [kernel_first_cluster], ax
+    mov ax, cx
 
     mov cl, 1
     mov bx, buffer                  ; Move the next place to read file data into (this is at 0x0000:0x7e00)
     mov dl, [bpb_drive_number]      ; Restore drive number if changed
     call read_disk
-
-    pop bx
-
-    ; Reading our drive information is one of the steps
-    ; First, read the file name (which is the first thing in the list, 11 bytes) from the memory.
-    ; If filename is not equal to the input value, move to the next entry (increment di to 11 and move 21 bytes to the next file entry)
-    ; If filename is equal, then read the file attributes (or not, we don't need them). What you want is the cluster number
-    ; (offset 26) for the entry's first cluster number and the file size (offset 28).
 
     ; Set string offset to start of the buffer
     xor bx, bx
@@ -132,11 +127,67 @@ start:
     ; Add 26 bytes to di and read the sector number into cx
     mov ax, [di + 26]
     mov [kernel_cluster], ax                ; Entry's first cluster number
-    pop ax
 
-    ; Move the message into the SI register
-    mov si, msg_hello
-    call puts               ; Call the function
+    ; Now we have the actual sector data, we check the FAT to see how many clusters to load.
+
+    mov ax, [bpb_reserved_sectors]
+    mov bx, buffer
+    mov cl, [bpb_sectors_per_fat]
+    mov dl, [bpb_drive_number]
+    call read_disk
+
+    mov bx, 0x2000
+    mov es, bx
+    mov bx, 0x0000          ; Set kernel offset to 0x2000:0x0000
+
+.load_kernel_sectors:
+
+    mov ax, [kernel_cluster]
+
+    add ax, 31                      ; Hard-coded because we can't read in ax and bx from earlier
+
+    mov cl, 1
+    mov dl, [bpb_drive_number]
+    call read_disk                  ; Read kernel into memory
+
+    mov ax, [kernel_cluster]
+    mov cx, 3
+    mul cx
+    mov cx, 2
+    div cx                  ; Need active_cluster * 3/2
+                            ; dx is now cluster no. mod 2
+
+    mov si, buffer
+    add si, ax
+    mov ax, [ds:si]
+
+    or dx, dx
+    jz .even
+
+.odd:
+    shr ax, 4
+    jmp .post_cluster_read
+
+.even:
+    and ax, 0x0fff
+
+.post_cluster_read:
+    cmp ax, 0x0ff8
+    jae .finish_read
+
+    mov [kernel_cluster], ax
+    jmp .load_kernel_sectors
+
+.finish_read:
+
+    mov dl, [bpb_drive_number]
+    mov ax, 0x2000
+    mov ds, ax
+    mov es, ax
+
+    jmp 0x2000:0x0000
+
+    jmp wait_and_reboot
 
     cli
     hlt
@@ -301,11 +352,11 @@ puts:
     ret
 
 
-msg_hello: db 'Hello, World!', ENDL, 0
 msg_read_failed: db 'Reading from disk failed!', ENDL, 0
 msg_kernel_not_found: db 'Could not find the kernel!', ENDL, 0
 kernel_name: db 'KERNEL  BIN'
 kernel_cluster: dw 0
+kernel_first_cluster: db 0
 
 times 510-($-$$) db 0
 dw 0aa55h
