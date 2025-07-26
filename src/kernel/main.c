@@ -1,9 +1,13 @@
-#include "stdio.h"
-#include "x86.h"
+#include <stdint.h>
+#include "memory.h"
 
-void __cdecl start(uint16_t boot_drive)
+extern uint8_t __bss_start;
+extern uint8_t __end;
+
+void __attribute__((section(".entry"))) start(uint16_t boot_drive)
 {
-    puts("Hello world from the kernel!\r\n");
-    puts("This is another message because I'm SO AWESOME!!!\r\n");
-    return;
+    // Zero the memory between the end of the binary and the start of the uninitialized data (bss contains no value at startup)
+    memset(&__bss_start, 0, (&__end) - (&__bss_start));
+
+    return; // Do nothing for mow
 }

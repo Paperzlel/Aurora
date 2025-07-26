@@ -89,11 +89,11 @@ start:
     add ax, [bpb_reserved_sectors]
 
     ; ax is the sector for the root directory, bx is the number of sectors in the root directory.
-    ; Save first kernel cluster in code
+    ; Save first stage 2 cluster in code
     mov cx, ax
     add ax, bx
-    sub ax, 2                           ; cluster = reserved + FAT + root_dir = ax + bx = 33, first_kernel_cluster_offset = 2
-    mov [kernel_first_cluster], ax
+    sub ax, 2                           ; cluster = reserved + FAT + root_dir = ax + bx = 33, first_stage2_cluster_offset = 2
+    mov [stage2_first_cluster], ax
     mov ax, cx
 
     mov cl, 1
@@ -105,14 +105,14 @@ start:
     xor bx, bx
     mov di, buffer
 
-; Compare si and di and se if they are equal. When ch == cl, the two strings are equal and we have found the kernel.
+; Compare si and di and se if they are equal. When ch == cl, the two strings are equal and we have found stage 2.
 .compare_value:
-    mov si, kernel_name
+    mov si, stage2_name
     mov cx, 11                      ; Get length of the string
     push di
     repe cmpsb                      ; REPE = repeat while equal, CMPSB = compare matching bytes in es:di and ds:si. Increments SI and DI
     pop di
-    je .found_kernel                ; Strings were equal, move to the next step
+    je .found_stage2                ; Strings were equal, move to the next step
 
     ; String was not equal
     add di, 32
@@ -120,13 +120,13 @@ start:
     cmp bx, [bpb_root_entry_count]
     jl .compare_value
 
-    jmp kernel_not_found            ; If bx > root_entry_count, then we ran out of root directories. Move to error message
+    jmp stage2_not_found            ; If bx > root_entry_count, then we ran out of root directories. Move to error message
 
-.found_kernel:
+.found_stage2:
 
     ; Add 26 bytes to di and read the sector number into cx
     mov ax, [di + 26]
-    mov [kernel_cluster], ax                ; Entry's first cluster number
+    mov [stage2_cluster], ax                ; Entry's first cluster number
 
     ; Now we have the actual sector data, we check the FAT to see how many clusters to load.
 
@@ -136,23 +136,23 @@ start:
     mov dl, [bpb_drive_number]
     call read_disk
 
-    mov bx, KERNEL_LOAD_SEGMENT
+    mov bx, STAGE2_LOAD_SEGMENT
     mov es, bx
-    mov bx, KERNEL_LOAD_OFFSET          ; Set offset to 0x0000:0x0500
+    mov bx, STAGE2_LOAD_OFFSET          ; Set offset to 0x0000:0x0500
 
-.load_kernel_sectors:
+.load_stage2_sectors:
 
-    mov ax, [kernel_cluster]
+    mov ax, [stage2_cluster]
 
     add ax, 31                      ; Hard-coded because we can't read in ax and bx from earlier
 
     mov cl, 1
     mov dl, [bpb_drive_number]
-    call read_disk                  ; Read kernel into memory
+    call read_disk                  ; Read stage 2 into memory
 
     add bx, [bpb_bytes_per_sector]  ; Increment offset to read next sector in
 
-    mov ax, [kernel_cluster]
+    mov ax, [stage2_cluster]
     mov cx, 3
     mul cx
     mov cx, 2
@@ -174,21 +174,21 @@ start:
     and ax, 0x0fff
 
 .post_cluster_read: 
-    cmp ax, 0x0ff8                  ; End of cluster chain? If so, stop reading kernel into memory and move on
+    cmp ax, 0x0ff8                  ; End of cluster chain? If so, stop reading stage 2 into memory and move on
     jae .finish_read
 
-    mov [kernel_cluster], ax        ; Set a new value for the cluster number
-    jmp .load_kernel_sectors
+    mov [stage2_cluster], ax        ; Set a new value for the cluster number
+    jmp .load_stage2_sectors
 
-; Found the kernel, now moving into it to boot properly
+; Found stage 2, now moving into it to boot properly
 .finish_read:
 
     mov dl, [bpb_drive_number]
-    mov ax, KERNEL_LOAD_SEGMENT                             ; Move data segment to the new location
+    mov ax, STAGE2_LOAD_SEGMENT                             ; Move data segment to the new location
     mov ds, ax
     mov es, ax                                              ; Set up registers to point to their new offset (FROM HERE ES AND DS SHOULD NOT CHANGE!!!!!)
 
-    jmp KERNEL_LOAD_SEGMENT:KERNEL_LOAD_OFFSET              ; Jump to kernel
+    jmp STAGE2_LOAD_SEGMENT:STAGE2_LOAD_OFFSET              ; Jump to stage 2
 
     jmp wait_and_reboot                                     ; Wait for any interrupts, should never happen as OS shutdown stays where it is
 
@@ -320,10 +320,10 @@ wait_and_reboot:
     hlt
 
 ;
-; Prints an error message when the kernel cannot be found at any point
+; Prints an error message when stage 2 of the bootloader cannot be found at any point
 ;
-kernel_not_found:
-    mov si, msg_kernel_not_found
+stage2_not_found:
+    mov si, msg_stage2_not_found
     call puts
     jmp wait_and_reboot
 
@@ -354,14 +354,14 @@ puts:
     pop si
     ret
 
-KERNEL_LOAD_SEGMENT     equ 0
-KERNEL_LOAD_OFFSET      equ 0x0500      ; Load bootloader stage 2 to 0x0500 (lower in memory but usable)
+STAGE2_LOAD_SEGMENT     equ 0
+STAGE2_LOAD_OFFSET      equ 0x0500      ; Load bootloader stage 2 to 0x0500 (lower in memory but usable)
 
 msg_read_failed: db 'Reading from disk failed!', ENDL, 0
-msg_kernel_not_found: db 'Could not find the kernel!', ENDL, 0
-kernel_name: db 'KERNEL  BIN'
-kernel_cluster: dw 0
-kernel_first_cluster: db 0
+msg_stage2_not_found: db 'Could not find stage 2!', ENDL, 0
+stage2_name: db 'STAGE2  BIN'
+stage2_cluster: dw 0
+stage2_first_cluster: db 0
 
 times 510-($-$$) db 0
 dw 0aa55h

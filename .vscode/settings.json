@@ -1,5 +1,6 @@
 {
-    "files.problemsExclude": [
+    "files.problemExclude": [
         "src/bootloader/main.asm"
     ],
+    "makefile.configureOnOpen": false,
 }

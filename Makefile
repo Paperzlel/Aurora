@@ -1,20 +1,24 @@
-ASM=nasm
-CC=gcc
-CXX=g++
-LD=gcc
-CFLAGS=std=c99 -g
-LINKFLAGS=
-LIBS=
+export ASM=nasm
+export CC=gcc
+export CXX=g++
+export LD=gcc
+export CFLAGS=std=c99 -g
+export LINKFLAGS=
+export LIBS=
 
 
-SRC_DIR=src
-BUILD_DIR=build
-TOOLS_DIR=toolchain
+export SRC_DIR=src
+export BUILD_DIR=build
+export TOOLS_DIR=toolchain
 
-TARGET=i686-elf
-TARGET_CC=$(TARGET)-gcc
-TARGET_CXX=$(TARGET)-g++
-TARGET_LD=$(TARGET)-gcc
+export TARGET=i686-elf
+export TARGET_CC=$(TARGET)-gcc
+export TARGET_CXX=$(TARGET)-g++
+export TARGET_LD=$(TARGET)-gcc
+export TARGET_ASMFLAGS= 
+export TARGET_CFLAGS=-std=c99 -g
+export TARGET_LDFLAGS= 
+export TARGET_LIBS=
 
 all: scaffold bootloader kernel floppy_image
 
@@ -34,39 +38,34 @@ scaffold:
 floppy_image: $(BUILD_DIR)/main_floppy.img
 
 $(BUILD_DIR)/main_floppy.img: bootloader kernel
-	@dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img bs=512 count=2880
-	@mkfs.fat -F 12 -n "AUOS" $(BUILD_DIR)/main_floppy.img
-	@dd if=$(BUILD_DIR)/bootloader.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
-	@mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin "::kernel.bin"
+	@dd if=/dev/zero of=$@ bs=512 count=2880 >/dev/null
+	@mkfs.fat -F 12 -n "AUOS" $@ >/dev/null
+	@dd if=$(BUILD_DIR)/stage1.bin of=$@ conv=notrunc >/dev/null
+	@mcopy -i $@ $(BUILD_DIR)/stage2.bin "::stage2.bin"
+	@mcopy -i $@ $(BUILD_DIR)/kernel.bin "::kernel.bin"
+	@echo Created $@
 
 # Bootloader
 
-bootloader: $(BUILD_DIR)/bootloader.bin
+bootloader: stage1 stage2
 
-$(BUILD_DIR)/bootloader.bin: $(SRC_DIR)/bootloader/main.asm
-	@$(ASM) $(SRC_DIR)/bootloader/main.asm -f bin -o $(BUILD_DIR)/bootloader.bin
+stage1: $(BUILD_DIR)/stage1.bin
+
+$(BUILD_DIR)/stage1.bin: scaffold
+	@$(MAKE) -C src/bootloader/stage1 BUILD_DIR=$(abspath $(BUILD_DIR))
+
+stage2: $(BUILD_DIR)/stage2.bin
+
+$(BUILD_DIR)/stage2.bin: scaffold
+	@$(MAKE) -C src/bootloader/stage2 BUILD_DIR=$(abspath $(BUILD_DIR))
+
 
 # Kernel
 
-SOURCES_KERNEL_C = $(wildcard src/kernel/*.c)
-SOURCES_KERNEL_ASM = $(wildcard src/kernel/*.asm)
-OBJECTS_KERNEL_C = $(patsubst src/kernel/%.c, $(BUILD_DIR)/kernel/c/%.o, $(SOURCES_KERNEL_C))
-OBJECTS_KERNEL_ASM = $(patsubst src/kernel/%.asm, $(BUILD_DIR)/kernel/asm/%.o, $(SOURCES_KERNEL_ASM))
-
-TARGET_CFLAGS=-std=c99 -g -m16 # HACK: Disable this when you can, it's needed to properly generate 16-bit assembly and doesn't work otherwise
-
 kernel: $(BUILD_DIR)/kernel.bin
 
-$(BUILD_DIR)/kernel.bin: $(OBJECTS_KERNEL_ASM) $(OBJECTS_KERNEL_C)
-	@$(TARGET_LD) $^ -T link.ld -nostdlib -o $@ -Wl,-Map=$(BUILD_DIR)/kernel.map -lgcc
-# Use Open Watcom, not GCC. It's not wanting to play for raw binaries
-
-$(BUILD_DIR)/kernel/c/%.o: $(SRC_DIR)/kernel/%.c
-	@$(TARGET_CC) $(TARGET_CFLAGS) -ffreestanding -c -o $@ $<
-
-
-$(BUILD_DIR)/kernel/asm/%.o: $(SRC_DIR)/kernel/%.asm
-	@$(ASM) -f elf -o $@ $<
+$(BUILD_DIR)/kernel.bin: scaffold stage1 stage2
+	@$(MAKE) -C src/kernel BUILD_DIR=$(abspath $(BUILD_DIR))
 
 clean:
 	@rm -rf $(BUILD_DIR)/*
