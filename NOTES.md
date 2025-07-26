@@ -3,8 +3,28 @@
 ## Main Addresses
 - The bootloader loads the OS into memory at `0x2000:0000` which is `0x20000` in real terms. 
 - The stack begins at position `0x07C0:0000` which is `0x07C00` in real terms.
+- See [this link](https://wiki.osdev.org/Memory_Map_(x86)) for more information
 
 
+## Stages
+### Bootloader
+This stage simply obtains some drive information and loads the rest of the kernel. Normally a bootloader would obtain more, but the majority of this
+will occur during the very early stages of the kernel (prior to any `kmain()` function) when we are still not in protected mode.
+
+### Early kernel
+This stage has more room to play with and hence can load vastly more information about the kernel. However, it is still in real mode and can do a lot
+of damage if not handled appropriately. Here, we want to do the following:
+1. Print a help message
+2. Move to 32-bit mode
+3. Get the full memory map of the system
+4. Setup COM connections for serial ports
+5. Check CPU features
+6. Setup GDTR
+7. Enable A20 line
+8. Enable graphics mode(s)
+
+### Later kernel
+This stage is currently under construction.
 
 
 # Understanding Assembly

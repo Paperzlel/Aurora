@@ -136,9 +136,9 @@ start:
     mov dl, [bpb_drive_number]
     call read_disk
 
-    mov bx, 0x2000
+    mov bx, KERNEL_LOAD_SEGMENT
     mov es, bx
-    mov bx, 0x0000          ; Set kernel offset to 0x2000:0x0000
+    mov bx, KERNEL_LOAD_OFFSET          ; Set offset to 0x0000:0x0500
 
 .load_kernel_sectors:
 
@@ -149,6 +149,8 @@ start:
     mov cl, 1
     mov dl, [bpb_drive_number]
     call read_disk                  ; Read kernel into memory
+
+    add bx, [bpb_bytes_per_sector]  ; Increment offset to read next sector in
 
     mov ax, [kernel_cluster]
     mov cx, 3
@@ -164,30 +166,31 @@ start:
     or dx, dx
     jz .even
 
-.odd:
+.odd:                           ; Since dx mod 2 can be 1 or 0 it is hence even or odd and this changes how we deal with the next cluster
     shr ax, 4
     jmp .post_cluster_read
 
 .even:
     and ax, 0x0fff
 
-.post_cluster_read:
-    cmp ax, 0x0ff8
+.post_cluster_read: 
+    cmp ax, 0x0ff8                  ; End of cluster chain? If so, stop reading kernel into memory and move on
     jae .finish_read
 
-    mov [kernel_cluster], ax
+    mov [kernel_cluster], ax        ; Set a new value for the cluster number
     jmp .load_kernel_sectors
 
+; Found the kernel, now moving into it to boot properly
 .finish_read:
 
     mov dl, [bpb_drive_number]
-    mov ax, 0x2000
+    mov ax, KERNEL_LOAD_SEGMENT                             ; Move data segment to the new location
     mov ds, ax
-    mov es, ax
+    mov es, ax                                              ; Set up registers to point to their new offset (FROM HERE ES AND DS SHOULD NOT CHANGE!!!!!)
 
-    jmp 0x2000:0x0000
+    jmp KERNEL_LOAD_SEGMENT:KERNEL_LOAD_OFFSET              ; Jump to kernel
 
-    jmp wait_and_reboot
+    jmp wait_and_reboot                                     ; Wait for any interrupts, should never happen as OS shutdown stays where it is
 
     cli
     hlt
@@ -351,6 +354,8 @@ puts:
     pop si
     ret
 
+KERNEL_LOAD_SEGMENT     equ 0
+KERNEL_LOAD_OFFSET      equ 0x0500      ; Load bootloader stage 2 to 0x0500 (lower in memory but usable)
 
 msg_read_failed: db 'Reading from disk failed!', ENDL, 0
 msg_kernel_not_found: db 'Could not find the kernel!', ENDL, 0
