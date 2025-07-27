@@ -49,6 +49,9 @@ start:
 
     mov [bpb_drive_number], dl      ; dl (drive number) set by BIOS
 
+    mov si, msg_loading
+    call puts                       ; Print loading message
+
     push es
     mov ah, 0x08
     int 0x13                        ; Get drive information (the format may not be 100% correct)
@@ -89,12 +92,7 @@ start:
     add ax, [bpb_reserved_sectors]
 
     ; ax is the sector for the root directory, bx is the number of sectors in the root directory.
-    ; Save first stage 2 cluster in code
-    mov cx, ax
-    add ax, bx
-    sub ax, 2                           ; cluster = reserved + FAT + root_dir = ax + bx = 33, first_stage2_cluster_offset = 2
-    mov [stage2_first_cluster], ax
-    mov ax, cx
+    ; Do not save these values, as we need more bytes for an information message at the end of the bootloader.
 
     mov cl, 1
     mov bx, buffer                  ; Move the next place to read file data into (this is at 0x0000:0x7e00)
@@ -357,11 +355,11 @@ puts:
 STAGE2_LOAD_SEGMENT     equ 0
 STAGE2_LOAD_OFFSET      equ 0x0500      ; Load bootloader stage 2 to 0x0500 (lower in memory but usable)
 
+msg_loading: db 'Loading...', ENDL, 0
 msg_read_failed: db 'Reading from disk failed!', ENDL, 0
 msg_stage2_not_found: db 'Could not find stage 2!', ENDL, 0
 stage2_name: db 'STAGE2  BIN'
 stage2_cluster: dw 0
-stage2_first_cluster: db 0
 
 times 510-($-$$) db 0
 dw 0aa55h

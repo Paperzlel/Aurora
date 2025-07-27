@@ -1,31 +1,61 @@
-bits 16
 
 section .text
 
-;
-; Call to BIOS to write a character
-; args: character, page
-;
-global x86_Video_WriteCharTeletype
-x86_Video_WriteCharTeletype:
+%macro x86_prot_to_real 0 
+    [bits 32]
+    jmp word 0x18:.protected_mode16
     
-    push bp
-    mov bp, sp              ; Create new stack frame
+.protected_mode16:
+    [bits 16]
 
-    push bx                 ; Save bx register
+    mov eax, cr0
+    and al, 0xfe
+    mov cr0, eax
 
-    mov ah, 0x0e            ; Set to write a character to memory
-    mov bh, [bp + 4]        ; [bp + 0] is the current call frame
-    mov al, [bp + 6]        ; [bp + 2] is the return address (saved in words not bytes for 16-bit goodness)
-                            ; [bp + 4] is the page number (since stack is pushed left-right)
-                            ; [bp + 6] is the character to write.
-                            ; This "shouldn't" work, as page and character are swapped for nanobyte, but this is actually intended behaviour - since
-                            ; __cdecl works right-left, the second argument is added first, then the first.
+    jmp word 0x00:.real_mode
 
-    int 0x10                ; Write character to screen
+.real_mode:
+    mov ax, 0
+    mov ds, ax
+    mov ss, ax
 
-    pop bx                  ; Restore bx
+    sti
 
-    mov sp, bp
-    pop bp                  ; Restore previous stack frame
-    ret
+%endmacro
+
+%macro x86_real_to_prot 0
+    cli
+    
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
+
+    jmp dword 0x08:.protected_mode
+
+.protected_mode:
+    [bits 32]
+
+    mov ax, 0x10
+    mov ds, ax
+    mov ss, ax
+
+%endmacro
+
+;
+; Converts a linear memory address to a segment:offset address. Useful when returning a pointer from an ASM function
+; Parameters:
+;   1 - Linear address (e.g. [bp + 8])
+;   2 - Out target segment (e.g. es)
+;   3 - Target 32-bit register to use (e.g. eax)
+;   4 - Target lower 16-bit half of 3 (e.g. ax)
+;
+
+%macro linear_to_seg_ofs 4
+
+    mov %3, %1
+    shr %3, 4
+    mov %2, %4
+    mov %3, %1
+    and %3, 0xf
+
+%endmacro

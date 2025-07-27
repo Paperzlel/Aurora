@@ -1,5 +1,5 @@
 TARGET_ASMFLAGS += -f elf
-TARGET_CFLAGS += -ffreestanding -m16 # HACK: Disable this when you can, it's needed to properly generate 16-bit assembly and doesn't work otherwise
+TARGET_CFLAGS += -ffreestanding
 TARGET_LDFLAGS += -T linker.ld -nostdlib
 TARGET_LIBS += -lgcc
 

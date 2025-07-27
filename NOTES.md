@@ -15,12 +15,12 @@ will occur during the very early stages of the kernel (prior to any `kmain()` fu
 This stage has more room to play with and hence can load vastly more information about the kernel. However, it is still in real mode and can do a lot
 of damage if not handled appropriately. Here, we want to do the following:
 1. Print a help message
-2. Move to 32-bit mode
-3. Get the full memory map of the system
-4. Setup COM connections for serial ports
-5. Check CPU features
-6. Setup GDTR
-7. Enable A20 line
+2. Enable A20 line
+3. Setup GDTR
+4. Move to 32-bit mode
+5. Get the full memory map of the system
+6. Setup COM connections for serial ports
+7. Check CPU features
 8. Enable graphics mode(s)
 
 ### Later kernel
