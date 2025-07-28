@@ -1,18 +1,27 @@
 #include "stdio.h"
-#include "x86.h"
+#include "memdefs.h"
+#include "fat.h"
 
-void __cdecl start(uint16_t boot_drive)
-{
-    // Need to do some more things before we can go further
-    // Since we're in protected mode, we need to write to the video display memory rather than to the BIOS (goodbye BIOS)
+void __attribute__((cdecl)) start(uint16_t boot_drive) {
     // First, clear the screen
     clrscr();
 
-    // do_something();
-    puts("Booted into bootloader stage 2\n");
-    for (int i = 0; i < 30; i++)
-    {
-        puts("a\n");
+    puts("Booted into bootloader stage 2.\n");
+
+    DISK out_disk;
+    if (!disk_initialize(&out_disk, boot_drive)) {
+        printf("Failed to initialize disk controller; unable to launch kernel.\n");
+        goto end;
     }
+
+    if (!fat_initialize(&out_disk)) {
+        printf("Failed to initialize the FAT file system.\n");
+        goto end;
+    }
+
+    fat_open(&out_disk, "/dev/NOTES.md");
+
+    printf("Video RAM is at %X.", 0xB8000);
+end:
     for (;;);
 }

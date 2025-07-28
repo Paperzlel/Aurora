@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Operating System",
+            "type": "shell",
+            "command": "make",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build Toolchain",
+            "type": "shell",
+            "command": "make toolchain",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Clean Operating System",
+            "type": "shell",
+            "command": "make clean",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Clean Toolchain",
+            "type": "shell",
+            "command": "make clean_toolchain",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Clean Toolchain (All)",
+            "type": "shell",
+            "command": "make clean_toolchain_all",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Run (QEMU)",
+            "type": "shell",
+            "command": "./run.sh",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Debug (bochs)",
+            "type": "shell",
+            "command": "./debug.sh",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

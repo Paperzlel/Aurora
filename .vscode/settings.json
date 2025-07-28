@@ -3,4 +3,14 @@
         "src/bootloader/main.asm"
     ],
     "makefile.configureOnOpen": false,
+    "files.associations": {
+        "*.json": "jsonc",
+        "limits": "c",
+        "stdbool.h": "c",
+        "stddef.h": "c",
+        "__stddef_null.h": "c",
+        "stdint.h": "c",
+        "executor": "c",
+        "functional": "c"
+    },
 }

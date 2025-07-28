@@ -18,9 +18,6 @@ entry:
     mov sp, 0xfff0
     mov bp, sp
 
-    mov si, msg_hello
-    call asm_puts
-
     ; Need to trigger/check A20 gate and enable GPT before moving to the rest of the bootloader
 
     push ax
@@ -69,9 +66,6 @@ entry:
 ;
 enable_a20:
     [bits 16]
-    mov si, msg_a20_disabled
-    call asm_puts
-
     call a20_wait                       ; Wait for data to be sent
     mov al, 0xad                        ; Disable keyboard inputs
     out 0x64, al                        ; Send the command
@@ -165,47 +159,10 @@ load_gdt:
     lgdt [gdt_desc]
     ret
 
-;
-;   Helper functions
-;
-
-; 
-; Prints a string to the screen. Any code not in this file should use `puts` from `stdio.h`.
-; Params:
-; - ds:si points to the string
-;
-asm_puts:
-    [bits 16]
-    ; Save registers we will modify, as they might contain data from other locations
-    push si
-    push ax
-
-.loop:
-    lodsb                   ; lodsb loads a byte from ds:si into al/ax/fax, then increments si
-    or al, al               ; Any value NEQ to zero will return not zero here, so return if zero
-    je .done
-
-    mov ah, 0x0e            ; Ox0e prints the character in ah to the screen.
-    mov bh, 0               ; Sets the page number (text mode) to 0
-    int 0x10                ; Calls BIOS interrupt 0x10 which is a set of video output options
-
-    jmp .loop
-
-.done:
-    pop ax
-    pop si
-    ret
-
 
 g_boot_drive: db 0
 buffer_below_mb: db 0
 buffer_above_mb: db 0
-
-%define ENDL 0x0d, 0x0a
-
-msg_hello: db 'Booted into stage 2 of bootloader', ENDL, 0
-msg_a20_disabled: db 'The A20 gate is not enabled, enabling manually...', ENDL, 0
-msg_enter_pmode: db 'Entered protected mode', ENDL, 0
 
 ; Global descriptor table, needed for protected mode.
 ; See http://www.osdever.net/tutorials/view/the-world-of-protected-mode for some insight on why each register is set as such

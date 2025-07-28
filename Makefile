@@ -43,6 +43,9 @@ $(BUILD_DIR)/main_floppy.img: bootloader kernel
 	@dd if=$(BUILD_DIR)/stage1.bin of=$@ conv=notrunc >/dev/null
 	@mcopy -i $@ $(BUILD_DIR)/stage2.bin "::stage2.bin"
 	@mcopy -i $@ $(BUILD_DIR)/kernel.bin "::kernel.bin"
+	@mmd -i $@ "::dev"
+	@mcopy -i $@ test.txt "::dev/test.txt"
+	@mcopy -i $@ NOTES.md "::dev/NOTES.md"
 	@echo Created $@
 
 # Bootloader
