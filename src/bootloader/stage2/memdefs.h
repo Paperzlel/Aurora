@@ -16,12 +16,12 @@
 #define MEMORY_FAT_SIZE             0x00010000  // Load at address, save space for rest of the filesystem
 
 #define KERNEL_LOAD_ADDR (void *)   0x00020000
-#define KERNEL_LOAD_SIZE (void *)   0x00010000  // Kernel loads here, move on later in life
-
-#define KERNEL_BASE_ADDR (void *)   0x00030000  // Actual location of the kernel
+#define KERNEL_LOAD_SIZE            0x00010000  // Kernel loads here, move on later in life
 
 // Extended BIOS data area      0x00080000 - 0x0009ffff
 // Video display memory area    0x000a0000 - 0x000bffff
 // Video BIOS area              0x000c0000 - 0x000c7fff
 // BIOS expansion area          0x000c8000 - 0x000effff
 // Motherboard BIOS area        0x000f0000 - 0x000fffff
+
+#define KERNEL_BASE_ADDR (void *)   0x00100000  // Actual location of the kernel

@@ -6,6 +6,7 @@
 #include "string.h"
 #include "memory.h"
 #include "ctype.h"
+#include "minmax.h"
 
 #include <stddef.h>
 
@@ -73,6 +74,85 @@ bool fat_read_fat_table(DISK *p_disk) {
     return disk_read_sectors(p_disk, a_filesystem->bs.boot_sector.reserved_sector_count, a_filesystem->bs.boot_sector.sectors_per_fat, a_fat_data);
 }
 
+uint32_t fat_cluster_to_lba(uint32_t p_in) {
+    return ((p_in - 2) * a_filesystem->bs.boot_sector.sectors_per_cluster + a_data_section_lba);
+}
+
+uint32_t fat_next_cluster(uint32_t p_input_sector) {
+    uint32_t offset = p_input_sector * 3 / 2;
+    uint16_t ret = (*(uint16_t *)(a_fat_data + offset));
+
+    return (p_input_sector & 1) ? ret >> 4 : ret & 0xfff;
+}
+
+bool fat_find_entry(DISK *p_disk, FAT_File *p_current, const char *p_name, FAT_DirectoryEntry *p_directory) {
+    FAT_DirectoryEntry entry;
+    char fat_filename[12];
+    memset(fat_filename, ' ', 12);
+    fat_filename[11] = 0;
+
+    // Obtain the file extension (NULL if it's a directory)
+    const char *ext = strchr(p_name, '.');
+    if (ext == NULL) {
+        ext = p_name + 11;
+    }
+
+    for (int i = 0; i < 8 && p_name[i] && p_name + i < ext; i++) {
+        fat_filename[i] = toupper(p_name[i]);
+    }
+
+    if (ext != p_name + 11) {
+        for (int i = 0; i < 3 && ext[i + 1]; i++) {
+            fat_filename[i + 8] = toupper(ext[i + 1]);
+        }
+    }
+
+    while (fat_read_dir_entry(p_disk, p_current, &entry)) {
+        if (memcmp(fat_filename, entry.file_name, 11) == 0) {
+            *p_directory = entry;
+            return true;
+        }
+    }
+
+    return true;
+}
+
+FAT_File *fat_open_entry(DISK *p_disk, FAT_DirectoryEntry *p_directory) {
+    int handle = ROOT_DIRECTORY_HANDLE;
+
+    for (int i = 0; i < MAX_FILE_HANDLES; i++) {
+        if (!a_filesystem->open_handles[i].opened) {
+            handle = i;
+        }
+    }
+
+    if (handle == ROOT_DIRECTORY_HANDLE) {
+        printf("FAT: No more file handles available.\n");
+        return NULL;
+    }
+
+    FAT_FileData *data = &a_filesystem->open_handles[handle];
+    data->public_fa.handle = handle;
+    data->public_fa.is_directory = (p_directory->attribs & FAT_DIRECTORY) != 0;
+    data->public_fa.position = 0;
+    data->public_fa.size = p_directory->size;
+    data->first_cluster = p_directory->first_cluster_no_low + ((uint32_t)p_directory->first_cluster_no_high << 16);
+    data->current_cluster = data->first_cluster;
+    data->current_sector_in_cluster = 0;
+
+    if (!disk_read_sectors(p_disk, fat_cluster_to_lba(data->current_cluster), 1, data->buffer)) {
+        printf("FAT: Opening entry failed - read error on cluster %u (LBA %u)\n", data->current_cluster, fat_cluster_to_lba(data->current_cluster));
+        for (int i = 0; i < 11; i++) {
+            printf("%c", p_directory->file_name[i]);
+        }
+        printf("\n");
+        return NULL;
+    }
+
+    data->opened = true;
+    return &data->public_fa;
+}
+
 bool fat_initialize(DISK *p_disk) {
     a_filesystem = (FAT_Data *)MEMORY_FAT_FS;
 
@@ -129,19 +209,6 @@ FAT_File *fat_open(DISK *p_disk, const char *p_path) {
     // 255-byte filename + NULL terminator. Here we copy in the file 
     char name[MAX_PATH_SIZE];
 
-    // e.g. find "/dev/test.txt"
-
-    // Remove '/' from start of file
-    // Extract "dev" from path (strchr(path, '/'), then sub result from path to get dev on its own)
-    // Look in current directory for dev (toupper each letter, move to 12-byte NULL-terminated buffer, memcmp with filename)
-    // Find it, OR in attribs, load "folder", return new directory
-    // Open new directory entry, move along
-    
-    // Extract "test.txt" from path (same as above, should return NULL as the '/' was removed in the last loop)
-    // Look in current directory for file (toupper name and ext, mov to buffer, memcmp with each directory filename)
-    // Find, OR in attribs, load directory, return
-    // path should be NULL now, return
-
     if (p_path[0] == '/') {
         p_path++;
     }
@@ -159,51 +226,100 @@ FAT_File *fat_open(DISK *p_disk, const char *p_path) {
         } else {
             uint32_t len = strlen(p_path);
             memcpy(name, p_path, len);
+            name[len] = 0;
             p_path += len;
             is_last = true;
         }
 
         // Load a file handler somehow
         FAT_DirectoryEntry entry;
-        printf("name is now: %s\n", name);
-        if (!fat_read_directory(p_disk, current, name, &entry)) {
+        if (!fat_find_entry(p_disk, current, name, &entry)) {
+            fat_close(current);
+
             printf("FAT: Could not find/read directory %s.\n", name);
             return NULL;
         } else {
+            // printf("Found entry with name %s.\n", name);
 
+            fat_close(current);
+
+            if (!is_last && entry.attribs & FAT_DIRECTORY == 0) {
+                printf("FAT: Entry %s is not a directory.\n", name);
+                return NULL;
+            }
+
+            current = fat_open_entry(p_disk, &entry);
         }
     }
 
     return current;
 }
 
-bool fat_read_directory(DISK *p_disk, FAT_File *p_current, const char *p_name, FAT_DirectoryEntry *p_directory) {
-    if (!p_name) {
-        printf("FAT: Input filename is null.\n");
-        return false;
+uint32_t fat_read(DISK *p_disk, FAT_File *p_file, uint32_t p_bytes, void *p_out_data) {
+    // Get filedata handle
+    FAT_FileData *data = (p_file->handle == ROOT_DIRECTORY_HANDLE) ? &a_filesystem->root_directory : &a_filesystem->open_handles[p_file->handle];
+
+    uint8_t *out_bytes = (uint8_t *)p_out_data;
+
+    // If a file or non-empty directory, modify the byte count to not read beyond the end of the file.
+    if (!data->public_fa.is_directory || (data->public_fa.is_directory && data->public_fa.size != 0)) {
+        p_bytes = min(p_bytes, data->public_fa.size - data->public_fa.position);
     }
-    
-    // Find the root directory handle or otherwise find an available handle
-    FAT_FileData *data = NULL;
-    if (p_current->handle == ROOT_DIRECTORY_HANDLE) {
-        data = &a_filesystem->root_directory;
-    } else {
-        for (int i = 0; i < MAX_FILE_HANDLES; i++) {
-            if (!a_filesystem->open_handles[i].opened) {
-                data = &a_filesystem->open_handles[i];
+
+    // Loop until all required bytes have been read
+    while (p_bytes > 0) {
+        int left_in_sector = SECTOR_SIZE - (data->public_fa.position % SECTOR_SIZE);
+        int read = min(p_bytes, left_in_sector);    // Either read all bytes left in the sector or the remaining number of bytes
+
+        // Copy data into output buffer
+        memcpy(out_bytes, data->buffer + data->public_fa.position % SECTOR_SIZE, read);
+        out_bytes += read;
+        data->public_fa.position += read;
+        p_bytes -= read;
+
+        // printf("Left in sector %lu, reading byte count %lu\n", left_in_sector, read);
+
+        // At this point, check if there's still more data to read
+        if (left_in_sector == read) {
+            // Handle root directory first as its reading varies
+            if (data->public_fa.handle == ROOT_DIRECTORY_HANDLE) {
+                ++data->current_cluster;
+
+                if (!disk_read_sectors(p_disk, data->current_cluster, 1, &data->buffer)) {
+                    printf("FAT: Reading disk sector %d failed.\n", data->current_cluster);
+                    break;
+                }
+            } else {
+                if (++data->current_sector_in_cluster >= a_filesystem->bs.boot_sector.sectors_per_cluster) {
+                    data->current_sector_in_cluster = 0;
+                    data->current_cluster = fat_next_cluster(data->current_cluster);
+                }
+
+                if (data->current_cluster >= 0xff8) {
+                    data->public_fa.size = data->public_fa.position;
+                    break;
+                }
+
+                if (!disk_read_sectors(p_disk, fat_cluster_to_lba(data->current_cluster) + data->current_sector_in_cluster, 1, data->buffer)) {
+                    printf("FAT: Reading disk cluster %d failed.\n", data->current_cluster);
+                }
+                // printf("FAT: Reading disk cluster %d.\n", data->current_cluster);
             }
         }
     }
 
-    // Couldn't find an available directory, recommend clearing one
-    if (data == NULL) {
-        printf("FAT: Couldn't open directory as all %d handles are full.\n", MAX_FILE_HANDLES);
-        return false;
-    }
+    return out_bytes - (uint8_t *)p_out_data;
+}
 
-    if ((void *)data->buffer == NULL) {
-        // Read data in about the directory
-    }
+bool fat_read_dir_entry(DISK *p_disk, FAT_File *p_file, FAT_DirectoryEntry *p_out_entry) {
+    return fat_read(p_disk, p_file, sizeof(FAT_DirectoryEntry), p_out_entry) == sizeof(FAT_DirectoryEntry);
+}
 
-    return true;
+void fat_close(FAT_File *p_file) {
+    if (p_file->handle == ROOT_DIRECTORY_HANDLE) {
+        p_file->position = 0;
+        a_filesystem->root_directory.current_cluster = a_filesystem->root_directory.first_cluster;
+    } else {
+        a_filesystem->open_handles[p_file->handle].opened = false;
+    }
 }

@@ -2,6 +2,13 @@
 #include "memdefs.h"
 #include "fat.h"
 
+#include "memory.h"
+
+uint8_t *kernel =           (uint8_t *)KERNEL_BASE_ADDR;
+uint8_t *kernel_load_buf =  (uint8_t *)KERNEL_LOAD_ADDR;
+
+typedef void (*kmain)();
+
 void __attribute__((cdecl)) start(uint16_t boot_drive) {
     // First, clear the screen
     clrscr();
@@ -19,7 +26,20 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         goto end;
     }
 
-    fat_open(&out_disk, "/dev/NOTES.md");
+    FAT_File *file = fat_open(&out_disk, "kernel.bin");
+    uint32_t read;
+    uint8_t *buf = kernel;
+
+    printf("%d bytes in file.\n", file->size);
+
+    while((read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf))) {
+        memcpy(buf, kernel_load_buf, read);
+        buf += read;
+    }
+    fat_close(file);
+
+    kmain kernel_start = (kmain)kernel;
+    kernel_start();
 
     printf("Video RAM is at %X.", 0xB8000);
 end:

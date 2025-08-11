@@ -35,5 +35,19 @@ typedef enum {
 } FAT_Attributes;
 
 bool fat_initialize(DISK *p_disk);
+
 FAT_File *fat_open(DISK *p_disk, const char *p_path);
-bool fat_read_directory(DISK *p_disk, FAT_File *p_current, const char *p_name, FAT_DirectoryEntry *p_directory);
+
+/**
+ * @brief Reads a number of bytes from the given FAT file into an array which can be used at a later point.
+ * @param p_disk The disk instance to read from
+ * @param p_file The file to read data from
+ * @param p_bytes The number of bytes of data to read into the buffer
+ * @param p_out_data The output pointer to read memory into
+ * @returns The number of bytes read from the data into the output buffer
+ */
+uint32_t fat_read(DISK *p_disk, FAT_File *p_file, uint32_t p_bytes, void *p_out_data);
+
+bool fat_read_dir_entry(DISK *p_disk, FAT_File *p_file, FAT_DirectoryEntry *p_out_entry);
+
+void fat_close(FAT_File *p_file);

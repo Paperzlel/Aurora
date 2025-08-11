@@ -1,5 +1,4 @@
 #include "stdio.h"
-#include "x86.h"
 
 // Included from GCC's freestanding library, as implementing them ourselves is a pain
 #include <stdarg.h>
