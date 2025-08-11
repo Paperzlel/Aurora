@@ -1,9 +1,11 @@
 #include "fat.h"
 #include "memdefs.h"
 
+#include "stdint.h"
 #include "stdio.h"
 #include "string.h"
 #include "memory.h"
+#include "ctype.h"
 
 #include <stddef.h>
 
@@ -103,6 +105,7 @@ bool fat_initialize(DISK *p_disk) {
     a_filesystem->root_directory.first_cluster = root_dir_lba;
     a_filesystem->root_directory.current_cluster = root_dir_lba;
     a_filesystem->root_directory.current_sector_in_cluster = 0;
+    printf("Setup root directory with size %d and first cluster no. %d.\n", a_filesystem->root_directory.public_fa.size, root_dir_lba);
 
     if (!disk_read_sectors(p_disk, root_dir_lba, 1, a_filesystem->root_directory.buffer)) {
         printf("FAT: Failed to read root directory.\n");
@@ -147,8 +150,8 @@ FAT_File *fat_open(DISK *p_disk, const char *p_path) {
 
     while (*p_path) {
         bool is_last = false;
-
         const char *delim = strchr(p_path, '/');
+
         if (delim != NULL) {
             memcpy(name, p_path, delim - p_path);
             name[delim - p_path + 1] = 0;
@@ -163,7 +166,44 @@ FAT_File *fat_open(DISK *p_disk, const char *p_path) {
         // Load a file handler somehow
         FAT_DirectoryEntry entry;
         printf("name is now: %s\n", name);
+        if (!fat_read_directory(p_disk, current, name, &entry)) {
+            printf("FAT: Could not find/read directory %s.\n", name);
+            return NULL;
+        } else {
+
+        }
     }
 
     return current;
+}
+
+bool fat_read_directory(DISK *p_disk, FAT_File *p_current, const char *p_name, FAT_DirectoryEntry *p_directory) {
+    if (!p_name) {
+        printf("FAT: Input filename is null.\n");
+        return false;
+    }
+    
+    // Find the root directory handle or otherwise find an available handle
+    FAT_FileData *data = NULL;
+    if (p_current->handle == ROOT_DIRECTORY_HANDLE) {
+        data = &a_filesystem->root_directory;
+    } else {
+        for (int i = 0; i < MAX_FILE_HANDLES; i++) {
+            if (!a_filesystem->open_handles[i].opened) {
+                data = &a_filesystem->open_handles[i];
+            }
+        }
+    }
+
+    // Couldn't find an available directory, recommend clearing one
+    if (data == NULL) {
+        printf("FAT: Couldn't open directory as all %d handles are full.\n", MAX_FILE_HANDLES);
+        return false;
+    }
+
+    if ((void *)data->buffer == NULL) {
+        // Read data in about the directory
+    }
+
+    return true;
 }

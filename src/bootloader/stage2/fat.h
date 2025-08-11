@@ -36,3 +36,4 @@ typedef enum {
 
 bool fat_initialize(DISK *p_disk);
 FAT_File *fat_open(DISK *p_disk, const char *p_path);
+bool fat_read_directory(DISK *p_disk, FAT_File *p_current, const char *p_name, FAT_DirectoryEntry *p_directory);
