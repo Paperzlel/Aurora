@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "stdio.h"
 
+#include <boot/memstructs.h>
 #include <cpuid.h>
 
 extern uint8_t __bss_start;
@@ -11,7 +12,7 @@ extern uint8_t __end;
 #define CPUID_VENDOR_QEMU   "TCGTCGTCGTCG"
 #define CPUID_VENDOR_INTEL  "GenuineIntel"
 
-void __attribute__((section(".entry"))) start(uint16_t boot_drive)
+void __attribute__((section(".entry"))) start(MemoryMap *mmap, uint16_t boot_drive)
 {
     // Zero the memory between the end of the binary and the start of the uninitialized data (bss contains no value at startup)
     memset(&__bss_start, 0, (&__end) - (&__bss_start));

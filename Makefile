@@ -17,6 +17,7 @@ export TARGET_CXX=$(TARGET)-g++
 export TARGET_LD=$(TARGET)-gcc
 export TARGET_ASMFLAGS= 
 export TARGET_CFLAGS=-std=c99 -g
+export TARGET_CINCLUDES=
 export TARGET_LDFLAGS= 
 export TARGET_LIBS=
 

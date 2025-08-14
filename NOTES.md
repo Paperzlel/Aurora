@@ -1,7 +1,9 @@
 # Information about the OS
 
 ## Main Addresses
-- The bootloader loads the OS into memory at `0x2000:0000` which is `0x20000` in real terms. 
+- Stage 2 is loaded by stage 1 at `0x0000:0500`, when stage 1 is at `0x0000:7c00`.
+- Stage 2 loads the kernel to address `0x0001:0000` which is `0x00100000` in real terms.
+- The bootloader loads the OS into memory at `0x1000:0000` which is `0x100000` in real terms. 
 - The stack begins at position `0x07C0:0000` which is `0x07C00` in real terms.
 - See [this link](https://wiki.osdev.org/Memory_Map_(x86)) for more information
 
@@ -27,6 +29,8 @@ This stage is far more complicated; it has many more roles to fill and many more
 
 ### Kernel
 This stage is under construction.
+#### To-do:
+- [ ] Implement a GDB stub for debugging purposes (this should be in the kernel and not the bootloader since we want to debug this and not that)
 
 # Understanding Assembly
 

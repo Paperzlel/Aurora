@@ -43,6 +43,18 @@ Run the shell script `./run.sh` to enter qemu.
 - press Continue
 - if everything goes right, you will end up at address `0x7C00`. If the code looks different than boot.asm, run the Disassemble command again.
 
+## Using GDB
+
+Using GDB makes our lives vastly easier, as we no longer need to use bochs for everything (which it's only useful for during ASM processes). To use GDB does require some hacks, as we currently use bin files over ELF files, and this means we cannot get the debug symbols as-is.
+To load GDB for QEMU, do the following steps:
+1. Add `-s -S` before `-fda` on the `run.sh` command. This makes QEMU wait for us to connect with GDB.
+2. Run GDB with the command `gdb` and no other arguments
+3. Run `target remote localhost:1234` to connect with QEMU
+4. Look at the `.map` files to set your breakpoints where you wish to debug
+5. Add a breakpoint with the command `break *0x[address]`
+6. Run the command `continue` to move to that breakpoint.
+
+For any extra references, see [this link](https://stackoverflow.com/questions/1471226/most-tricky-useful-commands-for-gdb-debugger)
+
 ## Known errors
 - Some parts of the code (e.g. the `org` instruction in the bootloader, call to `start`) will flag as an error when using NASM in VSCode. These are expected, as different binary formats have different errors and our bootloader is written as a flat binary whereas our kernel is written to `elf` standards. If they come up, don't panic! The compilers (should) know what they're doing and fix them for us.
-- Currently, a hack to force code 

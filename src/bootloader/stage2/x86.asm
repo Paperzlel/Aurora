@@ -120,10 +120,10 @@ x86_Drive_GetDriveParameters:
     linear_to_seg_ofs [bp + 24], es, esi, si
     mov [es:si], cx             ; Store head count
 
-    push di
-    push esi
-    push bx
-    push es
+    pop di
+    pop esi
+    pop bx
+    pop es
 
     push eax
 
@@ -214,6 +214,62 @@ x86_Drive_ResetDisk:
     x86_real_to_prot
 
     [bits 32]
+
+    pop eax
+
+    mov esp, ebp
+    pop ebp
+    ret
+
+
+global x86_Memory_GetMemoryRegion
+x86_Memory_GetMemoryRegion:
+    [bits 32]
+
+    push ebp
+    mov ebp, esp
+
+    x86_prot_to_real
+
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push es
+
+    [bits 16]
+
+    xor eax, eax
+    mov eax, 0xe820
+    mov ecx, 24
+    mov edx, 0x534d4150
+
+    mov bx, [bp + 8]
+
+    linear_to_seg_ofs [bp + 16], es, edi, di
+
+    int 0x15
+
+    jnc .worked
+    mov cl, 255             ; If carry flag is set, the function failed. Change the output to something silly to make it obvious it failed.
+
+.worked:
+
+    linear_to_seg_ofs [bp + 12], es, esi, si
+    mov [es:si], bx
+    mov al, cl
+    
+    pop es
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+
+    push eax
+
+    x86_real_to_prot
 
     pop eax
 

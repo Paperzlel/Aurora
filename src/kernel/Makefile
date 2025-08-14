@@ -1,6 +1,7 @@
 TARGET_ASMFLAGS += -f elf
 TARGET_CFLAGS += -ffreestanding
 TARGET_LDFLAGS += -T linker.ld -nostdlib
+TARGET_CINCLUDES += -I../libs
 TARGET_LIBS += -lgcc
 
 SOURCES_C = $(wildcard *.c)
@@ -24,7 +25,7 @@ $(BUILD_DIR)/kernel.bin: $(OBJECTS_ASM) $(OBJECTS_C)
 
 $(BUILD_DIR)/kernel/c/%.o: %.c
 	@echo 	Compiling $<...
-	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $< 
+	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $< $(TARGET_CINCLUDES)
 
 
 $(BUILD_DIR)/kernel/asm/%.o: %.asm

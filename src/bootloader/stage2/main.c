@@ -1,19 +1,23 @@
 #include "stdio.h"
 #include "memdefs.h"
 #include "fat.h"
-
 #include "memory.h"
+#include "memdetect.h"
+
 
 uint8_t *kernel =           (uint8_t *)KERNEL_BASE_ADDR;
 uint8_t *kernel_load_buf =  (uint8_t *)KERNEL_LOAD_ADDR;
 
-typedef void (*kmain)();
+typedef void (*kmain)(MemoryMap *, uint16_t);
 
 void __attribute__((cdecl)) start(uint16_t boot_drive) {
     // First, clear the screen
     clrscr();
 
     puts("Booted into bootloader stage 2.\n");
+
+    MemoryMap mmap;
+    memory_get_mem_map(&mmap);
 
     DISK out_disk;
     if (!disk_initialize(&out_disk, boot_drive)) {
@@ -39,7 +43,7 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
     fat_close(file);
 
     kmain kernel_start = (kmain)kernel;
-    kernel_start();
+    kernel_start(&mmap, boot_drive);
     
 end:
     for (;;);

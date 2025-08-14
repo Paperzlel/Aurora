@@ -16,6 +16,7 @@
         "internet": "c",
         "typeindex": "c",
         "typeinfo": "c",
-        "cpuid.h": "c"
+        "cpuid.h": "c",
+        "memdetect.h": "c"
     },
 }
