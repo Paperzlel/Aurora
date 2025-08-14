@@ -10,9 +10,9 @@ We want to understand how an OS works, and this project is aimed at doing just t
 
 - [x] Create a basic printing function for Assembly without using kernel things
 - [x] Create the bootloader that can load the OS from memory
-- [ ] Implement printf and other print family functions for our stage2 bootloader
-- [ ] Implement a C-based FAT driver to load the kernel
-- [ ] Load the kernel into memory
+- [x] Implement printf and other print family functions for our stage2 bootloader
+- [x] Implement a C-based FAT driver to load the kernel
+- [x] Load the kernel into memory
 - [ ] Create basic serial port I/O
 - [ ] Configure keyboard output from the user
 - [ ] Read a file from a floppy disk and print its contents using a command (say `rdfile /test/test.txt`, for instance)

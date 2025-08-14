@@ -12,8 +12,20 @@ const unsigned SCREEN_WIDTH = 80;
 const unsigned SCREEN_HEIGHT = 25;
 const unsigned DEFAULT_COLOUR = 0x07;       // change bit 1 for background, bit 2 for foreground
 
+#define FB_COMMAND_PORT     0x3d4
+#define FB_DATA_PORT        0x3d5
+
 int p_screen_x = 0;
 int p_screen_y = 0;
+
+void movecursor(int x, int y) {
+    uint16_t res = (y * SCREEN_WIDTH + x);
+
+    x86_outb(FB_COMMAND_PORT, 14);
+    x86_outb(FB_DATA_PORT, (res >> 8) & 0xff);
+    x86_outb(FB_COMMAND_PORT, 15);
+    x86_outb(FB_DATA_PORT, res & 0x00ff);
+}
 
 void putchr(int x, int y, char c) {
     video_memory[2 * (y * SCREEN_WIDTH + x)] = c; // y * scr_width + x is cell offset, mul by two because of the two-byte size
@@ -50,6 +62,8 @@ void putc(char c) {
             p_screen_x++;
             break;
     }
+
+    movecursor(p_screen_x, p_screen_y);
 }
 
 void puts(const char *str) {
@@ -202,12 +216,6 @@ void printf(const char *fmt, ...) {
                         break;
                     default:
                         break;      // Ignore undefined types for now (f/F, e/E, g/G, a/A, n)
-                }
-
-                // Add hex values manually. May be removed.
-                if (base == 16) {
-                    putc('0');
-                    putc('x');
                 }
 
                 if (number) {

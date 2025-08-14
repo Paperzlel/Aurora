@@ -8,24 +8,25 @@
 
 ## Stages
 ### Bootloader
-This stage simply obtains some drive information and loads the rest of the kernel. Normally a bootloader would obtain more, but the majority of this
-will occur during the very early stages of the kernel (prior to any `kmain()` function) when we are still not in protected mode.
+This stage is split into two parts: the first part which is called by the BIOS, and the second which is chain-loaded from the first part.
 
-### Early kernel
-This stage has more room to play with and hence can load vastly more information about the kernel. However, it is still in real mode and can do a lot
-of damage if not handled appropriately. Here, we want to do the following:
-1. Print a help message
-2. Enable A20 line
-3. Setup GDTR
-4. Move to 32-bit mode
-5. Get the full memory map of the system
-6. Setup COM connections for serial ports
-7. Check CPU features
-8. Enable graphics mode(s)
+#### Stage 1
+All this stage does is load drive information from the floppy disk, then looks for and loads the second stage into memory. Due to restrictions with byte count (we only have 446 or so bytes to write into), this stage is written exclusively in Assembly.
 
-### Later kernel
-This stage is currently under construction.
+#### Stage 2
+This stage is far more complicated; it has many more roles to fill and many more places to go wrong. The general things in order are as follows:
+1. Enable A20, if it exists. (There is an assumption that the CPU was made after 2000)
+2. Load the GDT
+3. Jump into protected mode
+4. Call into C code
+5. Obtain memory map
+6. Obtain framebuffer information
+7. Load the kernel to memory
+8. Call into the kernel via a function pointer
 
+
+### Kernel
+This stage is under construction.
 
 # Understanding Assembly
 

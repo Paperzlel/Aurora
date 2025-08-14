@@ -40,8 +40,7 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
 
     kmain kernel_start = (kmain)kernel;
     kernel_start();
-
-    printf("Video RAM is at %X.", 0xB8000);
+    
 end:
     for (;;);
 }

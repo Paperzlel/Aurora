@@ -4,6 +4,10 @@
 
 #define __cdecl __attribute__((cdecl))
 
+void __cdecl x86_outb(uint16_t p_port, uint8_t p_data);
+
+uint8_t __cdecl x86_inb(uint16_t p_port);
+
 bool __cdecl x86_Drive_GetDriveParameters(uint8_t p_drive_no, 
             uint8_t *out_drive_type, 
             uint16_t *out_cylinder_count, 
