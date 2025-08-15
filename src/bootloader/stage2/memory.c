@@ -36,3 +36,7 @@ int memcmp(const void *str1, const void *str2, int n) {
 
     return 0;
 }
+
+uint32_t segofs_to_linear(uint16_t p_segment, uint16_t p_offset) {
+    return ((uint32_t)p_segment << 4) + ((uint32_t)p_offset);
+}

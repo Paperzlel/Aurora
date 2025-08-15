@@ -26,3 +26,5 @@ bool __cdecl x86_Drive_ResetDisk(uint8_t p_drive_no);
 uint8_t __cdecl x86_Memory_GetMemoryRegion(uint16_t p_region,
             uint16_t *p_out_region,
             void *p_out_data);
+
+bool __cdecl x86_VBE_GetVESAInfo(void *p_struct, uint8_t *p_is_supported);

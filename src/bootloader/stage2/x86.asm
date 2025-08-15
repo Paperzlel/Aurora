@@ -230,6 +230,8 @@ x86_Memory_GetMemoryRegion:
     mov ebp, esp
 
     x86_prot_to_real
+    
+    [bits 16]
 
     push ebx
     push ecx
@@ -238,7 +240,6 @@ x86_Memory_GetMemoryRegion:
     push edi
     push es
 
-    [bits 16]
 
     xor eax, eax
     mov eax, 0xe820
@@ -270,6 +271,62 @@ x86_Memory_GetMemoryRegion:
     push eax
 
     x86_real_to_prot
+
+    [bits 32]
+
+    pop eax
+
+    mov esp, ebp
+    pop ebp
+    ret
+
+
+global x86_VBE_GetVESAInfo
+x86_VBE_GetVESAInfo:
+    [bits 32]
+
+    push ebp
+    mov ebp, esp
+
+    x86_prot_to_real
+
+    [bits 16]
+
+    push es
+    push edi
+    push esi
+
+    linear_to_seg_ofs [bp + 8], es, edi, di
+
+    mov ax, 0x4f00
+    int 0x10
+    cmp al, 0x4f
+    je .success
+    
+    xor ax, ax
+    jmp .done
+
+.success:
+    mov ax, 1
+
+.done:
+
+    mov bx, ax
+    xor eax, eax        ; Crappy clear to hopefully fix an issue with EAX
+    mov ax, bx
+
+    linear_to_seg_ofs [bp + 12], es, esi, si
+    mov [es:si], ax
+
+    pop esi
+    pop edi
+    pop es
+
+    push eax
+
+    x86_real_to_prot
+
+    [bits 32]
 
     pop eax
 

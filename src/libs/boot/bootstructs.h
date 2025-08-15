@@ -25,3 +25,30 @@ typedef enum {
     // Bad memory; do not use.
     MEMORY_REGION_BAD = 5
 } MemoryRegionType;
+
+typedef struct {
+    uint32_t address;
+
+    uint16_t size;
+    uint16_t width;
+    uint16_t height;
+    uint8_t bpp;
+
+    uint8_t red_mask;
+    uint8_t red_position;
+    uint8_t green_mask;
+    uint8_t green_position;
+    uint8_t blue_mask;
+    uint8_t blue_position;
+} VESA_Framebuffer;
+
+typedef struct {
+    int framebuffer_count;
+    VESA_Framebuffer *framebuffers;
+} VESA_FramebufferMap;
+
+typedef struct {
+    VESA_FramebufferMap framebuffer_map;
+    MemoryMap memory_map;
+    uint16_t boot_device;
+} BootInfo;

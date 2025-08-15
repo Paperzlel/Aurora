@@ -21,9 +21,17 @@ We want to understand how an OS works, and this project is aimed at doing just t
 ## Requirements
 There are several different tools one needs. The command to install all of them is below:
 ```
-$ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo nasm mtools qemu-system-x86 bochs-x bochsbios vgabios
+$ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo nasm mtools qemu-system-x86 alien
 ```
 Use other `apt` derivatives for other distros.
+
+To install `bochs`, go to [here](https://sourceforge.net/projects/bochs/) and grab the latest RPM package (I personally recommend 3.0). Then once it's installed, go to its repository and do the following commands:
+```
+sudo alien bochs_3.0-1.x86_64.rpm
+sudo dpkg -i [new_package_name].deb
+```
+This should install the latest version of `bochs` for you properly. This is preferred over the `apt` package as that one is only 2.7 and the VGA BIOS on that version had several issues that meant our bootloader would not work. It also meant I had to reinstall my distro, but that's another story.
+*Please note: This may require you to install a newer version of your distro. Please do so if needed.*
 
 ## Building
 
@@ -54,7 +62,7 @@ To load GDB for QEMU, do the following steps:
 5. Add a breakpoint with the command `break *0x[address]`
 6. Run the command `continue` to move to that breakpoint.
 
-For any extra references, see [this link](https://stackoverflow.com/questions/1471226/most-tricky-useful-commands-for-gdb-debugger)
+For any extra references, see [this link](https://stackoverflow.com/questions/1471226/most-tricky-useful-commands-for-gdb-debugger).
 
 ## Known errors
 - Some parts of the code (e.g. the `org` instruction in the bootloader, call to `start`) will flag as an error when using NASM in VSCode. These are expected, as different binary formats have different errors and our bootloader is written as a flat binary whereas our kernel is written to `elf` standards. If they come up, don't panic! The compilers (should) know what they're doing and fix them for us.
