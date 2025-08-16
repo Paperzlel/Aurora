@@ -29,22 +29,18 @@ typedef enum {
 typedef struct {
     uint32_t address;
 
-    uint16_t size;
     uint16_t width;
     uint16_t height;
     uint8_t bpp;
-
-    uint8_t red_mask;
-    uint8_t red_position;
-    uint8_t green_mask;
-    uint8_t green_position;
-    uint8_t blue_mask;
-    uint8_t blue_position;
+    
+    uint16_t bytes_per_line;
+    uint16_t mode_id;
 } VESA_Framebuffer;
 
 typedef struct {
-    int framebuffer_count;
-    VESA_Framebuffer *framebuffers;
+    VESA_Framebuffer framebuffer;
+    const char *vendor_name;
+    const char *product_name;
 } VESA_FramebufferMap;
 
 typedef struct {

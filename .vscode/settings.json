@@ -1,6 +1,7 @@
 {
     "files.problemExclude": [
-        "src/bootloader/main.asm"
+        "src/bootloader/stage1/main.asm",
+        "src/bootloader/stage2/entry.asm",
     ],
     "makefile.configureOnOpen": false,
     "files.associations": {

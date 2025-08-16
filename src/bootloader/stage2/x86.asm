@@ -256,7 +256,6 @@ x86_Memory_GetMemoryRegion:
     mov cl, 255             ; If carry flag is set, the function failed. Change the output to something silly to make it obvious it failed.
 
 .worked:
-
     linear_to_seg_ofs [bp + 12], es, esi, si
     mov [es:si], bx
     mov al, cl
@@ -294,7 +293,6 @@ x86_VBE_GetVESAInfo:
 
     push es
     push edi
-    push esi
 
     linear_to_seg_ofs [bp + 8], es, edi, di
 
@@ -303,22 +301,63 @@ x86_VBE_GetVESAInfo:
     cmp al, 0x4f
     je .success
     
-    xor ax, ax
+    xor eax, eax
     jmp .done
 
 .success:
     mov ax, 1
 
 .done:
+    pop edi
+    pop es
 
-    mov bx, ax
-    xor eax, eax        ; Crappy clear to hopefully fix an issue with EAX
-    mov ax, bx
+    push eax
 
-    linear_to_seg_ofs [bp + 12], es, esi, si
-    mov [es:si], ax
+    x86_real_to_prot
 
-    pop esi
+    [bits 32]
+
+    pop eax
+
+    mov esp, ebp
+    pop ebp
+    ret
+
+global x86_VBE_GetVESAVideoModeInfo
+x86_VBE_GetVESAVideoModeInfo:
+    [bits 32]
+
+    push ebp
+    mov ebp, esp
+
+    x86_prot_to_real
+
+    [bits 16]
+
+    push es
+    push edi
+    push ecx
+
+    mov cx, [bp + 8]
+
+    linear_to_seg_ofs [bp + 12], es, edi, di
+
+    mov ax, 0x4f01
+    int 0x10
+    cmp al, 0x4f
+    jne .failed
+
+    and ah, 1
+    jnz .failed
+    
+    mov eax, 1
+    jmp .done
+
+.failed:
+    xor eax, eax
+
+.done:
+    pop ecx
     pop edi
     pop es
 

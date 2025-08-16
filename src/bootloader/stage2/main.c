@@ -22,7 +22,15 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
     boot.boot_device = boot_drive;
     memory_get_mem_map(&boot.memory_map);
 
-    VESA_get_framebuffers(&boot.framebuffer_map);
+    // There is a small chance we COULD run the OS without any framebuffer information, but since we need it for everything else we're going to throw
+    // an error here instead.
+    if (!VESA_get_framebuffers(&boot.framebuffer_map)) {
+        printf("Failed to obtain VESA framebuffers, unable to draw.\n");
+        goto end;
+    }
+
+    VESA_Framebuffer fb = boot.framebuffer_map.framebuffer;
+    printf("Using framebuffer with resolution %dx%d and BPP %d.\n", fb.width, fb.height, fb.bpp);
 
     DISK out_disk;
     if (!disk_initialize(&out_disk, boot_drive)) {

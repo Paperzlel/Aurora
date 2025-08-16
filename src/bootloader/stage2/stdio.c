@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "x86.h"
+#include "memory.h"
 
 // Included from GCC's freestanding library, as implementing them ourselves is a pain
 #include <stdarg.h>
@@ -25,6 +26,16 @@ void movecursor(int x, int y) {
     x86_outb(FB_DATA_PORT, (res >> 8) & 0xff);
     x86_outb(FB_COMMAND_PORT, 15);
     x86_outb(FB_DATA_PORT, res & 0x00ff);
+}
+
+void scroll_screen(uint32_t p_amount) {
+    for (int i = p_amount; i < SCREEN_HEIGHT; i++) {
+        memcpy((uint8_t *)&video_memory[2 * (i - p_amount) * SCREEN_WIDTH], (uint8_t *)&video_memory[2 * i * SCREEN_WIDTH], 2 * SCREEN_WIDTH);
+    }
+
+    for (int x = 0; x < SCREEN_WIDTH; x++) {
+        putchr(x, SCREEN_HEIGHT - 1, '\0');
+    }
 }
 
 void putchr(int x, int y, char c) {
@@ -61,6 +72,11 @@ void putc(char c) {
             putchr(p_screen_x, p_screen_y, c);
             p_screen_x++;
             break;
+    }
+
+    if (p_screen_y >= SCREEN_HEIGHT) {
+        p_screen_y = SCREEN_HEIGHT - 1;
+        scroll_screen(1);
     }
 
     movecursor(p_screen_x, p_screen_y);

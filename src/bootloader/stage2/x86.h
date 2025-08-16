@@ -27,4 +27,7 @@ uint8_t __cdecl x86_Memory_GetMemoryRegion(uint16_t p_region,
             uint16_t *p_out_region,
             void *p_out_data);
 
-bool __cdecl x86_VBE_GetVESAInfo(void *p_struct, uint8_t *p_is_supported);
+bool __cdecl x86_VBE_GetVESAInfo(void *p_struct);
+
+bool __cdecl x86_VBE_GetVESAVideoModeInfo(uint16_t p_video_mode,
+            void *p_out_data);
