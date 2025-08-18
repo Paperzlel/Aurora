@@ -59,6 +59,7 @@ section .text
 
 %endmacro
 
+
 global x86_outb
 x86_outb:
     mov al, [esp + 8]
@@ -66,11 +67,13 @@ x86_outb:
     out dx, al
     ret
 
+
 global x86_inb
 x86_inb:
     mov dx, [esp + 4]
     in al, dx
     ret
+
 
 global x86_Drive_GetDriveParameters
 x86_Drive_GetDriveParameters:
@@ -90,7 +93,7 @@ x86_Drive_GetDriveParameters:
     mov dl, [bp + 8]            ; Get drive no.
     mov ah, 0x08
     mov di, 0
-    mov es, di                  ; 0x0000:0x0000 to fix some bioses
+    mov es, di                  ; 0x0000:0x0000 to fix an error on some BIOSes
     stc
     int 0x13
 
@@ -136,6 +139,7 @@ x86_Drive_GetDriveParameters:
     mov esp, ebp
     pop ebp
     ret
+
 
 global x86_Drive_ReadDisk
 x86_Drive_ReadDisk:
@@ -322,6 +326,7 @@ x86_VBE_GetVESAInfo:
     mov esp, ebp
     pop ebp
     ret
+
 
 global x86_VBE_GetVESAVideoModeInfo
 x86_VBE_GetVESAVideoModeInfo:

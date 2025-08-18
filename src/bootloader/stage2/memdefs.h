@@ -12,10 +12,10 @@
 #define MEMORY_AVAILABLE_MIN 0x00007e00
 #define MEMORY_AVAILABLE_MAX 0x0007ffff
 
-#define MEMORY_FAT_FS (void *)      0x00010000
+#define MEMORY_FAT_FS (void *)      0x00010000  // Pointer to FAT filesystem offset
 #define MEMORY_FAT_SIZE             0x00010000  // Load at address, save space for rest of the filesystem
 
-#define KERNEL_LOAD_ADDR (void *)   0x00020000
+#define KERNEL_LOAD_ADDR (void *)   0x00020000  // Pointer to kernel load offset
 #define KERNEL_LOAD_SIZE            0x00010000  // Kernel loads here, move on later in life
 
 // Extended BIOS data area      0x00080000 - 0x0009ffff

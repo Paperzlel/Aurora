@@ -1,59 +1,67 @@
-# Project Aurora
-
-My own OS, based on the work of nanobyte.
+# Aurora
+A custom operating system designed for i386 architectures and based on the work of nanobyte.
 
 ## Project Vision
 
-We want to understand how an OS works, and this project is aimed at doing just that - to understand what exactly goes on when we load up our computers. Aurora is designed to be easy-to-read and easy-to-understand, at least with some amount of reading on the topic.
+### Overview
+As a naturally curious person, I wanted to find out how operating systems worked. Rather than comb my way through the Linux kernel (which whilst a good source, is not for the faint of heart), I wanted to learn the hard way - by creating something of my own. 
+
+Because of this aim, Aurora is designed to be clear in what it's doing - at least to the extent of understanding what the code does (the why part would make the majority of the repository comments, and that is more the task of a YouTube series - see nanobyte's for an idea of what I'm talking about). The code may not be fast, but what is sacrifices in that is readability and digestion.
+
+### Short-term goals
+As of writing, the goal for the project is fairly simple: create a basic shell window, and create a command to display the contents of a text file into the shell window. 
+
+Whilst on paper this seems fairly simple, in practice there is plenty more to do than just this - at time of writing, the bootloader has only just been finished and the kernel is little more than a *"Hello, World!"* in the terminal. Many other items, displayed out in the sections below, need to be accomplished before the majority of the aforementioned code can be written.
+
+### Long-term goals
+I would lie if I said that there was no greater goal than the short-term ones, however many of these are simply aspirational and unlikely to be accomplished in a human lifetime. This does not mean they will never happen, just that they are unlikely to be done any time soon.
+
+- Create a multi-drive bootloader (i.e. booting from disk image/hard drive)
+- Make the project bootable on real-world media
+- Create an Intel/AMD GPU driver
+- Create an NVidia driver (less likely than above, lack of documentation)
+- Create a compiler/C extension for GCC to compile on-disk
 
 ## To-do list
-
-- [x] Create a basic printing function for Assembly without using kernel things
-- [x] Create the bootloader that can load the OS from memory
-- [x] Implement printf and other print family functions for our stage2 bootloader
-- [x] Implement a C-based FAT driver to load the kernel
-- [x] Load the kernel into memory
-- [ ] Create basic serial port I/O
-- [ ] Configure keyboard output from the user
-- [ ] Read a file from a floppy disk and print its contents using a command (say `rdfile /test/test.txt`, for instance)
-
+See [this list](https://www.github.com/Paperzlel/Aurora/blob/main/TODO.md) for a full rundown of what has been done and still needs to be done. This is not an exclusive list and may or may not be updated as the project goes on.
 
 ## Requirements
-There are several different tools one needs. The command to install all of them is below:
+The command(s) below will install the majority of the required packages for building.
+
+**Debian-based:**
 ```
 $ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo nasm mtools qemu-system-x86 alien
 ```
-Use other `apt` derivatives for other distros.
+(TODO: Update this package list for non-Debian distros; help is appreciated with updating this package list)
 
-To install `bochs`, go to [here](https://sourceforge.net/projects/bochs/) and grab the latest RPM package (I personally recommend 3.0). Then once it's installed, go to its repository and do the following commands:
+### Installing bochs
+To install `bochs`, go to [here](https://sourceforge.net/projects/bochs/) and grab the latest RPM package (I personally recommend 3.0). Then once it's installed, go to its downloaded folder and type the following commands:
 ```
 sudo alien bochs_3.0-1.x86_64.rpm
 sudo dpkg -i [new_package_name].deb
 ```
-This should install the latest version of `bochs` for you properly. This is preferred over the `apt` package as that one is only 2.7 and the VGA BIOS on that version had several issues that meant our bootloader would not work. It also meant I had to reinstall my distro, but that's another story.
+This should install the latest version of `bochs` for you properly. We do this as the current `bochs` package on `apt` is version 2.7, which has known issues with its VESA VBE BIOS, and since we use those instructions in the bootloader we require this version of `bochs`. Sorry.
+
 *Please note: This may require you to install a newer version of your distro. Please do so if needed.*
 
 ## Building
 
-In order to make an operating system, one must first create the universe. This is not always enjoyable to follow as a process, so we've provided a `make` option to do that for you. Running `make toolchain` will install and build `binutils` and `gcc` from scratch, under a folder labelled `toolchain`. Ideally, this will compile custom versions of these tools to make OS development easier. If you experience errors during the process, go into your `Makefile` and change the version numbers for `binutils` and `gcc` until they work (downgrading may be better).
+### Toolchain (REQUIRED)
+In order to make an operating system, one must first create the universe. This is not always enjoyable to follow as a process, so we've provided a `make` option to create the universe for you. Running `make toolchain` will install and build `binutils` and `gcc` from scratch, under a folder labelled `toolchain`. These are custom versions specific to your PC, which are compiled in such a manner so that they contain no default references or depedencies and only use the code that we have strictly written.
 
-To build the OS itself, run `make` normally.
+If you experience errors during the process, go into your `Makefile` and change the version numbers for `binutils` and `gcc` until they work (downgrading may be better for some people, however this may bring up issues down the line).
+
+### Operating System
+To build the OS itself, run `make` normally. This will create 3 binary files: `stage1.bin`, `stage2.bin` and `kernel.bin`, as well as `.map` files for the kernel and stage 2. The entire OS itself is stored inside `main_floppy.img`.
 
 ## Running with qemu 
+Run the shell script `./run.sh` to run the OS with QEMU. 
 
-Run the shell script `./run.sh` to enter qemu.
+### Using GDB with QEMU
+Using GDB makes our lives vastly easier, as we can step through the code minimally and no longer require `bochs` for debugging our C code.
 
-## Running with bochs
+However, our current setup has some limitations: due to us using a `.bin` file over an `.elf` one, GDB cannot load the necessary debug symbols to read the stack or any of our variables we have set. A long-term plan to fix this for the kernel is in progress. The steps below have a limited level of usability, but do allow us to step through the bootloader with less difficulty than before.
 
-- Run `./debug.sh`
-- navigate to View - Disassemble (or press Ctrl+D) and type `0x7C00` and press OK on both prompts
-- double click on the first instruction to set a breakpoint. The line should turn red.
-- press Continue
-- if everything goes right, you will end up at address `0x7C00`. If the code looks different than boot.asm, run the Disassemble command again.
-
-## Using GDB
-
-Using GDB makes our lives vastly easier, as we no longer need to use bochs for everything (which it's only useful for during ASM processes). To use GDB does require some hacks, as we currently use bin files over ELF files, and this means we cannot get the debug symbols as-is.
 To load GDB for QEMU, do the following steps:
 1. Add `-s -S` before `-fda` on the `run.sh` command. This makes QEMU wait for us to connect with GDB.
 2. Run GDB with the command `gdb` and no other arguments
@@ -64,5 +72,16 @@ To load GDB for QEMU, do the following steps:
 
 For any extra references, see [this link](https://stackoverflow.com/questions/1471226/most-tricky-useful-commands-for-gdb-debugger).
 
-## Known errors
-- Some parts of the code (e.g. the `org` instruction in the bootloader, call to `start`) will flag as an error when using NASM in VSCode. These are expected, as different binary formats have different errors and our bootloader is written as a flat binary whereas our kernel is written to `elf` standards. If they come up, don't panic! The compilers (should) know what they're doing and fix them for us.
+## Running with bochs
+
+1. Run `./debug.sh`
+2. Navigate to View - Disassemble (or press Ctrl+D) and type `0x7C00` and press OK on both prompts
+3. Double-click on the first instruction to set a breakpoint. The line should turn red.
+4. Press Continue
+5. If everything goes right, you will end up at address `0x7C00`. If the code looks different than boot.asm, run the Disassemble command again.
+6. Repeat this for any other ASM code you may wish to debug, using the generated `.map` files for reference. 
+
+To view memory at any given time, press F7 and type in the address you wish to observe. From there, you can see all of the memory from that given address and its respective values
+
+## Contributing
+Anyone wishing to contribute code is welcome to do so, however do bear in mind that the project in its current form is still missing a vast majority of features and each feature will need to be considered heavily before being implemented. Contributing guidelines, pull reqest formatting, proposals and so forth will be formalized when there is need for such a process.

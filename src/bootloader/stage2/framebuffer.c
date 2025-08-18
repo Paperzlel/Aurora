@@ -132,7 +132,7 @@ typedef enum {
 VBE_InfoBlock a_info_block;
 VBE_VideoModeInfo a_video_info;
 
-bool VESA_get_framebuffers(VESA_FramebufferMap *p_out_framebuffer) {
+bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
     a_info_block.vbe_signature[0] = 'V';
     a_info_block.vbe_signature[1] = 'B';
     a_info_block.vbe_signature[2] = 'E';

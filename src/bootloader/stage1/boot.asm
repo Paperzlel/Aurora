@@ -14,9 +14,9 @@ bpb_bytes_per_sector: dw 512            ; No. of bytes per sector
 bpb_sectors_per_cluster: db 1           ; No. of sectors per cluster
 bpb_reserved_sectors: dw 1              ; No. of reserved sectors
 bpb_fat_count: db 2                     ; No. of File Allocation Tables (FAT's) on the media.
-bpb_root_entry_count: dw 0e0h           ; No. of root directory entries
+bpb_root_entry_count: dw 0x0e0          ; No. of root directory entries
 bpb_total_sectors: dw 2880              ; Total number of sectors (a 3.5" floppy has 1.44MB which is this in kB)
-bpb_media_descriptor_type: db 0f0h      ; Media descriptor type (0x0f0 is 3.5" floppy disk)
+bpb_media_descriptor_type: db 0x0f0     ; Media descriptor type (0x0f0 is 3.5" floppy disk)
 bpb_sectors_per_fat: dw 9               ; No. of sectors per FAT disk (only FAT12, 9 sectors/fat on this disk model)
 bpb_sectors_per_track: dw 18            ; Sectors per track (18 for a 1.44MB floppy)
 bpb_heads: dw 2                         ; No. of heads per disk (2 for us as it's a double-sided floppy disk)
@@ -24,12 +24,12 @@ bpb_hidden_sectors: dd 0                ; No. of hidden sectors prior to this FA
 bpb_large_sector_count: dd 0            ; No. of logical sectors (leave blank for now)
 
 ; Extended boot record for BPB
-bpb_drive_number: db 0                  ; Physical drive number, is zero as the drive is the first removable media.
-bpb_reserved: db 0                      ; Reserved value
-bpb_extended_boot_signature: db 29h     ; Boot signature, needs to be 0x29 for the next 3 entries to exist.
-bpb_volume_id: db 12h, 24h, 36h, 48h    ; Volunme ID (serial number), can be anything we want :)
-bpb_volume_label: db 'AURORA      '     ; Partition label, 11 bytes and needs to be padded for space
-bpb_file_system_type: db 'FAT12   '     ; File system type, 8 bytes and padded with space
+bpb_drive_number: db 0                      ; Physical drive number, is zero as the drive is the first removable media.
+bpb_reserved: db 0                          ; Reserved value
+bpb_extended_boot_signature: db 0x29        ; Boot signature, needs to be 0x29 for the next 3 entries to exist.
+bpb_volume_id: db 0x12, 0x24, 0x36, 0x48    ; Volunme ID (serial number), can be anything we want :)
+bpb_volume_label: db 'AURORA      '         ; Partition label, 11 bytes and needs to be padded for space
+bpb_file_system_type: db 'FAT12   '         ; File system type, 8 bytes and padded with space
 
 
 ; BOOTLOADER
@@ -136,7 +136,7 @@ start:
 
     mov bx, STAGE2_LOAD_SEGMENT
     mov es, bx
-    mov bx, STAGE2_LOAD_OFFSET          ; Set offset to 0x0000:0x0500
+    mov bx, STAGE2_LOAD_OFFSET          ; Set offset to 0x0000:0x0500 as the entrypoint for stage 2
 
 .load_stage2_sectors:
 
@@ -145,7 +145,7 @@ start:
     add ax, 31                      ; Hard-coded because we can't read in ax and bx from earlier
 
     mov cl, 1
-    mov dl, [bpb_drive_number]
+    mov dl, [bpb_drive_number]      ; Re-conf
     call read_disk                  ; Read stage 2 into memory
 
     add bx, [bpb_bytes_per_sector]  ; Increment offset to read next sector in
@@ -244,7 +244,7 @@ read_disk:
     push bx
     push cx
     push dx
-    push di
+    push di                     ; Push registers
 
     push cx                     ; Save cl
     call lba_to_chs             ; Compute CHS
@@ -254,7 +254,7 @@ read_disk:
     mov di, 3                   ; Save retry count
 
 .retry:
-    pusha                       ; Panic-save all to stack
+    pusha                       ; Panic-save all registers to stack
     stc                         ; Set carry flag
     int 0x13
     jnc .done                   ; Jump if no error
@@ -271,7 +271,7 @@ read_disk:
 
 .done:
     popa 
-    pop di
+    pop di                      ; Pop manually saved registers
     pop dx
     pop cx
     pop bx
@@ -311,7 +311,7 @@ disk_reset:
 wait_and_reboot:
     mov ah, 0
     int 16h
-    jmp 0FFFFh:0            ; Jump to beginning of bios, which reboots.
+    jmp 0x0FFFF:0            ; Jump to beginning of bios, which reboots.
 
 .halt:
     cli
@@ -362,6 +362,6 @@ stage2_name: db 'STAGE2  BIN'
 stage2_cluster: dw 0
 
 times 510-($-$$) db 0
-dw 0aa55h
+dw 0xaa55
 
 buffer:

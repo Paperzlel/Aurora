@@ -5,13 +5,13 @@ section .entry
 extern __bss_start
 extern __end
 
-extern start
+extern start                            ; C entry function using cdecl calling convention
 global entry
 
 entry:
     cli
 
-    mov [g_boot_drive], dl              ; Save boot drive number for later
+    mov [a_boot_drive], dl              ; Save boot drive number for later
 
     mov ax, ds
     mov ss, ax
@@ -26,22 +26,22 @@ entry:
     cmp ah, al
     jne enable_a20      ; If A20 is disabled, then we need to enable it. But if it's not, then there's no need to do so, and we can
                         ; move on with our lives.
-    call load_gdt
+    call load_gdt       ; Load Global Descriptor Table, which will need to be re-configured and re-loaded when we reach the kernel 
 
     mov eax, cr0
     or eax, 1
-    mov cr0, eax
+    mov cr0, eax                            ; Set PE bit of CR0
 
-    jmp dword 08h:.protected_mode
-
+    jmp dword 0x08:.protected_mode          ; Far jump into protected mode
+                                            ; Code selector here is 0x08
 .protected_mode:
     [bits 32]
 
-    mov ax, 0x10
+    mov ax, 0x10                            ; Data selector is 0x10
     mov ds, ax
     mov ss, ax
 
-    ; Clear bss (since it can have garbage data when loading in, this is done via memset in the kernel)
+    ; Clear all data in __bss so it is unintialized properly, instead of potential garbage values (this may not always happen)
     mov edi, __bss_start
     mov ecx, __end
     sub ecx, edi
@@ -50,7 +50,7 @@ entry:
     rep stosb                   ; Repeat the process until 0 has been reached (set from ecx - edi)
 
     xor edx, edx
-    mov dl, [g_boot_drive]
+    mov dl, [a_boot_drive]      ; Move boot
     push edx
     call start
 
@@ -144,9 +144,9 @@ check_a20:
 .exit:
     mov al, [buffer_below_mb]
     mov [ds:si], al
-    mov al, [buffer_above_mb]
+    mov al, [buffer_above_mb]           ; Restore values to previous value
     mov [es:di], al
-    shr ax, 8
+    shr ax, 8                           ; Clear ax
 
     pop di
     pop si
@@ -154,13 +154,16 @@ check_a20:
     pop es
     ret
 
+;
+; Loads the GDT saved in memory to the CPU, to load our code and data segments properly
+;
 load_gdt:
     [bits 16]
     lgdt [gdt_desc]
     ret
 
 
-g_boot_drive: db 0
+a_boot_drive: db 0
 buffer_below_mb: db 0
 buffer_above_mb: db 0
 
@@ -168,7 +171,7 @@ buffer_above_mb: db 0
 ; See http://www.osdever.net/tutorials/view/the-world-of-protected-mode for some insight on why each register is set as such
 ; Also see https://wiki.osdev.org/Global_Descriptor_Table for more info on how it's laid out
 ; Remember to read each doubleword right to left from the tables (little-endian)
-g_gdt:
+a_gdt:
     dq 0                        ; NULL descriptor, 8 bytes
 
     ; 32-bit code segment
@@ -208,5 +211,5 @@ g_gdt:
     db 00001111b                ; No granularity + 16-bit protected mode
     db 0
 
-gdt_desc:   dw gdt_desc - g_gdt - 1     ; Size of the GDT in bytes
-            dd g_gdt                    ; Address of the GDT
+gdt_desc:   dw gdt_desc - a_gdt - 1     ; Size of the GDT in bytes
+            dd a_gdt                    ; Address of the GDT

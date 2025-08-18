@@ -33,6 +33,7 @@ bool memory_get_mem_map(MemoryMap *p_out_map) {
         if (region.length == 0) {
             continue;
         }
+
         a_regions[a_region_count].base_address = region.base_address;
         a_regions[a_region_count].length = region.length;
         a_regions[a_region_count].type = region.type;
