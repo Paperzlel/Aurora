@@ -7,7 +7,7 @@
 - [ ] Add support for non-FAT file types
 
 ### Stage 1
-- [ ] Optimise file size for extra information
+- [x] Optimise file size for extra information
 
 ### Stage 2
 - [x] Add support for ELF files for the kernel

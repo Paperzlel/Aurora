@@ -115,7 +115,7 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
     }
 
     printf("Stage 2: Entering kernel...\n");
-    // kernel_start(&boot);
+    kernel_start(&boot);
     
 end:
     for (;;);
