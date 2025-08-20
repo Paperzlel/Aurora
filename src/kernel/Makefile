@@ -17,11 +17,11 @@ scaffold:
 	@mkdir -p $(BUILD_DIR)/kernel/asm
 	@mkdir -p $(BUILD_DIR)/kernel/c
 
-kernel: $(BUILD_DIR)/kernel.bin
+kernel: $(BUILD_DIR)/kernel.elf
 
-$(BUILD_DIR)/kernel.bin: $(OBJECTS_ASM) $(OBJECTS_C)
+$(BUILD_DIR)/kernel.elf: $(OBJECTS_ASM) $(OBJECTS_C)
 	@$(TARGET_LD) $(TARGET_LDFLAGS) -Wl,-Map=$(BUILD_DIR)/kernel.map -o $@ $^ $(TARGET_LIBS)
-	@echo Created kernel.bin
+	@echo Created kernel.elf
 
 $(BUILD_DIR)/kernel/c/%.o: %.c
 	@echo 	Compiling $<...
@@ -33,4 +33,4 @@ $(BUILD_DIR)/kernel/asm/%.o: %.asm
 	@$(ASM) $(TARGET_ASMFLAGS) -o $@ $< 
 
 clean:
-	@rm -f $(BUILD_DIR)/kernel.bin
+	@rm -f $(BUILD_DIR)/kernel.elf

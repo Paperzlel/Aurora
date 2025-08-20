@@ -237,6 +237,6 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
     p_out_framebuffer->vendor_name = vendor_name;
     p_out_framebuffer->product_name = product_name;
     
-    printf("VESA version %x\n", a_info_block.vbe_version);
+    printf("VESA: Running VESA VBE version %x\n", a_info_block.vbe_version);
     return true;
 }

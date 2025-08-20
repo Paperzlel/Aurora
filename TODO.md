@@ -10,7 +10,7 @@
 - [ ] Optimise file size for extra information
 
 ### Stage 2
-- [ ] Add support for ELF files for the kernel
+- [x] Add support for ELF files for the kernel
 - [ ] Add timestamp information
 - [ ] Add serial port I/O configuration
 - [ ] Implement detection of a keyboard for a boot requirement
@@ -19,7 +19,7 @@
 - [ ] Implement loading of the GDT again due to protected mode swapping
 - [ ] Create an IDT for error handling/IO messages
 - [ ] Add CPUID checks for different features
-- [ ] Add Virtual 8086 Mode to 
+- [ ] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
 - [ ] Add paging
 - [ ] Add a virtual filesystem
 - [ ] Create module handling

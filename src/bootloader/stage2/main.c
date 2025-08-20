@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "memdefs.h"
 #include "fat.h"
+#include "elf.h"
 #include "memory.h"
 #include "memdetect.h"
 #include "framebuffer.h"
@@ -38,13 +39,13 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         }
 
         // Can map directly to a region
-        if (r.base_address == KERNEL_BASE_ADDR) {
+        if (r.base_address == (uint32_t)KERNEL_BASE_ADDR) {
             can_map_kernel = true;
             break;
         }
 
         // Is not the bottom of a region, but the kernel can map to a part of it
-        if (r.base_address < KERNEL_BASE_ADDR && r.base_address + r.length > KERNEL_BASE_ADDR) {
+        if (r.base_address < (uint32_t)KERNEL_BASE_ADDR && r.base_address + r.length > (uint32_t)KERNEL_BASE_ADDR) {
             can_map_kernel = true;
             break;
         }
@@ -65,9 +66,6 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         goto end;
     }
 
-    VESA_Framebuffer fb = boot.framebuffer_map.framebuffer;
-    printf("Using framebuffer with resolution %dx%d and BPP %d.\n", fb.width, fb.height, fb.bpp);
-
     DISK out_disk;
     if (!disk_initialize(&out_disk, boot_drive)) {
         printf("Failed to initialize disk controller; unable to launch kernel.\n");
@@ -79,19 +77,44 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         goto end;
     }
 
-    FAT_File *file = fat_open(&out_disk, "kernel.bin");
-    uint32_t read;
-    uint8_t *buf = kernel;
-
-    printf("%d bytes in file.\n", file->size);
-
-    while((read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf))) {
-        memcpy(buf, kernel_load_buf, read);
-        buf += read;
-    }
+    FAT_File *file = fat_open(&out_disk, "kernel.elf");
+    // Load kernel into buffer
+    uint32_t read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf);
     fat_close(file);
 
-    kmain kernel_start = (kmain)kernel;
+    uint8_t *buf = kernel;
+    kmain kernel_start = NULL;
+
+    if (elf_is_elf(kernel_load_buf)) {
+        // Load rest of ELF header; it's segmented so it needs to be loaded differently
+
+        printf("Stage 2: Checking ELF data is the correct format.\n");
+        if (!elf_is_valid_format((ELF_Header *)kernel_load_buf)) {
+            printf("Invalid format for ELF file.\n");
+            goto end;
+        }
+
+        void *entrypoint = NULL;
+
+        printf("Stage 2: Loading ELF file data into memory...\n");
+        if (!elf_read((ELF_Header *)kernel_load_buf, kernel_load_buf, &entrypoint)) {
+            printf("Unable to read ELF file.\n");
+            goto end;
+        }
+
+        printf("Stage 2: Loaded ELF successfully and found kernel entrypoint at %x.\n", entrypoint);
+        kernel_start = (kmain)entrypoint;
+    } else {
+        printf("Stage 2: Could not detect ELF, loading raw bin...\n");
+        // Assumes that the file is a .BIN and can be read directly
+        // This mode will probably be deprecated in the future
+        memcpy(buf, kernel_load_buf, read);
+        buf += read;
+
+        kernel_start = (kmain)kernel;
+    }
+
+    printf("Stage 2: Entering kernel...\n");
     // kernel_start(&boot);
     
 end:

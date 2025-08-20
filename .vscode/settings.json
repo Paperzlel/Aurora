@@ -18,6 +18,8 @@
         "typeindex": "c",
         "typeinfo": "c",
         "cpuid.h": "c",
-        "memdetect.h": "c"
+        "memdetect.h": "c",
+        "cstdint": "c",
+        "compare": "c"
     },
 }

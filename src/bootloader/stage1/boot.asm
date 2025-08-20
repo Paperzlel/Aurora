@@ -69,8 +69,7 @@ start:
 
     ; Calculate root directory sector count
     mov al, [bpb_root_entry_count]      ; Setup for multiplying root entry count
-    mov ah, 32 
-    mul ah
+    shl al, 5                           ; Faster to bit-shift than multiply
 
     mov bx, [bpb_bytes_per_sector]
     dec bx

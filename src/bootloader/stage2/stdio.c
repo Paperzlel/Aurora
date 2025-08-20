@@ -19,6 +19,23 @@ const unsigned DEFAULT_COLOUR = 0x07;       // change bit 1 for background, bit 
 int p_screen_x = 0;
 int p_screen_y = 0;
 
+void putchr(int x, int y, char c) {
+    video_memory[2 * (y * SCREEN_WIDTH + x)] = c; // y * scr_width + x is cell offset, mul by two because of the two-byte size
+}
+
+void putcolour(int x, int y, uint8_t colour) {
+    video_memory[2 * (y * SCREEN_WIDTH + x) + 1] = colour;
+}
+
+void clrscr() {
+    for (int y = 0; y < SCREEN_HEIGHT; y++) {
+        for (int x = 0; x < SCREEN_WIDTH; x++) {
+            putchr(x, y, '\0');
+            putcolour(x, y, DEFAULT_COLOUR);
+        }
+    }
+}
+
 void movecursor(int x, int y) {
     uint16_t res = (y * SCREEN_WIDTH + x);
 
@@ -38,22 +55,6 @@ void scroll_screen(uint32_t p_amount) {
     }
 }
 
-void putchr(int x, int y, char c) {
-    video_memory[2 * (y * SCREEN_WIDTH + x)] = c; // y * scr_width + x is cell offset, mul by two because of the two-byte size
-}
-
-void putcolour(int x, int y, uint8_t colour) {
-    video_memory[2 * (y * SCREEN_WIDTH + x) + 1] = colour;
-}
-
-void clrscr() {
-    for (int y = 0; y < SCREEN_HEIGHT; y++) {
-        for (int x = 0; x < SCREEN_WIDTH; x++) {
-            putchr(x, y, '\0');
-            putcolour(x, y, DEFAULT_COLOUR);
-        }
-    }
-}
 
 void putc(char c) {
     switch (c) {
@@ -72,6 +73,11 @@ void putc(char c) {
             putchr(p_screen_x, p_screen_y, c);
             p_screen_x++;
             break;
+    }
+
+    if (p_screen_x >= SCREEN_WIDTH) {
+        p_screen_x = 0;
+        p_screen_y++;
     }
 
     if (p_screen_y >= SCREEN_HEIGHT) {

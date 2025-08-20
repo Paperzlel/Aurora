@@ -43,7 +43,7 @@ $(BUILD_DIR)/main_floppy.img: bootloader kernel
 	@mkfs.fat -F 12 -n "AUOS" $@ >/dev/null
 	@dd if=$(BUILD_DIR)/stage1.bin of=$@ conv=notrunc >/dev/null
 	@mcopy -i $@ $(BUILD_DIR)/stage2.bin "::stage2.bin"
-	@mcopy -i $@ $(BUILD_DIR)/kernel.bin "::kernel.bin"
+	@mcopy -i $@ $(BUILD_DIR)/kernel.elf "::kernel.elf"
 	@mmd -i $@ "::dev"
 	@mcopy -i $@ test.txt "::dev/test.txt"
 	@mcopy -i $@ NOTES.md "::dev/NOTES.md"
@@ -66,9 +66,9 @@ $(BUILD_DIR)/stage2.bin: scaffold
 
 # Kernel
 
-kernel: $(BUILD_DIR)/kernel.bin
+kernel: $(BUILD_DIR)/kernel.elf
 
-$(BUILD_DIR)/kernel.bin: scaffold stage1 stage2
+$(BUILD_DIR)/kernel.elf: scaffold stage1 stage2
 	@$(MAKE) -C src/kernel BUILD_DIR=$(abspath $(BUILD_DIR))
 
 clean:

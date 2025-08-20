@@ -185,7 +185,7 @@ bool fat_initialize(DISK *p_disk) {
     a_filesystem->root_directory.first_cluster = root_dir_lba;
     a_filesystem->root_directory.current_cluster = root_dir_lba;
     a_filesystem->root_directory.current_sector_in_cluster = 0;
-    printf("Setup root directory with size %d and first cluster no. %d.\n", a_filesystem->root_directory.public_fa.size, root_dir_lba);
+    printf("FAT: Setup root directory with size %d and first cluster no. %d.\n", a_filesystem->root_directory.public_fa.size, root_dir_lba);
 
     if (!disk_read_sectors(p_disk, root_dir_lba, 1, a_filesystem->root_directory.buffer)) {
         printf("FAT: Failed to read root directory.\n");

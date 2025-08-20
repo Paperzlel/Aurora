@@ -42,7 +42,7 @@ bool memory_get_mem_map(MemoryMap *p_out_map) {
         current_region = next_region;
         a_region_count++;
 
-        printf("Memory: base=0x%llx length=0x%llx type=0x%x\n", region.base_address, region.length, region.type);
+        printf("Memory: region found, base=0x%llx length=0x%llx type=0x%x\n", region.base_address, region.length, region.type);
     }
 
     p_out_map->regions = a_regions;
