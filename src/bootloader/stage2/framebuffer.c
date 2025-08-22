@@ -85,7 +85,7 @@ typedef struct {
     uint8_t lsb_reserved_mask_position;             // bit position of LSB for reserved mask (shift count)
     uint32_t max_pixel_clock_speed;                 // Maximum pixel clock for graphics mode in Hz
     uint8_t reserved_2[190];
-} __attribute((packed)) VBE_VideoModeInfo;
+} __attribute__((packed)) VBE_VideoModeInfo;
 
 typedef enum {
     VBE_SUPPORTED = 1<< 0,

@@ -39,7 +39,7 @@ typedef struct {
     uint8_t bpp;                    // The number of bits per pixel, usually 32 for RGBA8 values
     
     uint16_t bytes_per_line;        // Number of bytes per scan line, may be greater than width * bpp due to padding
-    uint16_t mode_id;               // The ID of the VESA video mode, as the bootloader does not enable it by default.
+    uint16_t mode_id;               // The ID of the VESA video mode that was enabled by the bootloader
 } VESA_Framebuffer;
 
 // Structure that defines the framebuffer map for the system.

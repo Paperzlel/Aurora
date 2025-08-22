@@ -20,6 +20,9 @@
         "cpuid.h": "c",
         "memdetect.h": "c",
         "cstdint": "c",
-        "compare": "c"
+        "compare": "c",
+        "ranges": "c",
+        "stdio.h": "c",
+        "nondeduced6.C": "cpp"
     },
 }

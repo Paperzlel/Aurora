@@ -1,13 +1,14 @@
 TARGET_ASMFLAGS += -f elf
 TARGET_CFLAGS += -ffreestanding
 TARGET_LDFLAGS += -T linker.ld -nostdlib
-TARGET_CINCLUDES += -I../libs
+TARGET_CINCLUDES += -I../libs -I.
 TARGET_LIBS += -lgcc
 
-SOURCES_C = $(wildcard *.c)
-SOURCES_ASM = $(wildcard *.asm)
+SOURCES_C = $(subst ./,,$(shell find -type f -name "*.c"))
+SOURCES_ASM = $(subst ./,,$(shell find -type f -name "*.asm"))
 OBJECTS_C = $(patsubst %.c, $(BUILD_DIR)/kernel/c/%.o, $(SOURCES_C))
 OBJECTS_ASM = $(patsubst %.asm, $(BUILD_DIR)/kernel/asm/%.o, $(SOURCES_ASM))
+DIRECTORIES = $(subst .,,$(subst ./,/,$(subst $(BUILD_DIR),,$(shell find -type d))))
 
 .PHONY: all kernel clean scaffold
 
@@ -16,6 +17,8 @@ all: scaffold kernel
 scaffold:
 	@mkdir -p $(BUILD_DIR)/kernel/asm
 	@mkdir -p $(BUILD_DIR)/kernel/c
+	@mkdir -p $(addprefix $(BUILD_DIR)/kernel/asm,$(DIRECTORIES))
+	@mkdir -p $(addprefix $(BUILD_DIR)/kernel/c,$(DIRECTORIES))
 
 kernel: $(BUILD_DIR)/kernel.elf
 
