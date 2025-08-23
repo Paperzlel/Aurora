@@ -30,6 +30,9 @@ const char *a_exception_errors[22] = {
     "Control process exception"
 };
 
+// Array of all interrupt handlers, same as the number of interrupts.
+InterruptHandler a_handlers[256];
+
 /**
  * @brief Dummy definition to the function in "isr_list.c". Needed so we don't include it and get redefinition errors.
  */
@@ -40,6 +43,12 @@ void i686_idt_register_isrs();
  * @param p_regs Registers pushed to the stack by our ASM interrupt handler.
  */
 void __attribute__((cdecl)) i686_interrupt_handler(Registers *p_regs) {
+    // First launch into the handled interrupt, if it exists
+    if (a_handlers[p_regs->interrupt] != NULL) {
+        a_handlers[p_regs->interrupt](p_regs);
+        return;
+    }
+
     if (p_regs->interrupt < 22) {
         printf("Unhandled exception %d: %s\n", p_regs->interrupt, a_exception_errors[p_regs->interrupt]);
     } else {
@@ -63,4 +72,17 @@ void i686_isr_initialize() {
     for (int i = 0; i < 256; i++) {
         i686_idt_enable_isr(i);
     }
+}
+
+bool i686_isr_register_handler(int p_interrupt, InterruptHandler p_handler) {
+    if (a_handlers[p_interrupt] != NULL) {
+        return false;
+    }
+
+    a_handlers[p_interrupt] = p_handler;
+    return true;
+}
+
+void i686_isr_unregister_handler(int p_interrupt) {
+    a_handlers[p_interrupt] = NULL;
 }

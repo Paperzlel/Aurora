@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // Struct defining the different registers that are pushed to the stack during an interrupt.
 typedef struct {
@@ -22,8 +23,24 @@ typedef struct {
     uint32_t ss;                    // Stack segement, only pushed during ring changes, random value otherwise (like esp)
 } __attribute__((packed)) Registers;
 
+typedef void (*InterruptHandler)(Registers *);
+
 /**
  * @brief Initializes the ISR functions, or in other words loads all the needed data into the IDT and enables all the interrupts. Should save one or two for kernel
  * calls later on.
  */
 void i686_isr_initialize();
+
+/**
+ * @brief Registers the given handler to manager any interrupts over the default handler. Generally, handlers will be used in brief contexts like a V86 monitor,
+ * then pass interrupt control back to the default.
+ * @param p_interrupt The interrupt to handle differently
+ * @param p_handler The handler to use over the default
+ * @returns True if the handler could be registered, and false if there already was a handler attributed to said interrupt.
+ */
+bool i686_isr_register_handler(int p_interrupt, InterruptHandler p_handler);
+
+/**
+ * @brief NULLs the given handler to this interrupt. 
+ */
+void i686_isr_unregister_handler(int p_interrupt);

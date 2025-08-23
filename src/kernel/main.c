@@ -9,6 +9,9 @@
 #include "i686/gdt.h"
 #include "i686/idt.h"
 #include "i686/isr.h"
+#include "i686/tss.h"
+#include "i686/tasks/test.h"
+#include "i686/v86/v86_monitor.h"
 
 extern uint8_t __bss_start;
 extern uint8_t __end;
@@ -44,8 +47,15 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
     clrscr();
 
     i686_gdt_initialize();
+    i686_tss_initialize();
     i686_isr_initialize();
     i686_idt_initialize();
+
+    // TODO: Abstract.
+    uint8_t *p_test_start = get_task_start();
+    uint8_t *p_test_run = get_task_run();
+    uint8_t *p_test_end = get_task_end();
+    v86_load_task(p_test_start, p_test_run, p_test_end);    // Crashes, QEMU and bochs need a TSS 
 
     printf("Hello world from the kernel!!!!\n");
 
