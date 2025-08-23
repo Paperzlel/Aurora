@@ -27,22 +27,6 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
     // - Load ISR
     // - Load driver
     //      - Driver calls to v86 common routines when needed
-    //      - Driver may register a handle for any GPF that could occur
-
-    // v86 looks something like this
-    // entering:
-    // params: ss, esp, cs, eip
-    // mov ebp, esp
-    // push dword [ebp + 4]
-    // push dword [ebp + 8]
-    // pushfd
-    // or dword [esp], (1 << 17)
-    // push dword [ebp + 12]
-    // push dword [ebp + 16]
-    // iret                         ; IRET acts as if the data above is an interrupt, and is "tricking" our code into entering V86
-
-    // exiting is easier, have a v86 interrupt (see https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-system-programming-manual-325384.pdf)
-    // See 20.3.3.4 of above for how to deal with calling software interrupts
 
     clrscr();
 
@@ -53,9 +37,8 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
 
     // TODO: Abstract.
     uint8_t *p_test_start = get_task_start();
-    uint8_t *p_test_run = get_task_run();
     uint8_t *p_test_end = get_task_end();
-    v86_load_task(p_test_start, p_test_run, p_test_end);    // Crashes, QEMU and bochs need a TSS 
+    v86_load_task(p_test_start, p_test_end);
 
     printf("Hello world from the kernel!!!!\n");
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <i686/isr.h>
-
 /**
  * Runs Virtual 8086 code
  * Details:
@@ -13,8 +11,11 @@
  * - Every V86 task will use the same offset in memory
  */
 
+// Macro that defines the code segment that V86 runs
 #define V86_CODE_SEGMENT 0x1000
+// Macro that defines the data segment that V86 runs
 #define V86_DATA_SEGMENT 0x0000
+// Macro that defines the stack segment that V86 runs
 #define V86_STACK_SEGMENT 0x8000
 
 /**
@@ -27,4 +28,4 @@ void v86_monitor_initialize();
  * @param p_task_start Starting memory location of the task
  * @param p_task_end End memory location of the task
  */
-void v86_load_task(void *p_task_start, void *p_task_run, void *p_task_end);
+void v86_load_task(void *p_task_start, void *p_task_end);

@@ -2,9 +2,6 @@
 
 global __task_start
 __task_start:
-
-global __task_run
-__task_run:
     mov al, 3
     mov bl, 2
     mul ax

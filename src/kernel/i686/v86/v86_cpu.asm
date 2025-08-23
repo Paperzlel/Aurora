@@ -23,10 +23,10 @@ v86_enter_v86_handler:
 
     push ebx                ; Save registers that may have values in them
 
-    mov eax, [esp + 12]
-    mov ebx, [esp + 16]
-    mov ecx, [esp + 20]
-    mov edx, [esp + 24]
+    mov eax, [ebp + 8]
+    mov ebx, [ebp + 12]
+    mov ecx, [ebp + 16]
+    mov edx, [ebp + 20]
     int 0xfd                ; Call interrupt for entry
     
     pop ebx                 ; Restore registers
