@@ -16,10 +16,16 @@
 - [ ] Implement detection of a keyboard for a boot requirement
 
 ## Kernel
-- [ ] Implement loading of the GDT again due to protected mode swapping
-- [ ] Create an IDT for error handling/IO messages
+- [x] Implement loading of the GDT again due to protected mode swapping
+- [x] Create an IDT for error handling/IO messages
 - [ ] Add CPUID checks for different features
-- [ ] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
+- [x] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
+- [ ] Create a VBE graphics driver
+- [x] Abstract i686 instructions to generic hardware layer
+- [ ] Abstract graphic drivers to use generic format
+- [ ] Make stdio.c reroute to loaded graphics drivers
+- [ ] Disable PIC/Check PIC drivers
+- [ ] Enable/write APIC drivers
 - [ ] Add paging
 - [ ] Add a virtual filesystem
 - [ ] Create module handling

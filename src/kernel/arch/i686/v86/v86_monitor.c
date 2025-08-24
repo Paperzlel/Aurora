@@ -2,8 +2,8 @@
 
 #include "v86_cpu.h"
 
-#include <i686/isr.h>
-#include <i686/tss.h>
+#include <arch/i686/isr.h>
+#include <arch/i686/tss.h>
 
 #include <stdint.h>
 #include <memory.h>

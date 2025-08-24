@@ -25,6 +25,44 @@
         "stdio.h": "c",
         "nondeduced6.C": "cpp",
         "gdt.h": "c",
-        "regex": "c"
+        "regex": "c",
+        "v86_monitor.h": "c",
+        "test.h": "c"
     },
+
+    "todohighlight.isEnable": true,
+    "todohighlight.isCaseSensitive": false,
+    "todohighlight.keywords": [
+        {
+            "text": "TODO:",
+            "color": "#E41717",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "overviewRulerColor": "rgba(255,189,42,0.8)"
+        },
+        {
+            "text": "FIXME:",
+            "color": "#E41717",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "overviewRulerColor": "rgba(240,98,146,0.8)"
+        },
+        {
+            "text": "NOTE:",
+            "color": "#1BB73A",
+            "backgroundColor": "rgba(0, 0, 0, 0)"
+        },
+        {
+            "text": "WARNING:",
+            "color": "#f36709",
+            "backgroundColor": "rgba(0, 0, 0, 0)"
+        }
+    ],
+    "todohighlight.include": [
+        "**/*.c",
+        "**/*.h",
+        "**/*.asm",
+        "**/*.ld",
+        "**/*.sh",
+        "**/*.txt",
+        "**/*.md"
+    ]
 }

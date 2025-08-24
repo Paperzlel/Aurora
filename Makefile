@@ -2,7 +2,7 @@ export ASM=nasm
 export CC=gcc
 export CXX=g++
 export LD=gcc
-export CFLAGS=std=c99 -g
+export CFLAGS=std=c99 -g -mtune=i386
 export LINKFLAGS=
 export LIBS=
 
@@ -12,6 +12,7 @@ export BUILD_DIR=build
 export TOOLS_DIR=toolchain
 
 export TARGET=i686-elf
+export TARGET_ARCH=i686				# Use -march=[this] to load a specific architecture, add to both GCC and LD
 export TARGET_CC=$(TARGET)-gcc
 export TARGET_CXX=$(TARGET)-g++
 export TARGET_LD=$(TARGET)-gcc

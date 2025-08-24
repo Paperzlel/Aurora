@@ -42,6 +42,7 @@ void clrscr() {
             putcolour(x, y, DEFAULT_COLOUR);
         }
     }
+    movecursor(0, 0);
 }
 
 void putc(char c) {
