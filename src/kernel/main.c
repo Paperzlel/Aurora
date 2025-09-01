@@ -6,36 +6,21 @@
 #include <boot/bootstructs.h>
 #include <cpuid.h>
 
-#include <arch/i686/tasks/test.h>
 #include <arch/arch_frontend.h>
+#include <drivers/driver_load.h>
 
 #define CPUID_VENDOR_QEMU   "TCGTCGTCGTCG"
 #define CPUID_VENDOR_INTEL  "GenuineIntel"
 
 void __attribute__((section(".entry"))) start(BootInfo *boot)
 {
-
-    // - Load GDT again
-    // - Load IDT
-    // - Load ISR
-    // - Load driver
-    //      - Driver calls to v86 common routines when needed
-
-    // TODO: move to arch_init as a default driver call
-    clrscr();
-    
     // No GDT, TSS, IDT and so on, hang forever.
     if (!arch_init()) {
         printf("Could not load an architecure backend.\n");     // VGA drivers should be architecture-independent.
         goto end;
     }
 
-    // TODO: Abstract.
-    uint8_t *p_test_start = get_task_start();
-    uint8_t *p_test_end = get_task_end();
-    arch_run_v86_task(p_test_start, p_test_end);
-
-    printf("Hello world from the kernel!!!!\n");
+    driver_load_driver(LOAD_TYPE_VIDEO, &boot->framebuffer_map);
 
     int ebx, ecx, edx, unused;
     
@@ -56,8 +41,8 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
         printf("CPU is an Intel CPU.\n");
     }
 
-    int x = 3 / 0; // Crashes code, for now
-
 end:
-    for(;;);
+    while (true) {
+
+    }
 }

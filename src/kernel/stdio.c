@@ -1,25 +1,18 @@
 #include "stdio.h"
 #include "x86.h"
 
+#include <drivers/video/driver_video.h>
+
 // Included from GCC's freestanding library, as implementing them ourselves is a pain
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-uint8_t *video_memory = (uint8_t *)0xb8000;
-
-const unsigned SCREEN_WIDTH = 80;
-const unsigned SCREEN_HEIGHT = 25;
-const unsigned DEFAULT_COLOUR = 0x07;       // change bit 1 for background, bit 2 for foreground
-
 #define FB_COMMAND_PORT     0x3d4
 #define FB_DATA_PORT        0x3d5
 
-int p_screen_x = 0;
-int p_screen_y = 0;
-
 void movecursor(int x, int y) {
-    uint16_t res = (y * SCREEN_WIDTH + x);
+    const uint16_t res = (y * 80 + x);  //TODO: Fix
 
     x86_outb(FB_COMMAND_PORT, 14);
     x86_outb(FB_DATA_PORT, (res >> 8) & 0xff);
@@ -27,44 +20,10 @@ void movecursor(int x, int y) {
     x86_outb(FB_DATA_PORT, res & 0x00ff);
 }
 
-void putchr(int x, int y, char c) {
-    video_memory[2 * (y * SCREEN_WIDTH + x)] = c; // y * scr_width + x is cell offset, mul by two because of the two-byte size
-}
-
-void putcolour(int x, int y, uint8_t colour) {
-    video_memory[2 * (y * SCREEN_WIDTH + x) + 1] = colour;
-}
-
-void clrscr() {
-    for (int y = 0; y < SCREEN_HEIGHT; y++) {
-        for (int x = 0; x < SCREEN_WIDTH; x++) {
-            putchr(x, y, '\0');
-            putcolour(x, y, DEFAULT_COLOUR);
-        }
-    }
-    movecursor(0, 0);
-}
-
 void putc(char c) {
-    switch (c) {
-        case '\n':
-            p_screen_x = 0;
-            p_screen_y++;
-            break;
-        case '\t':
-            for (int i = 0; i < 4 - (p_screen_x % 4); i++) {
-                putc(' ');
-            }
-            break;
-        case '\r':
-            p_screen_x = 0;
-        default:
-            putchr(p_screen_x, p_screen_y, c);
-            p_screen_x++;
-            break;
-    }
+    driver_video_write_char(c);
 
-    movecursor(p_screen_x, p_screen_y);
+    movecursor(0, 0);
 }
 
 void puts(const char *str) {

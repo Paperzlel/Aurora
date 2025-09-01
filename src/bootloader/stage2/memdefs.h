@@ -16,7 +16,9 @@
 #define MEMORY_FAT_SIZE             0x00010000  // Load at address, save space for rest of the filesystem
 
 #define KERNEL_LOAD_ADDR (void *)   0x00020000  // Pointer to kernel load offset
-#define KERNEL_LOAD_SIZE            0x00010000  // Kernel loads here, move on later in life
+#define KERNEL_LOAD_SIZE            0x00050000  // Kernel loads here, move on later in life
+
+// NOTE: Kernel ELF may need to be moved elsewhere/loaded slowly as its max size as-is is ~320 KiB, which may not be enough in the future.
 
 // Extended BIOS data area      0x00080000 - 0x0009ffff
 // Video display memory area    0x000a0000 - 0x000bffff

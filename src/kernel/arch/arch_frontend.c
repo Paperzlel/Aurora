@@ -1,6 +1,5 @@
 #include "arch_frontend.h"
 
-#include <stdint.h>
 #include <cpuid.h>
 
 #include "i686/v86/v86_monitor.h"
@@ -15,13 +14,13 @@
 
 typedef struct {
     void (*initialize)();
-    void (*run_task)(void *, void *);
-    bool (*register_interrupt_handler)(int, void(*)(Registers *));
+    void (*run_task)(void *, void *, uint8_t *, int);
+    bool (*register_interrupt_handler)(int, bool (*)(Registers *));
     void (*unregister_interrupt_handler)(int);
     void (*finalize)();
-} Arch_State;
+} ArchState;
 
-static Arch_State *a_arch_state;
+static ArchState a_arch_state;
 
 typedef struct {
     int eax;
@@ -51,25 +50,25 @@ bool arch_init() {
 
     switch (family) {
         case 0x06: {    // i686
-            a_arch_state->initialize = i686_initialize;
-            a_arch_state->finalize = i686_finalize;
-            a_arch_state->run_task = v86_load_task;
-            a_arch_state->register_interrupt_handler = i686_isr_register_handler;
-            a_arch_state->unregister_interrupt_handler = i686_isr_unregister_handler;
+            a_arch_state.initialize = i686_initialize;
+            a_arch_state.finalize = i686_finalize;
+            a_arch_state.run_task = v86_load_task;
+            a_arch_state.register_interrupt_handler = i686_isr_register_handler;
+            a_arch_state.unregister_interrupt_handler = i686_isr_unregister_handler;
         } break;
         default: {      // Presumed i686
-            a_arch_state->initialize = i686_initialize;
-            a_arch_state->finalize = i686_finalize;
-            a_arch_state->run_task = v86_load_task;
-            a_arch_state->register_interrupt_handler = i686_isr_register_handler;
-            a_arch_state->unregister_interrupt_handler = i686_isr_unregister_handler;
+            a_arch_state.initialize = i686_initialize;
+            a_arch_state.finalize = i686_finalize;
+            a_arch_state.run_task = v86_load_task;
+            a_arch_state.register_interrupt_handler = i686_isr_register_handler;
+            a_arch_state.unregister_interrupt_handler = i686_isr_unregister_handler;
         } break;
     }
 
-    a_arch_state->initialize();
+    a_arch_state.initialize();
     return true;
 }
 
-void arch_run_v86_task(void *p_start, void *p_end) {
-    a_arch_state->run_task(p_start, p_end);
+void arch_run_v86_task(void *p_start, void *p_end, uint8_t *p_args, int p_argc) {
+    a_arch_state.run_task(p_start, p_end, p_args, p_argc);
 }

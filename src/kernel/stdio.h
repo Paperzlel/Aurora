@@ -4,11 +4,6 @@
 #define NULL ((void *)0)
 
 /**
- * @brief Clears the screen of all messages
- */
-void clrscr();
-
-/**
  * @brief Prints an inputted ASCII character to the current output stream.
  * @param c The character to print
  */

@@ -131,7 +131,7 @@ bool elf_read(ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry_point)
     for (int i = 0; i < p_header->section_header_entry_count; i++) {
         ELF_SectionHeader sh;
         memcpy(&sh, p_buffer + p_header->sect_header_offset + (header_size * i), header_size);
-
+        
         // Get section name;
         char *name = p_buffer + sh_name->offset + sh.name_offset;
 

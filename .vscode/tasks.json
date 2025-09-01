@@ -54,6 +54,14 @@
             ]
         },
         {
+            "label": "Debug (QEMU)",
+            "type": "shell",
+            "command": "./debug_qemu.sh",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
             "label": "Debug (bochs)",
             "type": "shell",
             "command": "./debug.sh",

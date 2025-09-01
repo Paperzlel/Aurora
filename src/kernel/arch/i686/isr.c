@@ -45,8 +45,10 @@ void i686_idt_register_isrs();
 void __attribute__((cdecl)) i686_interrupt_handler(Registers *p_regs) {
     // First launch into the handled interrupt, if it exists
     if (a_handlers[p_regs->interrupt] != NULL) {
-        a_handlers[p_regs->interrupt](p_regs);
-        return;
+        bool ret = a_handlers[p_regs->interrupt](p_regs);
+        if (ret) {
+            return;
+        }
     }
 
     if (p_regs->interrupt < 22) {
