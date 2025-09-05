@@ -1,5 +1,7 @@
 #include "driver_video.h"
 
+#include <arch/arch_frontend.h>
+
 #include "vga/vga.h"
 #include "vesa/vesa_main.h"
 
@@ -13,7 +15,7 @@ typedef struct {
 
 static VideoDriver a_driver_state;
 
-void driver_video_load(void *p_data) {
+bool driver_video_load(void *p_data) {
     // No information; load VGA driver
 
     a_driver_state.clear = vga_clear;
@@ -29,7 +31,8 @@ void driver_video_load(void *p_data) {
         a_driver_state.write_char = vesa_write_char;
     }
     
-    a_driver_state.clear();
+    // a_driver_state.clear();
+    return true;
 }
 
 void driver_video_clear() {
@@ -42,5 +45,6 @@ void driver_video_clear() {
 }
 
 void driver_video_write_char(char c) {
+    arch_io_outb(0xe9, c);
     a_driver_state.write_char(c);
 }

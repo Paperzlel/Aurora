@@ -176,7 +176,7 @@ void v86_monitor_initialize() {
     // Do nothing for now
 }
 
-void v86_load_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc) {
+bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc) {
     // Load task into code segment
     uint32_t size = p_task_end - p_task_start;
     memset((void *)(V86_CODE_SEGMENT << 4), 0, size);
@@ -197,7 +197,12 @@ void v86_load_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_
     // Set offset depending on argument count (SP gets messed with otherwise)
     v86_enter_v86_handler(V86_STACK_SEGMENT, 0x0000 + (p_argc * 2) - 2, V86_CODE_SEGMENT, 0x0000);
 
+    // Pass result into end pointer
+    uint8_t *result = (uint8_t *)((V86_STACK_SEGMENT << 4) + 2);
+
     // Unregister handlers
     i686_isr_unregister_handler(0xfd);
     i686_isr_unregister_handler(13);
+
+    return result;
 }

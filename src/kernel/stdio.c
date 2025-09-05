@@ -1,5 +1,4 @@
 #include "stdio.h"
-#include "x86.h"
 
 #include <drivers/video/driver_video.h>
 
@@ -8,22 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define FB_COMMAND_PORT     0x3d4
-#define FB_DATA_PORT        0x3d5
-
-void movecursor(int x, int y) {
-    const uint16_t res = (y * 80 + x);  //TODO: Fix
-
-    x86_outb(FB_COMMAND_PORT, 14);
-    x86_outb(FB_DATA_PORT, (res >> 8) & 0xff);
-    x86_outb(FB_COMMAND_PORT, 15);
-    x86_outb(FB_DATA_PORT, res & 0x00ff);
-}
-
 void putc(char c) {
     driver_video_write_char(c);
-
-    movecursor(0, 0);
 }
 
 void puts(const char *str) {

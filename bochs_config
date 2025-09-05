@@ -5,3 +5,5 @@ floppya: 1_44=build/main_floppy.img, status=inserted
 boot: floppy
 mouse: enabled=0
 display_library: x, options="gui_debug"
+port_e9_hack: enabled=1
+vga: extension=vbe

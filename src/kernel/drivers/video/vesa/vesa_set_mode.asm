@@ -12,11 +12,14 @@ __vesa_start:
     int 0x10
 
     cmp al, 0x4f
+    mov al, 1
     je .end
 
-    xor ax, ax
-
+    xor al, al
 .end:
+    
+    pop ebx
+    push eax
     int 0xfe
 
 global __vesa_end

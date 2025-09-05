@@ -16,13 +16,13 @@ uint16_t V_BPL = 0;
 uint16_t V_BPP = 0;
 
 
-void vesa_initialize(VESA_FramebufferMap *p_info) {
+bool vesa_initialize(VESA_FramebufferMap *p_info) {
     a_frame_info = p_info;
 
     if ((a_frame_info->framebuffer.bpp / 8) * a_frame_info->framebuffer.width != a_frame_info->framebuffer.bytes_per_line) {
         // Find a way to deal with padding
         vmem = (uint8_t *)a_frame_info->framebuffer.address;
-        return;
+        return false;
     }
 
 
@@ -35,16 +35,19 @@ void vesa_initialize(VESA_FramebufferMap *p_info) {
 
     uint8_t mode = a_frame_info->framebuffer.mode_id;
 
-    arch_run_v86_task(&__vesa_start, &__vesa_end, &mode, 1);
+    if (!arch_run_v86_task(&__vesa_start, &__vesa_end, &mode, 1)) {
+        printf("Could not enable VESA VBE software, an error has occured.");
+        return false;
+    }
 }
 
 void vesa_clear() {
     for (int x = 0; x < V_WIDTH; x++) {
         for (int y = 0; y < V_HEIGHT; y++) {
-            vmem[x * V_DEPTH + y * V_BPL] = 0;
-            vmem[(x * V_DEPTH + y * V_BPL) + 1] = 0;
-            vmem[(x * V_DEPTH + y * V_BPL) + 2] = 0;
-            vmem[(x * V_DEPTH + y * V_BPL) + 3] = 0xff;
+            vmem[x * V_DEPTH + y * V_BPL] = 128;
+            vmem[(x * V_DEPTH + y * V_BPL) + 1] = 128;
+            vmem[(x * V_DEPTH + y * V_BPL) + 2] = 128;
+            vmem[(x * V_DEPTH + y * V_BPL) + 3] = 0xf1;
         }
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 /**
  * Runs Virtual 8086 code
@@ -30,4 +31,4 @@ void v86_monitor_initialize();
  * @param p_task_start Starting memory location of the task
  * @param p_task_end End memory location of the task
  */
-void v86_load_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc);
+bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc);

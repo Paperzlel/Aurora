@@ -225,6 +225,7 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
                 a_video_info.red_colour_mask_size, a_video_info.lsb_red_mask_position,
                 a_video_info.green_colour_mask_size, a_video_info.lsb_green_mask_position,
                 a_video_info.blue_colour_mask_size, a_video_info.lsb_blue_mask_position);
+    printf("VESA: Reserved size: %d, offset %d\n", a_video_info.reserved_colour_mask_size, a_video_info.lsb_reserved_mask_position);
 
     if (a_closest_mode == 0) {
         printf("VESA: Failed to find a successful video mode.\n");

@@ -20,7 +20,10 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
         goto end;
     }
 
-    driver_load_driver(LOAD_TYPE_VIDEO, &boot->framebuffer_map);
+    if (!driver_load_driver(LOAD_TYPE_VIDEO, &boot->framebuffer_map)) {
+        printf("Failed to load the video driver.\n");
+        goto end;
+    }
 
     int ebx, ecx, edx, unused;
     
