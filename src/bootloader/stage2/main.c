@@ -66,10 +66,9 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         goto end;
     }
 
-    bool can_map_fb = false;
     MemoryRegion rm = boot.memory_map.regions[boot.memory_map.region_count - 1];
     if (rm.base_address < boot.framebuffer_map.framebuffer.address) {
-        printf("Stage 2: Framebuffer map position is out of range.");
+        printf("Stage 2: Framebuffer map position is out of range.\n");
         goto end;
     }
 

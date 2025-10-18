@@ -7,7 +7,7 @@
 #include <arch/arch_frontend.h>
 
 static VESA_FramebufferMap *a_frame_info;
-uint8_t *vmem = 0;
+uint32_t *vmem = 0;
 
 uint16_t V_WIDTH = 0;
 uint16_t V_HEIGHT = 0;
@@ -21,12 +21,12 @@ bool vesa_initialize(VESA_FramebufferMap *p_info) {
 
     if ((a_frame_info->framebuffer.bpp / 8) * a_frame_info->framebuffer.width != a_frame_info->framebuffer.bytes_per_line) {
         // Find a way to deal with padding
-        vmem = (uint8_t *)a_frame_info->framebuffer.address;
+        vmem = (uint32_t *)a_frame_info->framebuffer.address;
         return false;
     }
 
 
-    vmem = (uint8_t *)a_frame_info->framebuffer.address;
+    vmem = (uint32_t *)a_frame_info->framebuffer.address;
     V_WIDTH = a_frame_info->framebuffer.width;
     V_HEIGHT = a_frame_info->framebuffer.height;
     V_DEPTH = a_frame_info->framebuffer.bpp / 8;
@@ -36,22 +36,30 @@ bool vesa_initialize(VESA_FramebufferMap *p_info) {
     uint8_t mode = a_frame_info->framebuffer.mode_id;
 
     if (!arch_run_v86_task(&__vesa_start, &__vesa_end, &mode, 1)) {
-        printf("Could not enable VESA VBE software, an error has occured.");
+        printf("Could not enable VESA VBE option %d.\n", mode);
         return false;
     }
+
+    return true;
 }
 
 void vesa_clear() {
     for (int x = 0; x < V_WIDTH; x++) {
         for (int y = 0; y < V_HEIGHT; y++) {
-            vmem[x * V_DEPTH + y * V_BPL] = 128;
-            vmem[(x * V_DEPTH + y * V_BPL) + 1] = 128;
-            vmem[(x * V_DEPTH + y * V_BPL) + 2] = 128;
-            vmem[(x * V_DEPTH + y * V_BPL) + 3] = 0xf1;
+            vmem[x + y * V_BPL] = 0xff000000;
         }
     }
 }
 
 void vesa_write_char(char c) {
+    vesa_draw_rect(0, 0, 100, 100);
     return;
+}
+
+void vesa_draw_rect(int x, int y, int size_x, int size_y) {
+    for (int y_ofs = y; y_ofs < size_y; y_ofs++) {
+        for (int x_ofs = x; x_ofs < size_x; x_ofs++) {
+            vmem[x_ofs + y_ofs * V_BPL] |= 0x00ff0000;
+        }
+    }
 }

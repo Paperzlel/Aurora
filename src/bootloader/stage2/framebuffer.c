@@ -87,6 +87,33 @@ typedef struct {
     uint8_t reserved_2[190];
 } __attribute__((packed)) VBE_VideoModeInfo;
 
+
+// EDID graphics. Obtained once, need to support modes that can actually be used.
+typedef struct {
+    uint8_t padding;                            // Unused
+    uint16_t manufacture_id;                    // Manufacturer's ID (big-endian)
+    uint16_t edid_id_code;                      // EDID ID code
+    uint32_t serial_number;                     // Device serial no.
+    uint8_t manufacture_week;                   // Device manufacturing week
+    uint8_t manufacture_year;                   // Device manufacturing year
+    uint8_t video_input_type;                   // Video input type byte
+    uint8_t max_horizontal_size;                // Max horizonal size in cm
+    uint8_t max_verical_size;                   // Max vertical size in cm
+    uint8_t gamma_factor;                       // Gamma factor of the monitor
+    uint8_t dpms_flags;                         // Flags for DPMS
+    uint8_t chroma_info[10];                    // Chroma information
+    uint8_t established_timings_1;              // Established timings, part 1
+    uint8_t established_timings_2;              // Established timings, part 2
+    uint8_t manufacture_reserved_timings;       // Manufacturer-specific reserved timings
+    uint16_t standard_timing_id[8];             // Standard timing identification
+    uint8_t detail_desc_1[18];                  // Timing description 1 (detailed)
+    uint8_t detail_desc_2[18];                  // Timing description 2
+    uint8_t detail_desc_3[18];                  // Timing description 3
+    uint8_t detail_desc_4[18];                  // Timing description 4
+    uint8_t unused;                             // Unused
+    uint8_t checksum;                           // Valid checksum (is lowe byte 16-bit sum of 00-0x7e)
+} __attribute__((packed)) EDID_RecordBlock;
+
 typedef enum {
     VBE_SUPPORTED = 1<< 0,
     VBE_OPTIONAL_INFO = 1 << 1,
@@ -123,8 +150,8 @@ typedef enum {
 } VBE_MemoryModelType;
 
 
-#define DESIRED_FRAMEBUFFER_WIDTH 800
-#define DESIRED_FRAMEBUFFER_HEIGHT 600
+#define DESIRED_FRAMEBUFFER_WIDTH 320
+#define DESIRED_FRAMEBUFFER_HEIGHT 200
 #define DESIRED_FRAMEBUFFER_BPP 32
 
 #define DIFF(x, y) x >= y ? x - y : y - x
@@ -132,7 +159,23 @@ typedef enum {
 VBE_InfoBlock a_info_block;
 VBE_VideoModeInfo a_video_info;
 
+EDID_RecordBlock a_record_block;
+
 bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
+    // Get EDID block first
+    if (!x86_EDID_GetVideoBlock(&a_record_block)) {          // Returns true if failed.
+        printf("VESA: Could not obtain EDID information.\n");
+        return false;
+    }
+
+    int x = a_record_block.detail_desc_1[2] | ((int) (a_record_block.detail_desc_1[4] | 0xf0) << 4);
+    int y = a_record_block.detail_desc_1[5] | ((int) (a_record_block.detail_desc_1[7] | 0xf0) << 4);
+
+    if (x < DESIRED_FRAMEBUFFER_WIDTH || y < DESIRED_FRAMEBUFFER_HEIGHT) {
+        printf("Could not get a valid aspect ratio; wanted %dx%d, got %dx%d\n", DESIRED_FRAMEBUFFER_WIDTH, DESIRED_FRAMEBUFFER_HEIGHT, x, y);
+        return false;
+    }
+
     a_info_block.vbe_signature[0] = 'V';
     a_info_block.vbe_signature[1] = 'B';
     a_info_block.vbe_signature[2] = 'E';
@@ -191,6 +234,7 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
             best_x = DESIRED_FRAMEBUFFER_WIDTH;
             best_y = DESIRED_FRAMEBUFFER_HEIGHT;
             best_depth = DESIRED_FRAMEBUFFER_BPP;
+            printf("Video driver at %dx%dx%d, address %x\n", a_video_info.width, a_video_info.height, a_video_info.bpp, a_video_info.video_buffer_ptr);
             break;
         }
 
@@ -217,7 +261,7 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
             best_depth = a_video_info.bpp;
         }
         
-
+        a_closest_mode = *video_ptr;
         video_ptr++;
     }
 
@@ -231,18 +275,26 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
         printf("VESA: Failed to find a successful video mode.\n");
         return false;
     }
+    
+    if (!x86_VBE_GetVESAVideoModeInfo(a_closest_mode, &a_video_info)) {
+        printf("Are you kidding?!\n");
+        return false;
+    }
+    printf("Loaded driver ID %d\n", a_closest_mode);
+    printf("\tXRES: %d\n\tYRES: %d\n\tBPP: %d\n\tADDR: %x\n", a_video_info.width, a_video_info.height, a_video_info.bpp, a_video_info.video_buffer_ptr);
 
     fb.address = a_video_info.video_buffer_ptr;
-    fb.width = best_x;
-    fb.height = best_y;
-    fb.bpp = best_depth;
+    fb.width = a_video_info.width;
+    fb.height = a_video_info.height;
+    fb.bpp = a_video_info.bpp;
     fb.bytes_per_line = a_video_info.bytes_per_scan_line;
     fb.mode_id = a_closest_mode;
 
     p_out_framebuffer->framebuffer = fb;
     p_out_framebuffer->vendor_name = vendor_name;
     p_out_framebuffer->product_name = product_name;
-    
+
+    printf("VESA: Using GPU %s from vendor %s, found memory at address %x.\n", vendor_name, product_name, fb.address);   
     printf("VESA: Running VESA VBE version %x\n", a_info_block.vbe_version);
     return true;
 }

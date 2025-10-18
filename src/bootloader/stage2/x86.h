@@ -84,3 +84,5 @@ bool __cdecl x86_VBE_GetVESAInfo(void *p_struct);
  */
 bool __cdecl x86_VBE_GetVESAVideoModeInfo(uint16_t p_video_mode,
             void *p_out_data);
+
+bool __cdecl x86_EDID_GetVideoBlock(void *p_out_data);

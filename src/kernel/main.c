@@ -20,10 +20,12 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
         goto end;
     }
 
-    if (!driver_load_driver(LOAD_TYPE_VIDEO, &boot->framebuffer_map)) {
-        printf("Failed to load the video driver.\n");
-        goto end;
-    }
+    // TODO: Won't function for non-native hardware. Write an extension.
+    VESA_FramebufferMap fb_map = boot->framebuffer_map;
+    // driver_load_driver(LOAD_TYPE_VIDEO, (void *)&fb_map);
+    printf("VIDEO INFO: ADDR %x\n", fb_map.framebuffer.address);
+    uint32_t value_at_addr = *(uint32_t *)fb_map.framebuffer.address;
+    printf("Value is: %x (expected 0xff)\n", value_at_addr);
 
     int ebx, ecx, edx, unused;
     

@@ -377,3 +377,54 @@ x86_VBE_GetVESAVideoModeInfo:
     mov esp, ebp
     pop ebp
     ret
+
+global x86_EDID_GetVideoBlock
+x86_EDID_GetVideoBlock:
+    [bits 32]
+
+    push ebp
+    mov ebp, esp
+
+    x86_prot_to_real
+    [bits 16]
+
+    push ecx
+    push ebx
+    push edx
+    push es
+    push edi
+
+    linear_to_seg_ofs [bp + 8], es, edi, di
+
+    mov ax, 0x4f15
+    mov bl, 0x01
+    xor cx, cx
+    xor dx, dx
+
+    int 0x10
+
+    cmp al, 0x4f
+    mov ah, bl
+    je .done
+    
+.done:
+
+    xor eax, eax
+    mov al, bl
+
+    pop edi
+    pop es
+    pop edx
+    pop ebx
+    pop ecx
+
+    push eax
+
+    x86_real_to_prot
+    [bits 32]
+
+    pop eax
+
+    mov esp, ebp
+    pop ebp
+    ret

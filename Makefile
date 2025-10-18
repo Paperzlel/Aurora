@@ -47,7 +47,6 @@ $(BUILD_DIR)/main_floppy.img: bootloader kernel
 	@mcopy -i $@ $(BUILD_DIR)/kernel.elf "::kernel.elf"
 	@mmd -i $@ "::dev"
 	@mcopy -i $@ test.txt "::dev/test.txt"
-	@mcopy -i $@ NOTES.md "::dev/NOTES.md"
 	@echo Created $@
 
 # Bootloader
