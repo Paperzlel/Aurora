@@ -150,8 +150,8 @@ typedef enum {
 } VBE_MemoryModelType;
 
 
-#define DESIRED_FRAMEBUFFER_WIDTH 320
-#define DESIRED_FRAMEBUFFER_HEIGHT 200
+#define DESIRED_FRAMEBUFFER_WIDTH 800
+#define DESIRED_FRAMEBUFFER_HEIGHT 600
 #define DESIRED_FRAMEBUFFER_BPP 32
 
 #define DIFF(x, y) x >= y ? x - y : y - x

@@ -16,9 +16,13 @@ void __cdecl i686_panic();
  */
 uint8_t __cdecl i686_inb(uint16_t p_port);
 
+uint16_t __cdecl i686_inw(uint16_t p_port);
+
 /**
  * @brief Sends a byte to the given I/O port.
  * @param p_port The port ID to send the data to
  * @param p_value The data to send
  */
 void __cdecl i686_outb(uint16_t p_port, uint8_t p_value);
+
+void __cdecl i686_outw(uint16_t p_port, uint16_t p_value);

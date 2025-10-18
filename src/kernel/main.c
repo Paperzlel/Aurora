@@ -9,6 +9,9 @@
 #include <arch/arch_frontend.h>
 #include <drivers/driver_load.h>
 
+//TODO: Remove.
+#include <drivers/video/bochs/bochs.h>
+
 #define CPUID_VENDOR_QEMU   "TCGTCGTCGTCG"
 #define CPUID_VENDOR_INTEL  "GenuineIntel"
 
@@ -20,15 +23,12 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
         goto end;
     }
 
-    // TODO: Won't function for non-native hardware. Write an extension.
-    VESA_FramebufferMap fb_map = boot->framebuffer_map;
-    // driver_load_driver(LOAD_TYPE_VIDEO, (void *)&fb_map);
-    printf("VIDEO INFO: ADDR %x\n", fb_map.framebuffer.address);
-    uint32_t value_at_addr = *(uint32_t *)fb_map.framebuffer.address;
-    printf("Value is: %x (expected 0xff)\n", value_at_addr);
+    // Do CPUID stuff first - get CPU information (model and features)
+    // Once done, set up paging and other information.
+    // Then, run video driver stuff (find if bochs VGA drivers are used, then run from there).
+    // We can get the rest of the kernel from there.
 
-    int ebx, ecx, edx, unused;
-    
+    int ebx, ecx, edx, eax;
     int max_cpuid_calls = __get_cpuid_max(0, (void *)0);
 
     if (max_cpuid_calls == 0) {
@@ -38,11 +38,15 @@ void __attribute__((section(".entry"))) start(BootInfo *boot)
     printf("Max CPUID calls: %d\n", max_cpuid_calls);
 
     // For this function look at CPUID on wikipedia and look at the contents of ECX/EDX for features. May also look at EAX/EBX for other stuff.
-    __get_cpuid(1, &unused, &edx, &ebx, &ecx); // Little-endian storing and stuff makes this order have EDX contain the string in full.
+    __get_cpuid(0, &eax, &ebx, &ecx, &edx); // Little-endian storing and stuff makes this order have EDX contain the string in full.
     
-    printf("Processor ID: %x\n", (unused & 0xf00) >> 8);
+    char name[13] = {0};
+    memcpy(name, (void *)&ebx, 4);
+    memcpy(name + 4, (void *)&edx, 4);
+    memcpy(name + 8, (void *)&ecx, 4);
+    printf("CPU name is %s\n", name);
     
-    if (memcmp((void *)&edx, (void *)CPUID_VENDOR_INTEL, 12) == 0) {
+    if (memcmp(name, (void *)CPUID_VENDOR_INTEL, 12) == 0) {
         printf("CPU is an Intel CPU.\n");
     }
 

@@ -11,9 +11,22 @@ i686_inb:
     in al, dx
     ret
 
+global i686_inw
+i686_inw:
+    mov dx, [esp + 4]
+    in ax, dx
+    ret
+
 global i686_outb
 i686_outb:
     mov al, [esp + 8]
     mov dx, [esp + 4]
     out dx, al
+    ret
+
+global i686_outw
+i686_outw:
+    mov ax, [esp + 8]
+    mov dx, [esp + 4]
+    out dx, ax
     ret

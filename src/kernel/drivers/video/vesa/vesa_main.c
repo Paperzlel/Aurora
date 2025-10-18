@@ -17,6 +17,9 @@ uint16_t V_BPP = 0;
 
 
 bool vesa_initialize(VESA_FramebufferMap *p_info) {
+    if (!p_info) {
+        return false;
+    }
     a_frame_info = p_info;
 
     if ((a_frame_info->framebuffer.bpp / 8) * a_frame_info->framebuffer.width != a_frame_info->framebuffer.bytes_per_line) {

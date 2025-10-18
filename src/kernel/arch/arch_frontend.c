@@ -20,7 +20,9 @@ typedef struct {
     void (*unregister_interrupt_handler)(int);
     bool (*run_task)(void *, void *, uint8_t *, int);
     uint8_t (*inb)(uint16_t);
+    uint16_t (*inw)(uint16_t);
     void (*outb)(uint16_t, uint8_t);
+    void (*outw)(uint16_t, uint16_t);
 } ArchState;
 
 static ArchState a_arch_state;
@@ -59,7 +61,9 @@ bool arch_init() {
             a_arch_state.unregister_interrupt_handler = i686_isr_unregister_handler;
             a_arch_state.run_task = v86_run_task;
             a_arch_state.inb = i686_inb;
+            a_arch_state.inw = i686_inw;
             a_arch_state.outb = i686_outb;
+            a_arch_state.outw = i686_outw;
         } break;
         default: {      // Presumed i686
             a_arch_state.initialize = i686_initialize;
@@ -68,7 +72,9 @@ bool arch_init() {
             a_arch_state.unregister_interrupt_handler = i686_isr_unregister_handler;
             a_arch_state.run_task = v86_run_task;
             a_arch_state.inb = i686_inb;
+            a_arch_state.inw = i686_inw;
             a_arch_state.outb = i686_outb;
+            a_arch_state.outw = i686_outw;
         } break;
     }
 
@@ -84,6 +90,14 @@ uint8_t arch_io_inb(uint16_t p_port) {
     return a_arch_state.inb(p_port);
 }
 
+uint16_t arch_io_inw(uint16_t p_port) {
+    return a_arch_state.inw(p_port);
+}
+
 void arch_io_outb(uint16_t p_port, uint8_t p_value) {
     a_arch_state.outb(p_port, p_value);
+}
+
+void arch_io_outw(uint16_t p_port, uint16_t p_value) {
+    a_arch_state.outw(p_port, p_value);
 }

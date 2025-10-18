@@ -27,7 +27,8 @@
         "gdt.h": "c",
         "regex": "c",
         "v86_monitor.h": "c",
-        "test.h": "c"
+        "test.h": "c",
+        "bootstructs.h": "c"
     },
 
     "todohighlight.isEnable": true,
