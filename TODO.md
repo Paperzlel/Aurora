@@ -19,7 +19,7 @@
 ## Kernel
 - [x] Implement loading of the GDT again due to protected mode swapping
 - [x] Create an IDT for error handling/IO messages
-- [ ] Add CPUID checks for different features
+- [x] Add CPUID checks for different features
 - [x] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
 - [ ] Create a VBE graphics driver
 - [ ] Move video drivers to use common resources like framebuffer info

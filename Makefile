@@ -2,7 +2,7 @@ export ASM=nasm
 export CC=gcc
 export CXX=g++
 export LD=gcc
-export CFLAGS=std=c99 -g -mtune=i386
+export CFLAGS=-std=c99 -g -mtune=i386
 export LINKFLAGS=
 export LIBS=
 
@@ -40,9 +40,9 @@ scaffold:
 floppy_image: $(BUILD_DIR)/main_floppy.img
 
 $(BUILD_DIR)/main_floppy.img: bootloader kernel
-	@dd if=/dev/zero of=$@ bs=512 count=2880 >/dev/null
-	@mkfs.fat -F 12 -n "AUOS" $@ >/dev/null
-	@dd if=$(BUILD_DIR)/stage1.bin of=$@ conv=notrunc >/dev/null
+	@dd if=/dev/zero of=$@ bs=512 count=2880
+	@mkfs.fat -F 12 -n "AUOS" $@
+	@dd if=$(BUILD_DIR)/stage1.bin of=$@ conv=notrunc
 	@mcopy -i $@ $(BUILD_DIR)/stage2.bin "::stage2.bin"
 	@mcopy -i $@ $(BUILD_DIR)/kernel.elf "::kernel.elf"
 	@mmd -i $@ "::dev"
