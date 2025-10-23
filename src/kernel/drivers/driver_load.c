@@ -13,13 +13,12 @@ bool driver_load_driver(DriverLoadType p_type, void *p_data) {
 }
 
 void driver_set_hint(DriverLoadType p_type, DriverLoadHint p_hint) {
-    switch (p_type)
-    {
-    case LOAD_TYPE_VIDEO:
-        video_driver_set_hint(p_hint);
-        break;
+    switch (p_type) {
+        case LOAD_TYPE_VIDEO:
+            video_driver_set_hint(p_hint);
+            break;
     
-    default:
-        break;
+        default:
+            break;
     }
 }

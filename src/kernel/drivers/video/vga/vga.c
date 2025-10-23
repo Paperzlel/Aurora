@@ -68,3 +68,12 @@ void vga_write_char(char c) {
         vga_scrlscr(1);
     }
 }
+
+
+bool vga_initialize(VideoDriver *out_driver, Framebuffer *p_buffer) {
+    out_driver->init = vga_initialize;
+    out_driver->clear = vga_clear;
+    out_driver->write_char = vga_write_char;
+    
+    return true;
+}

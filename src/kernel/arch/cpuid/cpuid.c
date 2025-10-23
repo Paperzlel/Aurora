@@ -76,6 +76,11 @@ static char list[1024];
 static uint32_t edx_features;
 static uint32_t ecx_features;
 
+/**
+ * @brief Checks if the given CPU feature is supported. Useful for checking if we can use features such as SSE, x87 and so on.
+ * @param p_feature The feature to check for. Defined in the header.
+ * @param reg The register to check from. If the value is in ECX, this is 0. If the value is in EDX, this is 1.
+ */
 bool cpuid_supports_feature(CPU_Features p_feature, int reg) {
     if (reg > 0 && edx_features & p_feature) {
         return true;

@@ -30,7 +30,8 @@
         "test.h": "c",
         "bootstructs.h": "c",
         "string": "c",
-        "format": "c"
+        "format": "c",
+        "coroutine": "c"
     },
 
     "todohighlight.isEnable": true,

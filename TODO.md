@@ -17,18 +17,26 @@
 - [ ] Implement detection of a keyboard for a boot requirement
 
 ## Kernel
+
+### Architecture
 - [x] Implement loading of the GDT again due to protected mode swapping
 - [x] Create an IDT for error handling/IO messages
 - [x] Add CPUID checks for different features
 - [x] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
-- [ ] Create a VBE graphics driver
-- [ ] Move video drivers to use common resources like framebuffer info
 - [x] Abstract i686 instructions to generic hardware layer
-- [ ] Abstract graphic drivers to use generic format
-- [ ] Make stdio.c reroute to loaded graphics drivers
+
+### Hardware
 - [ ] Disable PIC/Check PIC drivers
 - [ ] Enable/write APIC drivers
+
+### Roadmap
 - [ ] Add paging
 - [ ] Add a virtual filesystem
 - [ ] Create module handling
 - [ ] Create a file reader command (e.g. `rdfile`)
+
+### Video
+- [ ] Create a VBE graphics driver for hardware (current one is non-functional)
+- [x] Move video drivers to use common resources like framebuffer info
+- [ ] Make stdio.c reroute to loaded graphics drivers
+- [ ] Expose a video driver API for non-driver functions to use

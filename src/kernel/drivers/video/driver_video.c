@@ -9,57 +9,72 @@
 
 #include <stdint.h>
 #include <boot/bootstructs.h>
-
-typedef struct {
-    void (*clear)();
-    void (*write_char)(char);
-
-    DriverLoadHint hint;
-} VideoDriver;
+#include <videostructs.h>
 
 static VideoDriver a_driver_state;
+
+void vesa_to_driver(VESA_FramebufferMap *p_map, Framebuffer *out_framebuffer) {
+    if (!p_map || !out_framebuffer) {
+        return;
+    }
+
+    if ((p_map->framebuffer.bpp / 8) * p_map->framebuffer.width != p_map->framebuffer.bytes_per_line) {
+        return;
+    }
+
+    out_framebuffer->address = (uint8_t *)p_map->framebuffer.address;
+    out_framebuffer->width = p_map->framebuffer.width;
+    out_framebuffer->height = p_map->framebuffer.height;
+    out_framebuffer->bpp = p_map->framebuffer.bpp;
+}
 
 bool driver_video_load(void *p_data) {
     // No information; load VGA driver
 
-    a_driver_state.clear = vga_clear;
-    a_driver_state.write_char = vga_write_char;
-
-    // Clear VGA screen first.
-    a_driver_state.clear();
+    VESA_FramebufferMap *map = (VESA_FramebufferMap *)p_data;
+    Framebuffer fb;
+    if (p_data) {
+        vesa_to_driver(map, &fb);
+    } else {
+        // No data, swap to VGA.
+        a_driver_state.hint = DRIVER_HINT_USE_VGA;
+        // Already loaded VGA drivers
+        if (a_driver_state.init != 0) {
+            return true;
+        }
+    }
 
     switch (a_driver_state.hint) {
         // BOCHS adapter
         case DRIVER_HINT_USE_BOCHS: {
-            VESA_FramebufferMap *map = (VESA_FramebufferMap *)p_data;
-            bool ret = bochs_initialize(map);
+            bool ret = bochs_initialize(&a_driver_state, &fb);
 
             if (!ret) {
                 return false;
             }
-
-            a_driver_state.clear = bochs_clear;
-            a_driver_state.write_char = bochs_write_char;
         } break;
         // VESA VBE driver (default for real PCs)
         case DRIVER_HINT_USE_VBE: {
-            // Cast void back to framebuffer
-            VESA_FramebufferMap *buf = (VESA_FramebufferMap *)p_data;
-            bool res = vesa_initialize(buf);
+            a_driver_state.hint = map->framebuffer.mode_id;
+            bool res = vesa_initialize(&a_driver_state, &fb);
 
             if (!res) {
                 return false;
             }
-            a_driver_state.clear = vesa_clear;
-            a_driver_state.write_char = vesa_write_char;
         } break;
-        // Backup driver
+        // Backup text-only driver
         case DRIVER_HINT_USE_VGA:
         default:
+            bool res = vga_initialize(&a_driver_state, 0);
+
+            if (!res) {
+                return false;
+            }
             break;
     }
     
-    a_driver_state.clear();
+    a_driver_state.clear(0, 0, 0);
+
     return true;
 }
 
@@ -68,17 +83,16 @@ void video_driver_set_hint(int p_hint) {
 }
 
 void driver_video_clear() {
-    //HACK: Loads video state if not set. Only caused if the TSS/GDT/IDT failed to load.
     if (a_driver_state.clear == 0) {
-        driver_video_load((void *)0);
+        return;
     }
 
-    a_driver_state.clear();
+    a_driver_state.clear(0, 0, 0);
 }
 
 void driver_video_write_char(char c) {
     if (!a_driver_state.write_char) {
-        driver_video_load((void *)0);
+        return;
     }
 
     arch_io_outb(0xe9, c);
