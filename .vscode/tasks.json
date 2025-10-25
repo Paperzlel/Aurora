@@ -48,21 +48,13 @@
         {
             "label": "Run (QEMU)",
             "type": "shell",
-            "command": "./run.sh",
+            "command": "qemu-system-i386 -S -gdb tcp::1234 -fda build/main_floppy.img -daemonize",
             "problemMatcher": [
                 "$gcc"
             ]
         },
         {
-            "label": "Debug (QEMU)",
-            "type": "shell",
-            "command": "./debug_qemu.sh",
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
-        {
-            "label": "Debug (bochs)",
+            "label": "Run (bochs)",
             "type": "shell",
             "command": "./debug.sh",
             "problemMatcher": [

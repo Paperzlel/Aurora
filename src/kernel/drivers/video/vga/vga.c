@@ -29,7 +29,7 @@ void vga_scrlscr(int p_amount) {
     }
 }
 
-void vga_clear() {
+void vga_clear(uint8_t r, uint8_t g, uint8_t b) {
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             vga_putchr('\0', x, y);

@@ -1,4 +1,5 @@
 #include "framebuffer.h"
+#include "stdio.h"
 
 static Framebuffer data;
 
@@ -7,7 +8,7 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
         return false;
     }
 
-    data.address = (uint8_t *)p_info->address;
+    data.address = p_info->address;
     data.width = p_info->width;
     data.height = p_info->height;
     data.bpp = p_info->bpp;
@@ -30,9 +31,10 @@ void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b) {
 
     for (int y = 0; y < data.height; y++) {
         for (int x = 0; x < data.width; x++) {
-            data.address[x * bytes_per_pixel + y * data.width + 1] = r;
-            data.address[x * bytes_per_pixel + y * data.width + 2] = g;
-            data.address[x * bytes_per_pixel + y * data.width + 3] = b;
+            int pixel = (x + y * data.width) * bytes_per_pixel;
+            data.address[pixel + 1] = r;
+            data.address[pixel + 2] = g;
+            data.address[pixel + 3] = b;
         }
     }
 }

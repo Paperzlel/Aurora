@@ -64,13 +64,13 @@ bool driver_video_load(void *p_data) {
         } break;
         // Backup text-only driver
         case DRIVER_HINT_USE_VGA:
-        default:
+        default: {
             bool res = vga_initialize(&a_driver_state, 0);
 
             if (!res) {
                 return false;
             }
-            break;
+        } break;
     }
     
     a_driver_state.clear(0, 0, 0);
