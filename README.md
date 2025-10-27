@@ -37,7 +37,7 @@ $ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpf
 ### Installing bochs
 To install `bochs`, go to [here](https://sourceforge.net/projects/bochs/) and grab the latest RPM package (I personally recommend 3.0). Then once it's installed, go to its downloaded folder and type the following commands:
 ```
-sudo alien bochs_3.0-1.x86_64.rpm
+sudo alien bochs-3.0-1.x86_64.rpm
 sudo dpkg -i [new_package_name].deb
 ```
 This should install the latest version of `bochs` for you properly. We do this as the current `bochs` package on `apt` is version 2.7, which has known issues with its VESA VBE BIOS, and since we use those instructions in the bootloader we require this version of `bochs`. Sorry.

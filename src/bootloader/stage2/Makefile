@@ -17,7 +17,11 @@ scaffold:
 	@mkdir -p $(BUILD_DIR)/stage2/asm
 	@mkdir -p $(BUILD_DIR)/stage2/c
 
-stage2: $(BUILD_DIR)/stage2.bin
+stage2: $(BUILD_DIR)/stage2.bin $(BUILD_DIR)/stage2_debug.elf
+
+$(BUILD_DIR)/stage2_debug.elf: $(BUILD_DIR)/stage2.bin
+	@$(TARGET_LD) -T linker_debug.ld -nostdlib -o $@ $(OBJECTS_ASM) $(OBJECTS_C) $(TARGET_LIBS)
+	@echo Created stage2_debug.elf
 
 $(BUILD_DIR)/stage2.bin: $(OBJECTS_ASM) $(OBJECTS_C)
 	@$(TARGET_LD) $(TARGET_LDFLAGS) -Wl,-Map=$(BUILD_DIR)/stage2.map -o $@ $^ $(TARGET_LIBS)

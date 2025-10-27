@@ -68,5 +68,8 @@
         "**/*.sh",
         "**/*.txt",
         "**/*.md"
+    ],
+    "clangd.arguments": [
+        "-header-insertion=never"
     ]
 }

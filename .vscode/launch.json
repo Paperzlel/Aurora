@@ -29,6 +29,10 @@
                     "text": "symbol-file ${workspaceFolder}/build/kernel.elf",
                     "ignoreFailures": false
                 },
+                {
+                    "description": "Load stage2 debugging symbols",
+                    "text": "symbol-file ${workspaceFolder}/build/stage2_debug.elf"
+                },
             ],
             "preLaunchTask": "Run (QEMU)"
         }

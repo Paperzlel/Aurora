@@ -87,6 +87,11 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
     // Load kernel into buffer
     uint32_t read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf);
     fat_close(file);
+    
+    if (read) {
+        boot.kernel_size = read;
+        printf("Loading %d bytes from the kernel...\n", read);
+    }
 
     uint8_t *buf = kernel;
     kmain kernel_start = NULL;

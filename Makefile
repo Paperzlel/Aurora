@@ -16,6 +16,7 @@ export TARGET_ARCH=i686				# Use -march=[this] to load a specific architecture, 
 export TARGET_CC=$(TARGET)-gcc
 export TARGET_CXX=$(TARGET)-g++
 export TARGET_LD=$(TARGET)-gcc
+export TARGET_OBJCOPY=$(TARGET)-objcopy
 export TARGET_ASMFLAGS= 
 export TARGET_CFLAGS=-std=c99 -g
 export TARGET_CINCLUDES=
@@ -47,7 +48,7 @@ $(BUILD_DIR)/main_floppy.img: bootloader kernel
 	@mcopy -i $@ $(BUILD_DIR)/kernel.elf "::kernel.elf" 2> /dev/null
 	@mmd -i $@ "::dev" 2> /dev/null
 	@mcopy -i $@ test.txt "::dev/test.txt" 2> /dev/null
-	@mmd -i $@ resources/Lat2-Fixed16.psf "::font.psf" 2> /dev/null
+	@mcopy -i $@ $(PWD)/resources/Lat2-Fixed16.psf "::font.psf" 2> /dev/null
 	@echo Created $@
 
 # Bootloader

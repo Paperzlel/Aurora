@@ -1,5 +1,6 @@
 #include "framebuffer.h"
-#include "stdio.h"
+
+#include <memory/paging.h>
 
 static Framebuffer data;
 
@@ -12,6 +13,8 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     data.width = p_info->width;
     data.height = p_info->height;
     data.bpp = p_info->bpp;
+
+    // Page allocate the FB to address 0xb0000000
 
     // Write test colour to screen
     data.address[0] = 12;

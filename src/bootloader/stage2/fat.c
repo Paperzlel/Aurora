@@ -123,6 +123,7 @@ FAT_File *fat_open_entry(DISK *p_disk, FAT_DirectoryEntry *p_directory) {
     for (int i = 0; i < MAX_FILE_HANDLES; i++) {
         if (!a_filesystem->open_handles[i].opened) {
             handle = i;
+            break;
         }
     }
 

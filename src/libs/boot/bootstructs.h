@@ -54,4 +54,5 @@ typedef struct {
     VESA_FramebufferMap framebuffer_map;        // Strucure containing the desired framebuffer map
     MemoryMap memory_map;                       // Map of the physical system memory
     uint16_t boot_device;                       // ID of the boot device that is being used
+    uint32_t kernel_size;                       // Size of the kernel in bytes
 } BootInfo;
