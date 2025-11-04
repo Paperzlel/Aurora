@@ -37,3 +37,5 @@ uint16_t arch_io_inw(uint16_t p_port);
 void arch_io_outb(uint16_t p_port, uint8_t p_value);
 
 void arch_io_outw(uint16_t p_port, uint16_t p_value);
+
+bool arch_is_virtualized();

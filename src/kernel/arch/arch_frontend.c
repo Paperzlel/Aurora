@@ -101,3 +101,12 @@ void arch_io_outb(uint16_t p_port, uint8_t p_value) {
 void arch_io_outw(uint16_t p_port, uint16_t p_value) {
     a_arch_state.outw(p_port, p_value);
 }
+
+/**
+ * @brief Checks to see if the user is running on bochs or another emulator that supports bochs VBE drivers.
+ * @returns True if bochs VBE is supported, false if not.
+ */
+bool arch_is_virtualized() {
+    arch_io_outw(0x01ce, 0);
+    return arch_io_inw(0x01cf) >= 0xb0c0;
+}

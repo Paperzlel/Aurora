@@ -116,7 +116,6 @@ bool elf_read(ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry_point)
             return false;
         }
 
-        // WARNING: Only do this for physical addresses now, virtual ones will require a separate system.
         memset((uint32_t *)ph.physical_address, 0, ph.memory_size);
         memcpy((uint32_t *)ph.physical_address, p_buffer + ph.offset, ph.memory_size);
     }
@@ -127,35 +126,6 @@ bool elf_read(ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry_point)
 
     // Change header size, then start loading section headers
     header_size = p_header->section_header_entry_size;
-
-    for (int i = 0; i < p_header->section_header_entry_count; i++) {
-        ELF_SectionHeader sh;
-        memcpy(&sh, p_buffer + p_header->sect_header_offset + (header_size * i), header_size);
-        
-        // Get section name;
-        char *name = p_buffer + sh_name->offset + sh.name_offset;
-
-        if (sh.type == ELF_SECTION_NULL) {
-            // printf("ELF: Skipping null header %s\n", name);
-            continue;
-        }
-
-        if (!(sh.flags & ELF_TYPE_ALLOC)) {
-            // printf("ELF: Skipping header %s that doesn't need allocation\n", name);
-            continue;
-        }
-
-        if (sh.flags & ELF_TYPE_EXECUTE) {
-            // printf("ELF: Skipping header %s that is made of executable code (program headers already loaded)\n", name);
-            continue;
-        }
-
-        memset((uint32_t *)sh.virtual_address, 0, sh.size);
-        // Only copy bits if data region is non-zero (i.e. don't bother copying .bss)
-        if (sh.type != ELF_SECTION_NOBITS) {
-            memcpy((uint32_t *)sh.virtual_address, p_buffer + sh.offset, sh.size);
-        }
-    }
 
     // Finally, set the entry point to whatever it needs to be;
     *p_out_entry_point = (void *)p_header->entry_point;

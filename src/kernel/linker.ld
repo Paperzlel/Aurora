@@ -22,27 +22,25 @@ SECTIONS
 
 
   __kernel_lh_end = .;
-  phys = __kernel_lh_end;
-  . = ASSERT(phys == __kernel_lh_end, "Invalid size of kernel lower half.");
-  . = virt;
+  . += virt;
   
   /* All here is within virtual addresses. */
-  .text  : AT(ADDR(.text) - virt + phys)
+  .text  : AT(ADDR(.text) - virt)
   {
     __text_start = .;        *(.text)      
   }
   
-  .data  : AT(ADDR(.data) - virt + phys)
+  .data  : AT(ADDR(.data) - virt)
   {
     __data_start = .;        *(.data)      
   }
   
-  .rodata  : AT(ADDR(.rodata) - virt + phys)
+  .rodata  : AT(ADDR(.rodata) - virt)
   {
     __entry_start = .;       *(.rodata)
   }
   
-  .bss  : AT(ADDR(.bss) - virt + phys)
+  .bss  : AT(ADDR(.bss) - virt)
   {
     __bss_start = .;         *(.bss)
   }

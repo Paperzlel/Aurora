@@ -25,6 +25,10 @@
 - [x] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
 - [x] Abstract i686 instructions to generic hardware layer
 
+### Filesystem
+- [ ] Implement a basic FAT12 filesystem driver
+- [ ] Expose methods for `fopen` and `fread` in `stdio.h`
+
 ### Hardware
 - [ ] Disable PIC/Check PIC drivers
 - [ ] Enable/write APIC drivers
@@ -38,5 +42,6 @@
 ### Video
 - [ ] Create a VBE graphics driver for hardware (current one is non-functional)
 - [x] Move video drivers to use common resources like framebuffer info
-- [ ] Make stdio.c reroute to loaded graphics drivers
+- [x] Make stdio.c reroute to loaded graphics drivers
 - [ ] Expose a video driver API for non-driver functions to use
+- [ ] Load a charlist and draw chars to the screen

@@ -11,7 +11,7 @@
 #include <boot/bootstructs.h>
 #include <videostructs.h>
 
-static VideoDriver a_driver_state;
+VideoDriver a_driver_state;
 
 void vesa_to_driver(VESA_FramebufferMap *p_map, Framebuffer *out_framebuffer) {
     if (!p_map || !out_framebuffer) {

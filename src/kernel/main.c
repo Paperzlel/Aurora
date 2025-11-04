@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-// #include "memory.h"
+#include "memory.h"
 #include "stdio.h"
 
 #include <boot/bootstructs.h>
@@ -9,14 +9,15 @@
 #include <arch/cpuid/cpuid.h>
 #include <drivers/driver_load.h>
 #include <memory/paging.h>
+#include <drivers/video/framebuffer.h>
 
-void cstart(BootInfo *boot)
+extern uint8_t __bss_start;
+extern uint8_t __end;
+
+void __attribute__((cdecl)) cstart(BootInfo *boot)
 {
-    // // Initialize paging
-    // if (!paging_initialize(boot->kernel_size)) {
-    //     printf("Could not initialize paging.\n");
-    //     goto end;
-    // }
+    // Clear BSS data
+    memset(&__bss_start, 0, (&__end) - (&__bss_start));
 
     // "Load" VGA driver. We do this first because otherwise any architecture-loading errors will fail silently.
     driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_VGA);
@@ -39,7 +40,7 @@ void cstart(BootInfo *boot)
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs
-    if (cpuid_supports_feature(CPU_FEATURE_HYPERVISOR, 0)) {
+    if (cpuid_supports_feature(CPU_FEATURE_HYPERVISOR, 0) || arch_is_virtualized()) {
         driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_BOCHS);
         video_driver_loaded = driver_load_driver(LOAD_TYPE_VIDEO, (void *)&boot->framebuffer_map);
     }
@@ -54,10 +55,6 @@ void cstart(BootInfo *boot)
 
         video_driver_loaded = true;
     }
-
-    int *p_check_in_unmapped = (int *)0xb0000000;
-    *p_check_in_unmapped = 33;
-    
 
 end:
     while (true) {

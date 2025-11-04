@@ -54,21 +54,9 @@ If you experience errors during the process, go into your `Makefile` and change 
 ### Operating System
 To build the OS itself, run `make` normally. This will create 3 binary files: `stage1.bin`, `stage2.bin` and `kernel.bin`, as well as `.map` files for the kernel and stage 2. The entire OS itself is stored inside `main_floppy.img`.
 
-## Running with qemu 
-Run the shell script `./run.sh` to run the OS with QEMU. 
+## Running with qemu + GDB
 
-### Using GDB with QEMU
-Using GDB makes our lives vastly easier, as we can step through the code minimally and no longer require `bochs` for debugging our C code.
-
-However, our current setup has some limitations: due to us using a `.bin` file over an `.elf` one, GDB cannot load the necessary debug symbols to read the stack or any of our variables we have set. A long-term plan to fix this for the kernel is in progress. The steps below have a limited level of usability, but do allow us to step through the bootloader with less difficulty than before.
-
-To load GDB for QEMU, do the following steps:
-1. Add `-s -S` before `-fda` on the `run.sh` command. This makes QEMU wait for us to connect with GDB.
-2. Run GDB with the command `gdb` and no other arguments
-3. Run `target remote localhost:1234` to connect with QEMU
-4. Look at the `.map` files to set your breakpoints where you wish to debug
-5. Add a breakpoint with the command `break *0x[address]`
-6. Run the command `continue` to move to that breakpoint.
+QEMU and GDB have been set up to work together within Visual Studio Code using their debugger. Adding breakpoints within C code and pressing F5 to run will allow the project to be debugged as normal.
 
 For any extra references, see [this link](https://stackoverflow.com/questions/1471226/most-tricky-useful-commands-for-gdb-debugger).
 

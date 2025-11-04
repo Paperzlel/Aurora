@@ -15,6 +15,11 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     data.bpp = p_info->bpp;
 
     // Page allocate the FB to address 0xb0000000
+    if (!paging_map_region((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8))) {
+        return false;
+    }
+    // Re-assign if successful.
+    data.address = (uint8_t *)0xb0000000;
 
     // Write test colour to screen
     data.address[0] = 12;
@@ -35,9 +40,9 @@ void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b) {
     for (int y = 0; y < data.height; y++) {
         for (int x = 0; x < data.width; x++) {
             int pixel = (x + y * data.width) * bytes_per_pixel;
-            data.address[pixel + 1] = r;
-            data.address[pixel + 2] = g;
-            data.address[pixel + 3] = b;
+            data.address[pixel] = b;
+            data.address[pixel + 1] = g;
+            data.address[pixel + 2] = r;
         }
     }
 }

@@ -13,10 +13,13 @@ typedef enum {
     PAGE_FLAG_READ_ONLY = 0,
 } PagingFlags;
 
-bool paging_map_region(void *p_from, void *p_to,  uint64_t p_size, PagingFlags p_flags);
+
+bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size);
 void paging_free_region(void *p_address);
 
 void paging_set_flag(void *p_address, PagingFlags p_flags);
 void paging_clear_flag(void *p_address, PagingFlags p_flags);
 
 uint32_t virtual_to_physical(uint32_t p_address);
+
+bool is_valid_address(void *p_virtual);

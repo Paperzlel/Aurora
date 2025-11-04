@@ -31,7 +31,8 @@
         "bootstructs.h": "c",
         "string": "c",
         "format": "c",
-        "coroutine": "c"
+        "coroutine": "c",
+        "memory.h": "c"
     },
 
     "todohighlight.isEnable": true,
