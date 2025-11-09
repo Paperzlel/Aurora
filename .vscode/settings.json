@@ -72,5 +72,8 @@
     ],
     "clangd.arguments": [
         "-header-insertion=never"
-    ]
+    ],
+
+    "C_Cpp.default.cppStandard": "c++98",
+    "C_Cpp.default.cStandard": "c99",
 }

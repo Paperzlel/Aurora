@@ -33,8 +33,13 @@
 - [ ] Disable PIC/Check PIC drivers
 - [ ] Enable/write APIC drivers
 
+### Memory
+- [x] Implement dynamic paging
+- [ ] Implement kernel-level malloc() and free()
+- [ ] Use MemoryRegions to find all regions where memory is used, and set blocks to invalid if so
+
 ### Roadmap
-- [ ] Add paging
+- [x] Add paging
 - [ ] Add a virtual filesystem
 - [ ] Create module handling
 - [ ] Create a file reader command (e.g. `rdfile`)
