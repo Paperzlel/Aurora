@@ -37,3 +37,5 @@ $(BUILD_DIR)/kernel/asm/%.o: %.asm
 
 clean:
 	@rm -f $(BUILD_DIR)/kernel.elf
+
+-include $(OBJECTS_C:.o=.d)

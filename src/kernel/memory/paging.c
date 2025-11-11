@@ -59,6 +59,11 @@ extern uint32_t page_directory[1024];
 
 void __attribute__((cdecl)) __tlb_flush(void *p_address);
 
+// Utility function (rounds up)
+uint32_t ceil(uint32_t x, uint32_t y) {
+    return x % y == 0 ? x / y : (x / y) + 1;
+}
+
 
 // Linked-list implementation for memory:
 // - Allocate new list
@@ -253,9 +258,7 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size, PageT
         _init_paging_config();
     }
 
-    // Find the number of directories to use
-    int directory_count = p_size / (0x1000 * 0x1000);
-    directory_count++;          // Always increment division
+    int directory_count = ceil(p_size, 0x400 * 0x1000);
 
     void *phys_address = p_physical;
     uint32_t phys = (uint32_t)p_physical;
@@ -300,13 +303,14 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size, PageT
         }
 
         uint16_t table_start = 0;
-        if (i <= 0) {
-            table_start = ((uint32_t)p_virtual & 0x003ff000);
+        if (i == 0) {
+            table_start = ((uint32_t)p_virtual & 0x003ff000) >> 12;
         }
 
         uint16_t table_end = 1024;
         if (i == directory_count - 1) {
-            table_end = ((p_size % 0x400000) / 4096) + 1;
+            // End of table must be 1 less than the full size as here we map 4096 bytes INCLUDING byte 0.
+            table_end = ceil((((uint32_t)p_virtual + p_size - 1) % 0x400000), 4096);
             table_end = (table_end > 1024) ? 1024 : table_end;
         }
 

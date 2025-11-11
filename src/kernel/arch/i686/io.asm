@@ -30,3 +30,23 @@ i686_outw:
     mov dx, [esp + 4]
     out dx, ax
     ret
+
+global i686_set_msr
+i686_set_msr:
+    mov ecx, [esp + 4]
+    mov eax, [esp + 8]
+    mov edx, [esp + 12]
+    wrmsr
+    ret
+
+global i686_get_msr
+i686_get_msr:
+    mov ecx, [esp + 4]
+    mov esi, [esp + 8]
+    mov edi, [esp + 12]
+    xor eax, eax
+    xor edx, edx
+    rdmsr
+    mov [esi], eax
+    mov [edi], edx
+    ret

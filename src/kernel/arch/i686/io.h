@@ -25,4 +25,25 @@ uint16_t __cdecl i686_inw(uint16_t p_port);
  */
 void __cdecl i686_outb(uint16_t p_port, uint8_t p_value);
 
+/**
+ * @brief Sends a word to the given I/O port.
+ * @param p_port The port ID to send the data to
+ * @param p_value The data to send
+ */
 void __cdecl i686_outw(uint16_t p_port, uint16_t p_value);
+
+/**
+ * @brief Sets the value of a given MSR to the inputted results
+ * @param p_msr The MSR to set
+ * @param p_low The lower 32 bits of the value
+ * @param p_high The higher 32 bits of the value
+ */
+void __cdecl i686_set_msr(uint32_t p_msr, uint32_t p_low, uint32_t p_high);
+
+/**
+ * @brief Gets the values held inside a given MSR
+ * @param p_msr The MSR to read from
+ * @param p_low The lower 32 bits to read in
+ * @param p_high The higher 32 bits to read in
+ */
+void __cdecl i686_get_msr(uint32_t p_msr, uint32_t *p_low, uint32_t *p_high);

@@ -32,7 +32,15 @@
         "string": "c",
         "format": "c",
         "coroutine": "c",
-        "memory.h": "c"
+        "memory.h": "c",
+        "optional": "c",
+        "ratio": "c",
+        "system_error": "c",
+        "type_traits": "c",
+        "variant": "c",
+        "array": "c",
+        "tuple": "c",
+        "utility": "c"
     },
 
     "todohighlight.isEnable": true,

@@ -1,0 +1,68 @@
+#include "pic.h"
+
+#include "io.h"
+#include "apic.h"
+#include <arch/cpuid/cpuid.h>
+#include <stdio.h>
+
+#define PIC_1               0x20
+#define PIC_2               0xa0
+
+#define PIC_1_COMMAND       PIC_1
+#define PIC_1_DATA          (PIC_1 + 1)
+#define PIC_2_COMMAND       PIC_2
+#define PIC_2_DATA          (PIC_2 + 1)
+
+#define ICW1_ENV_DATA       0x01
+#define ICW1_CASCADE        0x02
+#define ICW1_INTERVAL_4     0x04
+#define ICW1_LEVEL          0x08
+#define ICW1_INIT           0x10
+
+#define ENV_8086            0x01
+#define ENV_AUTO            0x02
+#define ENV_BUF_SLAVE       0x04
+#define ENV_BUF_MASTER      0x08
+#define ENV_SFNM            0x10
+
+#define CASCADE_IRQ         0x02
+
+
+#define PIC_EOI     0x20
+
+void pic_send_eoi(uint8_t p_interrupt) {
+    if (p_interrupt > 8) {
+        i686_outb(PIC_2_COMMAND, PIC_EOI);
+    } else {
+        i686_outb(PIC_1_COMMAND, PIC_EOI);
+    }
+}
+
+void i686_pic_initialize() {
+    // Remap all PICs to different values.
+    // Should be done over ignoring them, as they will still give off interrupts regardless.
+    i686_outb(PIC_1_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
+    i686_outb(PIC_2_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
+
+    i686_outb(PIC_1_DATA, PIC_1);           // Remap vectors to 0x20 and 0xa0 respectively
+    i686_outb(PIC_2_DATA, PIC_2);
+
+    i686_outb(PIC_1_DATA, 1 << CASCADE_IRQ);
+    i686_outb(PIC_2_DATA, 2);
+
+    i686_outb(PIC_1_DATA, ENV_8086);
+    i686_outb(PIC_2_DATA, ENV_8086);
+
+    i686_outb(PIC_1_DATA, 0x00);
+    i686_outb(PIC_2_DATA, 0x00);
+    
+    // If APIC is present, use that instead
+    if (cpuid_supports_feature(CPU_FEATURE_APIC, 1)) {
+        i686_outb(PIC_1_DATA, 0xff);
+        i686_outb(PIC_2_DATA, 0xff);
+        if (!apic_initialize()) {
+            printf("Could not load APIC.\n");
+        }
+        return;
+    }
+}

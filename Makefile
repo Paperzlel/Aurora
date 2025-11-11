@@ -2,7 +2,7 @@ export ASM=nasm
 export CC=gcc
 export CXX=g++
 export LD=gcc
-export CFLAGS=-std=c99 -g -mtune=i386
+export CFLAGS=-std=c99 -g -mtune=i386 -MD
 export LINKFLAGS=
 export LIBS=
 
@@ -18,7 +18,7 @@ export TARGET_CXX=$(TARGET)-g++
 export TARGET_LD=$(TARGET)-gcc
 export TARGET_OBJCOPY=$(TARGET)-objcopy
 export TARGET_ASMFLAGS= 
-export TARGET_CFLAGS=-std=c99 -g
+export TARGET_CFLAGS=-std=c99 -g -MD
 export TARGET_CINCLUDES=
 export TARGET_LDFLAGS= 
 export TARGET_LIBS=

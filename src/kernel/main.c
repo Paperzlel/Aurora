@@ -8,8 +8,8 @@
 #include <arch/arch_frontend.h>
 #include <arch/cpuid/cpuid.h>
 #include <drivers/driver_load.h>
-#include <memory/paging.h>
 #include <drivers/video/framebuffer.h>
+#include <memory/memory_core.h>
 
 extern uint8_t __bss_start;
 extern uint8_t __end;
@@ -23,20 +23,25 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
     driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_VGA);
     driver_load_driver(LOAD_TYPE_VIDEO, NULL);
 
-    // Load architecture information (IDT, GDT, ISRs).
-    if (!arch_init()) {
-        printf("Could not load an architecure backend.\n");
-        goto end;
-    }
-
-    // Check CPUID for supported features.
+    // Check CPUID for supported features. Needed here as CPU features may be checked by the CPU architecture
     CPU_Config cfg;
     if (!cpuid_initialize(&cfg)) {
         printf("Could not initialize CPUID information.");
         goto end;
     }
 
+    // Load architecture information (IDT, GDT, ISRs).
+    if (!arch_init()) {
+        printf("Could not load an architecure backend.\n");
+        goto end;
+    }
     printf("CPU features: %s\n", cpuid_get_features());
+
+    // Load MemoryRegion info into a valid memory map
+    if (!initialize_memory_map(&boot->memory_map)) {
+        printf("Failed to initialize memory.\n");
+        goto end;
+    }
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs

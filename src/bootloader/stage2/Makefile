@@ -38,3 +38,5 @@ $(BUILD_DIR)/stage2/asm/%.o: %.asm
 
 clean:
 	@rm -f $(BUILD_DIR)/stage2.bin
+
+-include $(OBJECTS_C:.o=.d)

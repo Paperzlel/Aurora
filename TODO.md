@@ -24,19 +24,19 @@
 - [x] Add CPUID checks for different features
 - [x] Add Virtual 8086 Mode option to prevent Real Mode/Protected mode switching
 - [x] Abstract i686 instructions to generic hardware layer
+- [x] Disable PIC/Check PIC drivers
+- [x] Begin APIC drivers
 
 ### Filesystem
 - [ ] Implement a basic FAT12 filesystem driver
 - [ ] Expose methods for `fopen` and `fread` in `stdio.h`
 
-### Hardware
-- [ ] Disable PIC/Check PIC drivers
-- [ ] Enable/write APIC drivers
 
 ### Memory
 - [x] Implement dynamic paging
 - [ ] Implement kernel-level malloc() and free()
 - [ ] Use MemoryRegions to find all regions where memory is used, and set blocks to invalid if so
+- [ ] Automatically identity page memory-mapped I/O data from MemoryRegions
 
 ### Roadmap
 - [x] Add paging
