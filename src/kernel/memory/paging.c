@@ -3,8 +3,8 @@
 #include "memdefs.h"
 #include <memory.h>
 
-#define PAGE_TABLE_COUNT PAGE_TABLE_MEMORY_SIZE / 4096
-#define PAGE_TABLE_CONFIG_SIZE PAGE_TABLE_MEMORY_SIZE % 4096
+#define PAGE_TABLE_COUNT (PAGE_TABLE_MEMORY_SIZE / 4096) - 1
+#define PAGE_TABLE_CONFIG_SIZE (PAGE_TABLE_MEMORY_SIZE % 4096)
 
 #define NULL ((void *)0)
 
@@ -33,7 +33,7 @@ typedef enum {
     BIT_USED = 1 << 0,
     BIT_PARTIALLY_FILLED = 1 << 1,
     BIT_KERNEL = 0 << 2,
-    BIT_USERLAND = 1 << 2,
+    BIT_USERSPACE = 1 << 2,
 } PageInfoBits;
 
 // (PAGE_TABLE_VIRTUAL_ADDRESS + PAGE_TABLE_MEMORY_SIZE - PAGE_TABLE_CONFIG_SIZE)
@@ -46,15 +46,6 @@ PageTableConfig *config = (PageTableConfig *)&__ptc_reserved;
 PageTable *allocated_tables = PAGE_TABLE_VIRTUAL_ADDRESS;
 int used_table_count = 0;
 
-// (PAGE_TABLE_VIRTUAL_ADDRESS + PAGE_TABLE_MEMORY_SIZE - PAGE_TABLE_CONFIG_SIZE) + sizeof(PageTableConfig)
-
-uint8_t __pt_list_reserved[PAGE_TABLE_CONFIG_SIZE - sizeof(PageTableConfig)] = { 0 };
-
-PageTableElement *pt_list_memory = (PageTableElement *)&__pt_list_reserved;
-uint32_t pt_list_allocated[8];
-int allocated_lists = 0;
-
-
 extern uint32_t page_directory[1024];
 
 void __attribute__((cdecl)) __tlb_flush(void *p_address);
@@ -62,130 +53,6 @@ void __attribute__((cdecl)) __tlb_flush(void *p_address);
 // Utility function (rounds up)
 uint32_t ceil(uint32_t x, uint32_t y) {
     return x % y == 0 ? x / y : (x / y) + 1;
-}
-
-
-// Linked-list implementation for memory:
-// - Allocate new list
-// - Free list (invalidate PT)
-// - Append new list
-
-/**
- * @brief Obtains the next immediately available page table index by finding the next "available" bit index and offset. Memory efficient but CPU-expensive.
- * @param out_list_idx The index for out page table to look for this value at.
- * @param out_offset The offset bit into the page table to look for the value at
- */
-void _get_next_pt_index_and_offset(uint8_t *out_list_idx, uint8_t *out_offset) {
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < sizeof(uint32_t) * 8; j++) {
-            if (!((pt_list_allocated[i] >> j) & 1)) {
-                *out_list_idx = i;
-                *out_offset = j;
-                return;
-            }
-        }
-    }
-}
-
-/**
- * @brief Sets the given offset and index value for the page table list as used.
- * @param p_index The index into the page table list array
- * @param p_offset The offset into the page table index bits
- */
-void _set_pt_as_used(uint8_t p_index, uint8_t p_offset) {
-    pt_list_allocated[p_index] |= 1 << p_offset;
-}
-
-/**
- * @brief Clears the given page table list index and marks it usable.
- * @param p_index The index into the page table list
- * @param p_offset The offset into the page table list bitmask
- */
-void _set_pt_as_clear(uint8_t p_index, uint8_t p_offset) {
-    pt_list_allocated[p_index] ^= 1 << p_offset;
-}
-
-bool _pt_list_check_used(uint8_t p_index, uint8_t p_offset) {
-    return (pt_list_allocated[p_index] & 1 << p_offset) != 0;
-}
-
-/**
- * @brief Allocates a new page table list element from our given memory to use in a list. Linked-list information should only be handled by the code and
- * not touched by the user. In other words, only use the page table this gives in code.
- * @return `NULL` if the function was unable to allocate memory, and the pointer to the element if allocated.
- */
-PageTableElement *_alloc_new_pt_list_element() {
-    // Check for if the page table is overlapping into kernel memory. This is a serious case and should generally mean we move this information, but
-    // is unlikely to be causes before we need more page tables anyways.
-    // Include the potential table in this calculation.
-    // if ((void *)(pt_list_memory + (allocated_lists * sizeof(PageTableElement)) + 1) >= KERNEL_VIRTUAL_ADDRESS) {
-    //     return NULL;
-    // }
-
-    // Index * 32 + offset = index into array
-    uint8_t idx, ofs;
-    _get_next_pt_index_and_offset(&idx, &ofs);
-
-    PageTableElement *ret = &pt_list_memory[idx * 32 + ofs];
-    if (!ret) {
-        return NULL;
-    }
-
-    ret->packed_idx_ofs = (idx << 8) + ofs;
-    _set_pt_as_used(idx, ofs);
-    allocated_lists++;
-    return ret;
-}
-
-/**
- * @brief Frees a page table list element from memory. Only destroys the element itself and does not remove it from the list.
- * @param p_element The element to free
- */
-void _pt_list_element_free(PageTableElement *p_element) {
-    // Unpack index and offset
-    uint8_t idx, ofs;
-    idx = p_element->packed_idx_ofs >> 8;
-    ofs = p_element->packed_idx_ofs & 0x00ff;
-
-    if (!_pt_list_check_used(idx, ofs)) {
-        return;
-    }
-
-    _set_pt_as_clear(idx, ofs);
-    memset(p_element, 0, sizeof(PageTableElement));         // Clear used memory
-    allocated_lists--;
-    p_element = NULL;
-}
-
-/**
- * @brief Pushes an item to the end of the list. 
- * @param p_list The list to use
- * @param p_item The header item to use
- */
-void _pt_list_push(PageTableElement *p_list, PageTableElement *p_item) {
-    PageTableElement *end = p_list;
-    while (end->next) {
-        end = p_list->next;
-    }
-
-    end->next = p_item;
-}
-
-void _pt_list_pop(PageTableElement *p_list, PageTableElement *p_elem) {
-    PageTableElement *item = p_list;
-    PageTableElement *prev = p_list;
-    while (item != p_elem && item) {
-        item = item->next;
-        prev = item;
-    }
-
-    if (item == NULL) {
-        return;
-    }
-
-    if (prev) {
-        prev->next = item->next;
-    }
 }
 
 
@@ -253,23 +120,47 @@ void _pt_free(PageTable *p_table) {
     used_table_count--;
 }
 
-bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size, PageTableHandle *out_handle) {
+// 1024 PT entries --> 4096 KiB = 4 MiB = 0x400000 in hex per PT
+// 1024 PD entries --> 4096 * 1024 = 4194304 KiB = 4096 MiB = 4 GiB
+
+/**
+ * @brief Finds the number of directories to use for the given virtual address and size. Virtual addresses that are not aligned to a 4 MiB
+ * boundary may straddle a border, which doesn't get picked up by the `ceil()` function. In order to find the appropriate number of directories,
+ * we need to check if the remaining address space until the next 4 MiB boundary is greater than the size, and if so, we subtract the difference
+ * and ceiling-divide size to get the directory count.
+ * @param p_virtual The base virtual address to place the memory at
+ * @param p_size The amount of memory we are looking to map
+ * @return The number of page directories to allocate.
+ */
+int _get_directory_count(uint32_t p_virtual, uint32_t p_size) {
+    uint32_t remainder_in_virt = (p_virtual & 0xffc00000) + 0x400000 - p_virtual;
+    // Isn't straddling a border
+    if (p_size <= remainder_in_virt) {
+        return 1;
+    }
+
+    p_size -= remainder_in_virt;
+    return ceil(p_size, 0x400000) + 1;
+}
+
+bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size) {
     if (!config->intialized) {
         _init_paging_config();
     }
 
-    int directory_count = ceil(p_size, 0x400 * 0x1000);
+    // Already mapped, no need to remap
+    if (is_valid_range(p_virtual, p_virtual + p_size)) {
+        return true;
+    }
 
+    int directory_count = _get_directory_count((uint32_t)p_virtual, p_size);
     void *phys_address = p_physical;
-    uint32_t phys = (uint32_t)p_physical;
     uint16_t page_index = ((uint32_t)p_virtual & 0xffc00000) >> 22;
-
-    PageTableElement *list = NULL;
 
     for (int i = 0; i < directory_count; i++) {
         // TODO: set an error
         if (used_table_count >= PAGE_TABLE_COUNT) {
-            break;
+            return false;
         }
 
         PageTable *table = NULL;
@@ -289,25 +180,11 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size, PageT
             return false;
         }
 
-        // Assign new PT list element
-        PageTableElement *tmp = _alloc_new_pt_list_element();
-        if (!tmp) {
-            return false;
-        }
-
-        tmp->table = table;
-        if (!list) {
-            list = tmp;
-        } else {
-            _pt_list_push(list, tmp);
-        }
-
         uint16_t table_start = 0;
+        uint16_t table_end = 1024;
         if (i == 0) {
             table_start = ((uint32_t)p_virtual & 0x003ff000) >> 12;
-        }
-
-        uint16_t table_end = 1024;
+        } 
         if (i == directory_count - 1) {
             // End of table must be 1 less than the full size as here we map 4096 bytes INCLUDING byte 0.
             table_end = ceil((((uint32_t)p_virtual + p_size - 1) % 0x400000), 4096);
@@ -331,34 +208,68 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size, PageT
         page_directory[page_index + i] = pde;
     }
 
-    out_handle->size = p_size;
-    out_handle->memory_start = p_virtual;
-    out_handle->initialized = true;
-    out_handle->internal = (void *)list;
-
     return true;
 }
 
-/**
- * @brief Frees the data associated to the given handle. Handles should not be created manually as they are generated by `paging_map_region()`.
- * @param p_handle The handle to the page table to modify.
- */
-void paging_free_region(PageTableHandle *p_handle) {
-    PageTableElement *root = (PageTableElement *)p_handle->internal;
+void paging_free_region(void *p_virtual, uint32_t p_size) {
+    int directory_count = _get_directory_count((uint32_t)p_virtual, p_size);
 
-    int i = 0;
-
-    while (root) {
-        if (root->table) {
-            _pt_free(root->table);
-        }
-
-        uint16_t page_index = ((uint32_t)p_handle->memory_start & 0xffc00000) >> 22;
+    for (int i = 0; i < directory_count; i++) {
+        uint16_t page_index = ((uint32_t)p_virtual & 0xffc00000) >> 22;
+        PageTable *table = (PageTable *)(page_directory[page_index + i] & 0xfffff000);
         page_directory[page_index + i] &= 2;            // Clear all bits except bit 1 (r/w bit)
 
-        PageTableElement *this = root;
-        root = root->next;
-        _pt_list_element_free(this);
+        uint16_t table_start = 0;
+        uint16_t table_end = 1024;
+        if (i == 0) {
+            table_start = ((uint32_t)p_virtual & 0x003ff000) >> 12;
+        }
+        if (i == directory_count - 1) {
+            table_end = ceil((((uint32_t)p_virtual + p_size - 1) % 0x400000), 4096);
+            table_end = (table_end > 1024) ? 1024 : table_end;
+        }
+
+        // Can free entire page table
+        bool free_pt = (table_start == 0 && table_end == 1024);
+
+        for (int j = table_start; j < table_end; j++) {
+            table->entry[j] = 0;
+        }
+
+        // Check if lower regions are empty as well
+        bool lower_empty = false;
+        if (table_start > 0) {
+            for (int i = 0; i < table_start; i++) {
+                if (table->entry[i] != 0) {
+                    lower_empty = false;
+                    break;
+                }
+            }
+
+            lower_empty = true;
+        }
+
+        // Check if upper regions are empty as well
+        bool upper_empty = false;
+        if (table_end < 1024) {
+            for (int i = table_end; i < 1024; i++) {
+                if (table->entry[i] != 0) {
+                    upper_empty = false;
+                    break;
+                }
+            }
+
+            upper_empty = true;
+        }
+
+        // If both lower and upper are empty, free the table.
+        if (lower_empty && upper_empty) {
+            free_pt = true;
+        }
+
+        if (free_pt) {
+            _pt_free(table);
+        }
     }
 }
 
@@ -381,4 +292,22 @@ uint32_t virtual_to_physical(uint32_t p_virtual) {
 
 bool is_valid_address(void *p_virtual) {
     return virtual_to_physical((uint32_t)p_virtual) != 0;
+}
+
+bool is_valid_range(void *p_start, void *p_end) {
+    // Start and end may need to be mapped
+    if (virtual_to_physical((uint32_t)p_start) == 0 || virtual_to_physical((uint32_t)p_end) == 0) {
+        return false;
+    }
+
+    int range_size = (uint32_t)(p_end - p_start);
+    while (range_size > 0) {
+        if (virtual_to_physical((uint32_t)(p_end - range_size)) == 0) {
+            return false;
+        }
+
+        range_size -= 4096;
+    }
+
+    return true;
 }

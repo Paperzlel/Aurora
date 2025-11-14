@@ -95,6 +95,9 @@ void driver_video_write_char(char c) {
         return;
     }
 
-    arch_io_outb(0xe9, c);
+    if (arch_is_virtualized()) {
+        i686_outb(0xe9, c);
+    }
+    
     a_driver_state.write_char(c);
 }

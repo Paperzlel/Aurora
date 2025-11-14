@@ -26,17 +26,18 @@
 - [x] Abstract i686 instructions to generic hardware layer
 - [x] Disable PIC/Check PIC drivers
 - [x] Begin APIC drivers
+- [ ] Modify CPU architecture so that different drivers are loaded at different times (i.e. GDT/IRQ/TSS should load instantly but not APIC)
 
 ### Filesystem
 - [ ] Implement a basic FAT12 filesystem driver
 - [ ] Expose methods for `fopen` and `fread` in `stdio.h`
-
 
 ### Memory
 - [x] Implement dynamic paging
 - [ ] Implement kernel-level malloc() and free()
 - [ ] Use MemoryRegions to find all regions where memory is used, and set blocks to invalid if so
 - [ ] Automatically identity page memory-mapped I/O data from MemoryRegions
+- [ ] Align memory allocations to 16-byte boundaries
 
 ### Roadmap
 - [x] Add paging

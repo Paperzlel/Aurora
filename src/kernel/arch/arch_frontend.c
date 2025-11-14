@@ -14,6 +14,7 @@
  */
 
 typedef struct {
+    bool initialized;
     void (*initialize)();
     void (*finalize)();
     bool (*register_interrupt_handler)(int, bool (*)(Registers *));
@@ -27,7 +28,7 @@ typedef struct {
     void (*outw)(uint16_t, uint16_t);
 } ArchState;
 
-static ArchState a_arch_state;
+static ArchState a_arch_state = { .initialized = false };
 
 typedef struct {
     int eax;
@@ -89,30 +90,60 @@ bool arch_init() {
 }
 
 bool arch_run_v86_task(void *p_start, void *p_end, uint8_t *p_args, int p_argc) {
+    if (!a_arch_state.initialized) {
+        return false;
+    }
+
     return a_arch_state.run_task(p_start, p_end, p_args, p_argc);
 }
 
 uint8_t arch_io_inb(uint16_t p_port) {
+    if (!a_arch_state.initialized) {
+        return -1;
+    }
+
     return a_arch_state.inb(p_port);
 }
 
 uint16_t arch_io_inw(uint16_t p_port) {
+    if (!a_arch_state.initialized) {
+        return -1;
+    }
+
     return a_arch_state.inw(p_port);
 }
 
 void arch_io_outb(uint16_t p_port, uint8_t p_value) {
+    if (!a_arch_state.initialized) {
+        return;
+    }
+
     a_arch_state.outb(p_port, p_value);
 }
 
 void arch_io_outw(uint16_t p_port, uint16_t p_value) {
+    if (!a_arch_state.initialized) {
+        return;
+    }
+
     a_arch_state.outw(p_port, p_value);
 }
 
 void arch_set_msr(uint32_t p_msr, uint32_t p_lower, uint32_t p_higher) {
+    if (!a_arch_state.initialized) {
+        return;
+    }
+
     a_arch_state.set_msr(p_msr, p_lower, p_higher);
 }
 
 void arch_get_msr(uint32_t p_msr, uint32_t *p_lower, uint32_t *p_higher) {
+    if (!a_arch_state.initialized) {
+        *p_lower = -1;
+        *p_higher = -1;
+        return;
+    }
+
     a_arch_state.get_msr(p_msr, p_lower, p_higher);
 }
 

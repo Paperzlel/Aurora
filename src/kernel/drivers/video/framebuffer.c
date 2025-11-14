@@ -3,7 +3,6 @@
 #include <memory/paging.h>
 
 static Framebuffer data;
-static PageTableHandle fb_page_handle;
 
 bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     if (!p_info || !p_info->address || data.address != 0) {
@@ -16,17 +15,11 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     data.bpp = p_info->bpp;
 
     // Page allocate the FB to address 0xb0000000
-    if (!paging_map_region((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8), &fb_page_handle)) {
+    if (!paging_map_region((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8))) {
         return false;
     }
     // Re-assign if successful.
     data.address = (uint8_t *)0xb0000000;
-
-    // Write test colour to screen
-    data.address[0] = 12;
-    if (data.address[0] != 12) {
-        return false;
-    }
 
     out_driver->clear = framebuffer_clear;
     out_driver->set_pixel = framebuffer_set_pixel;

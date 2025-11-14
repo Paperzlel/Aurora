@@ -30,18 +30,18 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         goto end;
     }
 
+    // Initialize memory info.
+    if (!initialize_memory(&boot->memory_map, boot->kernel_size)) {
+        printf("Failed to initialize memory.\n");
+        goto end;
+    }
+
     // Load architecture information (IDT, GDT, ISRs).
     if (!arch_init()) {
         printf("Could not load an architecure backend.\n");
         goto end;
     }
     printf("CPU features: %s\n", cpuid_get_features());
-
-    // Load MemoryRegion info into a valid memory map
-    if (!initialize_memory_map(&boot->memory_map)) {
-        printf("Failed to initialize memory.\n");
-        goto end;
-    }
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs

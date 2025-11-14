@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #include "arch/arch_frontend.h"
-#include "memory/paging.h"
 
 // RSDP/XSDP
 
@@ -261,9 +260,6 @@ bool apic_parse_madt(void *p_madt) {
     eax &= 0xfffff000;
     eax |= IA32_APIC_BASE_MSR_ENABLE;
     arch_set_msr(IA32_APIC_BASE_MSR, eax, edx);
-
-    PageTableHandle ph;
-    paging_map_region((void *)eax, (void *)eax, 0x4000, &ph);
 
     // Write SIVR bit 8 to enable interrupts
     uint32_t svir_value = *((volatile uint32_t *)(eax + 0xf0));
