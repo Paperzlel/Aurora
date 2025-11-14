@@ -16,11 +16,15 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size);
 
 /**
  * @brief Allocates N bytes of memory for use, with kernel-level permissions. Use whenever dynamic allocations are required.
- * @param p_size The number of bytes to use in the 
- * @return 
+ * @param p_size The number of bytes to allocate.
+ * @return A pointer to the allocated memory if successful, and `NULL` if not.
  */
 void *kalloc(uint32_t p_size);
 
+/**
+ * @brief Frees the memory from the allocator, if it is valid. If not, throws an error.
+ * @param p_mem The memory region to free.
+ */
 void kfree(void *p_mem);
 
 /**
