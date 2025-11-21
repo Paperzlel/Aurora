@@ -21,14 +21,14 @@ typedef enum {
  * @brief Changes the present flag for the given ISR so that it can be used by the rest of our code.
  * @param p_interrupt The interrupt to enable
  */
-void i686_idt_enable_isr(int p_interrupt);
+void i386_idt_enable_isr(int p_interrupt);
 
 /**
  * @brief Changes the present flag for the given ISR so that it is no longer checked when said interrupt is called, usually to create a manual handler.
  * Do not disable if you don't want to handle it manually, as the ISR call will otherwise go to the BIOS, and may cause a reboot.
  * @param p_interrupt The interrupt to disable
  */
-void i686_idt_disable_isr(int p_interrupt);
+void i386_idt_disable_isr(int p_interrupt);
 
 /**
  * @brief Registers the given ISR to call to the given function pointer (passed as void *) whenever the ISR is needed. By default you should need to do this as
@@ -38,9 +38,9 @@ void i686_idt_disable_isr(int p_interrupt);
  * @param p_segment_descriptor The segment descriptor this should run in (same as kernel, 0x08)
  * @param p_flags Any flags the ISR should need, mainly running in ring 0 and being a 32-bit interrupt
  */
-void i686_idt_register_isr(int p_interrupt, void *p_address, uint16_t p_segment_descriptor, uint8_t p_flags);
+void i386_idt_register_isr(int p_interrupt, void *p_address, uint16_t p_segment_descriptor, uint8_t p_flags);
 
 /**
  * @brief Initializes the interrupt subsystem by loading the configured IDT into the IDTR.
  */
-void i686_idt_initialize();
+void i386_idt_initialize();

@@ -5,7 +5,7 @@
 
 #include <boot/bootstructs.h>
 
-#include <arch/arch_frontend.h>
+#include <arch/arch.h>
 #include <arch/cpuid/cpuid.h>
 #include <drivers/driver_load.h>
 #include <drivers/video/framebuffer.h>

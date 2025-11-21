@@ -7,4 +7,4 @@
  * @brief Initializes the kernel's General Descriptor Table, which is functionally the same as the bootloader's, but needs to be re-loaded due to our
  * trips back and forth from Real Mode.
  */
-void i686_gdt_initialize();
+void i386_gdt_initialize();

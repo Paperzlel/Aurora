@@ -32,34 +32,34 @@
 
 void pic_send_eoi(uint8_t p_interrupt) {
     if (p_interrupt > 8) {
-        i686_outb(PIC_2_COMMAND, PIC_EOI);
+        i386_outb(PIC_2_COMMAND, PIC_EOI);
     } else {
-        i686_outb(PIC_1_COMMAND, PIC_EOI);
+        i386_outb(PIC_1_COMMAND, PIC_EOI);
     }
 }
 
-void i686_pic_initialize() {
+void i386_pic_initialize() {
     // Remap all PICs to different values.
     // Should be done over ignoring them, as they will still give off interrupts regardless.
-    i686_outb(PIC_1_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
-    i686_outb(PIC_2_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
+    i386_outb(PIC_1_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
+    i386_outb(PIC_2_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
 
-    i686_outb(PIC_1_DATA, PIC_1);           // Remap vectors to 0x20 and 0xa0 respectively
-    i686_outb(PIC_2_DATA, PIC_2);
+    i386_outb(PIC_1_DATA, PIC_1);           // Remap vectors to 0x20 and 0xa0 respectively
+    i386_outb(PIC_2_DATA, PIC_2);
 
-    i686_outb(PIC_1_DATA, 1 << CASCADE_IRQ);
-    i686_outb(PIC_2_DATA, 2);
+    i386_outb(PIC_1_DATA, 1 << CASCADE_IRQ);
+    i386_outb(PIC_2_DATA, 2);
 
-    i686_outb(PIC_1_DATA, ENV_8086);
-    i686_outb(PIC_2_DATA, ENV_8086);
+    i386_outb(PIC_1_DATA, ENV_8086);
+    i386_outb(PIC_2_DATA, ENV_8086);
 
-    i686_outb(PIC_1_DATA, 0x00);
-    i686_outb(PIC_2_DATA, 0x00);
+    i386_outb(PIC_1_DATA, 0x00);
+    i386_outb(PIC_2_DATA, 0x00);
     
     // If APIC is present, use that instead
     if (cpuid_supports_feature(CPU_FEATURE_APIC, 1)) {
-        i686_outb(PIC_1_DATA, 0xff);
-        i686_outb(PIC_2_DATA, 0xff);
+        i386_outb(PIC_1_DATA, 0xff);
+        i386_outb(PIC_2_DATA, 0xff);
         if (!apic_initialize()) {
             printf("Could not load APIC.\n");
         }

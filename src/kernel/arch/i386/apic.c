@@ -4,7 +4,7 @@
 #include <memory.h>
 #include <stdio.h>
 
-#include "arch/arch_frontend.h"
+#include <arch/io.h>
 
 // RSDP/XSDP
 
@@ -255,11 +255,11 @@ bool apic_parse_madt(void *p_madt) {
     }
 
     // Set APIC address
-    uint32_t eax, edx;
-    arch_get_msr(IA32_APIC_BASE_MSR, &eax, &edx);
+    uint64_t ret = rdmsr(IA32_APIC_BASE_MSR);
+    uint32_t eax = ret >> 32;
     eax &= 0xfffff000;
     eax |= IA32_APIC_BASE_MSR_ENABLE;
-    arch_set_msr(IA32_APIC_BASE_MSR, eax, edx);
+    wrmsr(IA32_APIC_BASE_MSR, eax);
 
     // Write SIVR bit 8 to enable interrupts
     uint32_t svir_value = *((volatile uint32_t *)(eax + 0xf0));

@@ -38,9 +38,9 @@ typedef struct {
     TSS *address;
 } __attribute__((packed)) TSS_Descriptor;
 
-TSS_Descriptor *i686_tss_get_descriptor();
+TSS_Descriptor *i386_tss_get_descriptor();
 
-void i686_tss_initialize();
+void i386_tss_initialize();
 
-void i686_tss_set_esp(uint32_t p_value);
-void i686_tss_set_eip(uint32_t p_value);
+void i386_tss_set_esp(uint32_t p_value);
+void i386_tss_set_eip(uint32_t p_value);

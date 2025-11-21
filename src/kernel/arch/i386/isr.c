@@ -36,13 +36,13 @@ InterruptHandler a_handlers[256];
 /**
  * @brief Dummy definition to the function in "isr_list.c". Needed so we don't include it and get redefinition errors.
  */
-void i686_idt_register_isrs();
+void i386_idt_register_isrs();
 
 /**
  * @brief Default interrupt handler. Will likely need a system to register more handlers in the future,.
  * @param p_regs Registers pushed to the stack by our ASM interrupt handler.
  */
-void __attribute__((cdecl)) i686_interrupt_handler(Registers *p_regs) {
+void __attribute__((cdecl)) i386_interrupt_handler(Registers *p_regs) {
     // First launch into the handled interrupt, if it exists
     if (a_handlers[p_regs->interrupt] != NULL) {
         bool ret = a_handlers[p_regs->interrupt](p_regs);
@@ -65,18 +65,18 @@ void __attribute__((cdecl)) i686_interrupt_handler(Registers *p_regs) {
 
     printf("KERNEL PANIC\n");
     
-    i686_panic();
+    i386_panic();
 }
 
-void i686_isr_initialize() {
-    i686_idt_register_isrs();
+void i386_isr_initialize() {
+    i386_idt_register_isrs();
 
     for (int i = 0; i < 256; i++) {
-        i686_idt_enable_isr(i);
+        i386_idt_enable_isr(i);
     }
 }
 
-bool i686_isr_register_handler(int p_interrupt, InterruptHandler p_handler) {
+bool i386_isr_register_handler(int p_interrupt, InterruptHandler p_handler) {
     if (a_handlers[p_interrupt] != NULL) {
         return false;
     }
@@ -85,6 +85,6 @@ bool i686_isr_register_handler(int p_interrupt, InterruptHandler p_handler) {
     return true;
 }
 
-void i686_isr_unregister_handler(int p_interrupt) {
+void i386_isr_unregister_handler(int p_interrupt) {
     a_handlers[p_interrupt] = NULL;
 }

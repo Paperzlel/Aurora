@@ -1,7 +1,7 @@
 [bits 32]
 
-global i686_tss_load
-i686_tss_load:
+global i386_tss_load
+i386_tss_load:
     push ebp
     mov ebp, esp
 

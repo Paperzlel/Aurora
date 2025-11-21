@@ -28,7 +28,7 @@ $(BUILD_DIR)/kernel.elf: $(OBJECTS_ASM) $(OBJECTS_C)
 
 $(BUILD_DIR)/kernel/c/%.o: %.c
 	@echo 	Compiling $<...
-	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $< $(TARGET_CINCLUDES)
+	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $< $(TARGET_CINCLUDES) $(TARGET_CDEFINES)
 
 
 $(BUILD_DIR)/kernel/asm/%.o: %.asm

@@ -2,8 +2,8 @@
 
 #include "v86_cpu.h"
 
-#include <arch/i686/isr.h>
-#include <arch/i686/tss.h>
+#include <arch/i386/isr.h>
+#include <arch/i386/tss.h>
 
 #include <stdint.h>
 #include <memory.h>
@@ -57,8 +57,8 @@ uint16_t popw(Registers *p_regs) {
  */
 bool v86_monitor_entry_handler(Registers *p_regs) {
     memcpy((void *)&a_reg_state, p_regs, sizeof(Registers));
-    i686_tss_set_esp(v86_cpu_get_esp());
-    i686_tss_set_eip(v86_cpu_get_eip());
+    i386_tss_set_esp(v86_cpu_get_esp());
+    i386_tss_set_eip(v86_cpu_get_eip());
     v86_enter_v86(p_regs->eax, p_regs->ebx, p_regs->ecx, p_regs->edx);
     return true;
 }
@@ -190,8 +190,8 @@ bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_a
     }
 
     // Enable exception handler hook and entry handler hook
-    i686_isr_register_handler(13, v86_monitor_exception_handler);
-    i686_isr_register_handler(0xfd, v86_monitor_entry_handler);
+    i386_isr_register_handler(13, v86_monitor_exception_handler);
+    i386_isr_register_handler(0xfd, v86_monitor_entry_handler);
 
     // Call to ASM to set SS, SP, CS, IP, then boot into task
     // Set offset depending on argument count (SP gets messed with otherwise)
@@ -201,8 +201,8 @@ bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_a
     uint8_t *result = (uint8_t *)((V86_STACK_SEGMENT << 4) + 2);
 
     // Unregister handlers
-    i686_isr_unregister_handler(0xfd);
-    i686_isr_unregister_handler(13);
+    i386_isr_unregister_handler(0xfd);
+    i386_isr_unregister_handler(13);
 
     return result;
 }

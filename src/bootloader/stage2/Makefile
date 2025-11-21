@@ -29,7 +29,7 @@ $(BUILD_DIR)/stage2.bin: $(OBJECTS_ASM) $(OBJECTS_C)
 
 $(BUILD_DIR)/stage2/c/%.o: %.c
 	@echo 	Compiling $<...
-	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $< $(TARGET_CINCLUDES)
+	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $< $(TARGET_CINCLUDES) $(TARGET_CDEFINES)
 
 
 $(BUILD_DIR)/stage2/asm/%.o: %.asm

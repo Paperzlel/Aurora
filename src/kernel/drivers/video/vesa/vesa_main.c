@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <arch/arch_frontend.h>
+#include <arch/arch.h>
 
 static Framebuffer *a_frame_info;
 uint32_t *vmem = 0;

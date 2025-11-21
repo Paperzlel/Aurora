@@ -1,14 +1,14 @@
 [bits 32]
 
-extern i686_interrupt_handler
+extern i386_interrupt_handler
 
 ;
 ;   Macro for an interrupt handler for an interrupt that has no error code. Pushed 0 to the stack as a dummy error.
 ;
 %macro ISR_NOERROR 1
 
-global i686_ISR_%1
-i686_ISR_%1:
+global i386_ISR_%1
+i386_ISR_%1:
     push 0
     push %1
     jmp err_handler_common
@@ -20,8 +20,8 @@ i686_ISR_%1:
 ;
 %macro ISR_ERROR 1
 
-global i686_ISR_%1
-i686_ISR_%1:
+global i386_ISR_%1
+i386_ISR_%1:
     push %1
     jmp err_handler_common
 
@@ -43,7 +43,7 @@ err_handler_common:
     mov gs, ax
 
     push esp
-    call i686_interrupt_handler
+    call i386_interrupt_handler
     add esp, 4
 
     pop eax

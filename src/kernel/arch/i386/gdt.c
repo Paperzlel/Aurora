@@ -124,15 +124,15 @@ GDT_Description a_desc = {
  * @param p_code_segment The code segment to use
  * @param p_data_segment The data segment to use
  */
-void __attribute__((cdecl)) i686_gdt_load(GDT_Description *p_gdt, uint8_t p_code_segment, uint8_t p_data_segment);
+void __attribute__((cdecl)) i386_gdt_load(GDT_Description *p_gdt, uint8_t p_code_segment, uint8_t p_data_segment);
 
-void i686_gdt_initialize() {
+void i386_gdt_initialize() {
 
-    TSS_Descriptor *p_desc = i686_tss_get_descriptor();
+    TSS_Descriptor *p_desc = i386_tss_get_descriptor();
 
     GDT_ADDENTRY(a_gdt_entries[5], (uint32_t)p_desc->address, p_desc->size, 
         GDT_PRESENT | GDT_RING0 | GDT_SYSTEM_SEGMENT | GDT_TYPE_TSS32_AV, 
         GDT_GRANULARITY_4KIB | GDT_32BIT);
 
-    i686_gdt_load(&a_desc, KERNEL32_CODE_SEGMENT, KERNEL32_DATA_SEGMENT);
+    i386_gdt_load(&a_desc, KERNEL32_CODE_SEGMENT, KERNEL32_DATA_SEGMENT);
 }

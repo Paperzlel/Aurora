@@ -1,6 +1,7 @@
 #include "driver_video.h"
 
-#include <arch/arch_frontend.h>
+#include <arch/io.h>
+#include <arch/arch.h>
 #include <drivers/driver_load.h>
 
 #include "vga/vga.h"
@@ -96,7 +97,7 @@ void driver_video_write_char(char c) {
     }
 
     if (arch_is_virtualized()) {
-        i686_outb(0xe9, c);
+        outb(0xe9, c);
     }
     
     a_driver_state.write_char(c);

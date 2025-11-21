@@ -1,6 +1,6 @@
 #include "bochs.h"
 
-#include <arch/arch_frontend.h>
+#include <arch/io.h>
 #include <stdio.h>
 #include <drivers/video/framebuffer.h>
 
@@ -22,8 +22,8 @@
 uint32_t *a_video_mem = NULL;
 
 void bochs_set_register(uint16_t p_index, uint16_t p_value) {
-    arch_io_outw(BOCHS_PORT_INDEX, p_index);
-    arch_io_outw(BOCHS_PORT_DATA, p_value);
+    outw(BOCHS_PORT_INDEX, p_index);
+    outw(BOCHS_PORT_DATA, p_value);
 }
 
 bool bochs_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
@@ -33,8 +33,8 @@ bool bochs_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
     }
 
     // Check for support, if available
-    arch_io_outw(BOCHS_PORT_INDEX, BOCHS_INDEX_ID);
-    uint16_t usable = arch_io_inw(BOCHS_PORT_DATA);
+    outw(BOCHS_PORT_INDEX, BOCHS_INDEX_ID);
+    uint16_t usable = inw(BOCHS_PORT_DATA);
     if (usable < BOCHS_BGA_LATEST) {
         return false;
     }

@@ -1,7 +1,7 @@
 [bits 32]
 
-global i686_gdt_load
-i686_gdt_load:
+global i386_gdt_load
+i386_gdt_load:
     push ebp
     mov ebp, esp
 
