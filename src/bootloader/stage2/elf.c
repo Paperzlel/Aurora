@@ -121,8 +121,8 @@ bool elf_read(ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry_point)
     }
 
     // Pre-emptively get the section header name
-    ELF_SectionHeader *sh_name = (ELF_SectionHeader *)(p_buffer + p_header->sect_header_offset + 
-                (p_header->section_header_entry_section_names * p_header->section_header_entry_size));
+    // ELF_SectionHeader *sh_name = (ELF_SectionHeader *)(p_buffer + p_header->sect_header_offset + 
+    //             (p_header->section_header_entry_section_names * p_header->section_header_entry_size));
 
     // Change header size, then start loading section headers
     header_size = p_header->section_header_entry_size;

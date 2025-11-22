@@ -189,7 +189,7 @@ bool apic_get_rsdt(void **out_location) {
     }
 
     uint32_t pointer = 0;           // Should really be 64-bit, but we only support x86 for the meantime
-    uint32_t size = 0;
+    // uint32_t size = 0;
 
     if (sdp_base.revision == 2) {
         XSDP sdp_v2;
@@ -201,7 +201,7 @@ bool apic_get_rsdt(void **out_location) {
         }
 
         pointer = sdp_v2.xsdt_address;
-        size = sdp_v2.length;
+        // size = sdp_v2.length;
     } else {
         pointer = sdp_base.rsdt_address;
     }

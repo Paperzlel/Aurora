@@ -1,7 +1,7 @@
 #include "gdt.h"
 #include "tss.h"
 
-#include <stdint.h>
+#include <defs.h>
 
 // Struct that describes any entry in the GDT. Some parts contain more than one item
 typedef struct {
@@ -80,7 +80,7 @@ typedef enum {
     (base & 0xffff),                                            \
     ((base >> 16) & 0xff),                                      \
     access,                                                     \
-    (((limit >> 16) & 0xf) | (flags & 0xf0)),                   \
+    (((limit >> 16) & 0xf) | ((flags) & 0xf0)),                 \
     ((base >> 24) & 0xff)
 
 #define GDT_ADDENTRY(m_entry, m_base, m_limit, m_access, m_flags)                       \
@@ -88,10 +88,11 @@ typedef enum {
     m_entry.base_low = (m_base & 0xffff),                                               \
     m_entry.base_mid = ((m_base >> 16) & 0xff),                                         \
     m_entry.access = m_access,                                                          \
-    m_entry.flags_limit = (((m_limit >> 16) & 0xf) | (m_flags & 0xf0)),                 \
+    m_entry.flags_limit = (((m_limit >> 16) & 0xf) | ((m_flags) & 0xf0)),               \
     m_entry.base_high = ((m_base >> 24) & 0xff)
 
 // Same segments as bootloader/stage2/entry.asm
+
 GDT_Entry a_gdt_entries[6] = {
     GDT_ENTRY(0, 0, 0, 0),
     // Code segment

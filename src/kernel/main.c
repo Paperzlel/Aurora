@@ -18,6 +18,12 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
 {
     // Clear BSS data
     memset(&__bss_start, 0, (&__end) - (&__bss_start));
+    
+    // Load architecture information (IDT, GDT, ISRs).
+    if (!arch_init()) {
+        printf("Could not load an architecure backend.\n");
+        goto end;
+    }
 
     // "Load" VGA driver. We do this first because otherwise any architecture-loading errors will fail silently.
     driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_VGA);
@@ -29,6 +35,7 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         printf("Could not initialize CPUID information.");
         goto end;
     }
+    printf("CPU features: %s\n", cpuid_get_features());
 
     // Initialize memory info.
     if (!initialize_memory(&boot->memory_map, boot->kernel_size)) {
@@ -36,12 +43,6 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         goto end;
     }
 
-    // Load architecture information (IDT, GDT, ISRs).
-    if (!arch_init()) {
-        printf("Could not load an architecure backend.\n");
-        goto end;
-    }
-    printf("CPU features: %s\n", cpuid_get_features());
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs

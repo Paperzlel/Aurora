@@ -197,9 +197,9 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
     const char *vendor_name = (const char *)segofs_to_linear(a_info_block.vendor_name_ptr[1], a_info_block.vendor_name_ptr[0]);
     const char *product_name = (const char *)segofs_to_linear(a_info_block.product_name_ptr[1], a_info_block.product_name_ptr[0]);
     
-    uint16_t best_x, best_x_diff;
-    uint16_t best_y, best_y_diff;
-    uint16_t best_depth, best_depth_diff;
+    uint16_t best_x = 0, best_x_diff = 0;
+    uint16_t best_y = 0, best_y_diff = 0;
+    uint16_t best_depth = 0, best_depth_diff = 0;
     uint16_t a_closest_mode;
 
     while (*video_ptr != 0xFFFF) {
@@ -263,6 +263,12 @@ bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer) {
         
         a_closest_mode = *video_ptr;
         video_ptr++;
+    }
+
+    // Shouldn't happen. Here to make -Wall shut up.
+    if (!best_depth || !best_x || !best_y) {
+        printf("VESA: Could not retrieve a best X, Y or Z value. Unable to continue.\n");
+        return false;
     }
 
     printf("VESA: Red mask size: %d, offset %d\n Green mask size: %d, offset %d\nBlue mask size: %d, offset %d\n", 

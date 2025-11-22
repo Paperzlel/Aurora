@@ -29,6 +29,8 @@ void vga_scrlscr(int p_amount) {
     }
 }
 
+GCC_PUSH_WARNING
+GCC_WARNING_IGNORE("-Wunused-parameter")
 void vga_clear(uint8_t r, uint8_t g, uint8_t b) {
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
@@ -37,6 +39,7 @@ void vga_clear(uint8_t r, uint8_t g, uint8_t b) {
         }
     }
 }
+GCC_POP_WARNING
 
 void vga_write_char(char c) {
     switch (c) {
@@ -71,6 +74,11 @@ void vga_write_char(char c) {
 
 
 bool vga_initialize(VideoDriver *out_driver, Framebuffer *p_buffer) {
+    // Shouldn't have the buffer at this point...
+    if (p_buffer) {
+        return false;
+    }
+
     out_driver->init = vga_initialize;
     out_driver->clear = vga_clear;
     out_driver->write_char = vga_write_char;

@@ -36,7 +36,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
     for (i = 0; i < p_map->region_count; i++) {
         MemoryRegion mr = p_map->regions[i];
         uint32_t mr_base = (uint32_t)mr.base_address;
-        if (mr.type == MEMORY_REGION_ACPI_NVS || mr.type == MEMORY_REGION_RESERVED && !is_valid_address((void *)mr_base)) {
+        if (mr.type == MEMORY_REGION_ACPI_NVS || (mr.type == MEMORY_REGION_RESERVED && !is_valid_address((void *)mr_base))) {
             if (!paging_map_region((void *)mr_base, (void *)mr_base, mr.length)) {
                 printf("Failed to map region %x (size %x)\n", mr.base_address, mr.length);
                 continue;

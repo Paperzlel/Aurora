@@ -78,7 +78,7 @@ PageTable *_alloc_new_table() {
     }
 
     // Failed to find a valid table (potential overload?)
-    if (idx == -1) {
+    if (idx == (uint16_t)-1) {
         return NULL;
     }
 
@@ -101,7 +101,7 @@ PageTable *_alloc_new_table() {
 }
 
 void _pt_free(PageTable *p_table) {
-    uint8_t idx = -1;
+    uint16_t idx = -1;
     for (int i = 0; i < PAGE_TABLE_COUNT; i++) {
         if (&allocated_tables[i] == p_table) {
             idx = i;
@@ -109,7 +109,7 @@ void _pt_free(PageTable *p_table) {
         }
     }
 
-    if (idx == -1) {
+    if (idx == (uint16_t)-1) {
         return;
     }
 
@@ -202,7 +202,7 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size) {
         }
 
         uint32_t pt_phys = virtual_to_physical((uint32_t)table);
-        uint32_t pde = (uint32_t)pt_phys & 0xfffff000 | 3;
+        uint32_t pde = ((uint32_t)pt_phys & 0xfffff000) | 3;
 
         // Set PDE here to avoid invalid entries
         page_directory[page_index + i] = pde;

@@ -55,14 +55,4 @@ void i386_pic_initialize() {
 
     i386_outb(PIC_1_DATA, 0x00);
     i386_outb(PIC_2_DATA, 0x00);
-    
-    // If APIC is present, use that instead
-    if (cpuid_supports_feature(CPU_FEATURE_APIC, 1)) {
-        i386_outb(PIC_1_DATA, 0xff);
-        i386_outb(PIC_2_DATA, 0xff);
-        if (!apic_initialize()) {
-            printf("Could not load APIC.\n");
-        }
-        return;
-    }
 }

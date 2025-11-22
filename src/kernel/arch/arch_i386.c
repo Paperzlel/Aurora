@@ -8,6 +8,7 @@
 #include "i386/tss.h"
 #include "i386/isr.h"
 #include "i386/idt.h"
+#include "i386/pic.h"
 #include "i386/v86/v86_monitor.h"
 
 bool arch_init() {
@@ -15,6 +16,7 @@ bool arch_init() {
     i386_tss_initialize();
     i386_isr_initialize();
     i386_idt_initialize();
+    i386_pic_initialize();
     return true;
 }
 

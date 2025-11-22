@@ -69,6 +69,7 @@ void putc(char c) {
             break;
         case '\r':
             p_screen_x = 0;
+            break;
         default:
             putchr(p_screen_x, p_screen_y, c);
             p_screen_x++;
@@ -128,7 +129,6 @@ typedef enum {
     PRINTF_STATE_IDENTIFIER,
     PRINTF_STATE_LENGTH_SHORT,
     PRINTF_STATE_LENGTH_LONG,
-    PRINTF_STATE_NUMBER,
 } PrintfState;
 
 typedef enum {
@@ -167,7 +167,8 @@ void printf(const char *fmt, ...) {
             case PRINTF_STATE_LENGTH_SHORT: {
                 if (*fmt == 'h') {
                     length = LENGTH_SHORT_SHORT;
-                    state = PRINTF_STATE_NUMBER;
+                    state = PRINTF_STATE_IDENTIFIER;
+                    break;
                 } else {
                     goto PRINTF_STATE_IDENTIFIER_;
                 }
@@ -237,6 +238,7 @@ void printf(const char *fmt, ...) {
                         number = true;
                         break;
                     default:
+                        // NOTE: Putting identifiers without an identifier is UB so this needs to be improved :/
                         break;      // Ignore undefined types for now (f/F, e/E, g/G, a/A, n)
                 }
 
@@ -285,7 +287,6 @@ void printf(const char *fmt, ...) {
                 base = 10;
                 is_signed = false;
                 number = false;
-
                 break;
         }
 

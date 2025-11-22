@@ -92,12 +92,17 @@ void driver_video_clear() {
 }
 
 void driver_video_write_char(char c) {
-    if (!a_driver_state.write_char) {
-        return;
-    }
-
+    
     if (arch_is_virtualized()) {
         outb(0xe9, c);
+    }
+    
+    if (!a_driver_state.write_char) {
+        // PANIC, write exclamation marks to the screen.
+        for (int i = 0; i < 24; i++) {
+            vga_write_char('!');
+        }
+        return;
     }
     
     a_driver_state.write_char(c);

@@ -18,7 +18,7 @@ export TARGET_CXX=$(TARGET)-g++
 export TARGET_LD=$(TARGET)-gcc
 export TARGET_OBJCOPY=$(TARGET)-objcopy
 export TARGET_ASMFLAGS= 
-export TARGET_CFLAGS=-std=c99 -g -MD
+export TARGET_CFLAGS=-std=c99 -g -MD -Wall -Wextra -Wno-sign-compare
 export TARGET_CINCLUDES=
 export TARGET_CDEFINES=-D__aurora__ -D__I386__ -D__x86__
 export TARGET_LDFLAGS= 

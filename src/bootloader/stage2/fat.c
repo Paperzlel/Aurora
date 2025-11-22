@@ -244,7 +244,7 @@ FAT_File *fat_open(DISK *p_disk, const char *p_path) {
 
             fat_close(current);
 
-            if (!is_last && entry.attribs & FAT_DIRECTORY == 0) {
+            if (!is_last && (entry.attribs & FAT_DIRECTORY) == 0) {
                 printf("FAT: Entry %s is not a directory.\n", name);
                 return NULL;
             }

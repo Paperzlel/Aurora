@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <defs.h>
 #include <videostructs.h>
 
 bool vga_initialize(VideoDriver *out_driver, Framebuffer *p_buffer);
