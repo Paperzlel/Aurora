@@ -9,6 +9,7 @@
 #include <arch/cpuid/cpuid.h>
 #include <drivers/driver_load.h>
 #include <drivers/video/framebuffer.h>
+#include <hal/hal.h>
 #include <memory/memory_core.h>
 
 extern uint8_t __bss_start;
@@ -43,6 +44,7 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         goto end;
     }
 
+    hal_initialize();
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs
@@ -63,7 +65,6 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
     }
 
 end:
-    while (true) {
-
-    }
+    printf("%llu ticks since PIT initialized\n", hal_get_ticks());
+    for(;;);
 }

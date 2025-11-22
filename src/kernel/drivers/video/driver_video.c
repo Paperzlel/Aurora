@@ -92,7 +92,6 @@ void driver_video_clear() {
 }
 
 void driver_video_write_char(char c) {
-    
     if (arch_is_virtualized()) {
         outb(0xe9, c);
     }

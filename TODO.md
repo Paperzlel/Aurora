@@ -33,6 +33,10 @@
 - [ ] Implement a basic FAT12 filesystem driver
 - [ ] Expose methods for `fopen` and `fread` in `stdio.h`
 
+## HAL
+- [ ] Add alternative timer settings that aren't PIT for specific systems
+- [ ] Mask out unused IRQ lines until needed
+
 ### Memory
 - [x] Implement dynamic paging
 - [x] Implement kernel-level malloc() and free()

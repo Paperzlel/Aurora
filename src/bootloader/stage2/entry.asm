@@ -9,7 +9,7 @@ extern start                            ; C entry function using cdecl calling c
 global entry
 
 entry:
-    cli
+    cli                                 ; Disable all hardware interrupts until the kernel is ready for them
 
     mov [a_boot_drive], dl              ; Save boot drive number for later
 

@@ -1,7 +1,7 @@
 #include "gdt.h"
 #include "tss.h"
 
-#include <defs.h>
+#include <kdefs.h>
 
 // Struct that describes any entry in the GDT. Some parts contain more than one item
 typedef struct {

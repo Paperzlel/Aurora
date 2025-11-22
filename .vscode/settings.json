@@ -40,7 +40,9 @@
         "variant": "c",
         "array": "c",
         "tuple": "c",
-        "utility": "c"
+        "utility": "c",
+        "io.h": "c",
+        "defs.h": "c"
     },
 
     "todohighlight.isEnable": true,
