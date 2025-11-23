@@ -4,6 +4,8 @@
 #include <arch/arch.h>
 #include <arch/io.h>
 
+#include <stdio.h>
+
 #define PIT_DATA_CHANNEL_0      0x40
 #define PIT_DATA_CHANNEL_1      0x41
 #define PIT_DATA_CHANNEL_2      0x42
@@ -11,11 +13,9 @@
 
 #define PIT_BASE_FREQUENCY  1193182
 // Slowest possible timer frequency (18Hz)
-#define PIT_MIN_FREQUENCY PIT_BASE_FREQUENCY / 65536 
-// Highest possible timer frequency (596591Hz or ~0.6MHz)
-#define PIT_MAX_FREQUENCY PIT_BASE_FREQUENCY / 2
-// We can't use the base 1.1MHz because the timer mode we use (mode 3) reduces the count by 2 and thus a reload value of 1 would not work.
-// Using the highest frequency makes QEMU unhappy. Avoid using that for now.
+#define PIT_MIN_FREQUENCY PIT_BASE_FREQUENCY / 19
+// Highest possible timer frequency (1193182Hz)
+#define PIT_MAX_FREQUENCY PIT_BASE_FREQUENCY / PIT_BASE_FREQUENCY
 
 static uint64_t tick_count;
 static uint32_t frequency;
@@ -32,9 +32,10 @@ bool pit_irq_handler(Registers *p_regs) {
 
 void pit_initialize() {
     arch_register_isr_handler(0x20, pit_irq_handler);
-
-    frequency = PIT_MIN_FREQUENCY;
-    uint16_t divisor = (uint16_t)(PIT_BASE_FREQUENCY / (frequency));
+    
+    // Set timer to tick every 100us (~119us)
+    frequency = 10000;
+    uint16_t divisor = (uint16_t)((PIT_BASE_FREQUENCY / 10000) * 2);
     uint8_t low = (uint8_t)(divisor & 0xff);
     uint8_t high = (uint8_t)((divisor >> 8) & 0xff);
 
@@ -51,4 +52,8 @@ void pit_initialize() {
 
 uint64_t pit_get_ticks() {
     return tick_count;
+}
+
+uint32_t pit_get_frequency() {
+    return frequency;
 }

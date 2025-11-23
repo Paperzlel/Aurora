@@ -27,15 +27,17 @@
 - [x] Disable PIC/Check PIC drivers
 - [x] Begin APIC drivers
 - [x] Re-enable PIC for the time being
-- [ ] Modify CPU architecture so that different drivers are loaded at different times (i.e. GDT/IRQ/TSS should load instantly but not APIC)
+- [x] Modify CPU architecture so that different drivers are loaded at different times (i.e. GDT/IRQ/TSS should load instantly but not APIC)
 
 ### Filesystem
 - [ ] Implement a basic FAT12 filesystem driver
+- [ ] Implement a VFS on top of the FAT12 driver
 - [ ] Expose methods for `fopen` and `fread` in `stdio.h`
 
 ## HAL
 - [ ] Add alternative timer settings that aren't PIT for specific systems
-- [ ] Mask out unused IRQ lines until needed
+- [x] Mask out unused IRQ lines until needed
+- [ ] Implement CMOS retrieval of the floppy disk controller
 
 ### Memory
 - [x] Implement dynamic paging
