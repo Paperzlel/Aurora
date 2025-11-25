@@ -1,6 +1,5 @@
 #include "isr.h"
 #include "idt.h"
-#include "io.h"
 
 #include <stdio.h>
 
@@ -37,6 +36,11 @@ InterruptHandler a_handlers[256];
  * @brief Dummy definition to the function in "isr_list.c". Needed so we don't include it and get redefinition errors.
  */
 void i386_idt_register_isrs();
+
+/**
+ * @brief Disables interrupts and panics the kernel from an unresolvable state.
+ */
+void __attribute__((cdecl)) i386_panic();
 
 /**
  * @brief Default interrupt handler. Will likely need a system to register more handlers in the future,.

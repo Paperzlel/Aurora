@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/toolchain/i686-elf/lib/gcc/i686-elf/11.2.0/include",
+                "${workspaceFolder}/src/bootloader",
+                "${workspaceFolder}/src/kernel",
+                "${workspaceFolder}/src/libs"
+            ],
+            "compilerPath": "${workspaceFolder}/toolchain/i686-elf/bin/i686-elf-gcc",
+            "compilerArgs": [
+                "-ffreestanding",
+                "-MD", 
+                "-Wall", 
+                "-Wextra", 
+                "-Wno-sign-compare"
+            ],
+            "cStandard": "c99",
+            "cppStandard": "c++98",
+            "intelliSenseMode": "gcc-x86"
+        }
+    ],
+    "version": 4
+}

@@ -44,7 +44,7 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         goto end;
     }
 
-    hal_initialize();
+    hal_initialize(boot->boot_device);
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs

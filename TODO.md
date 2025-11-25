@@ -28,6 +28,7 @@
 - [x] Begin APIC drivers
 - [x] Re-enable PIC for the time being
 - [x] Modify CPU architecture so that different drivers are loaded at different times (i.e. GDT/IRQ/TSS should load instantly but not APIC)
+- [ ] Move paging to use an architecture-specific implementation
 
 ### Filesystem
 - [ ] Implement a basic FAT12 filesystem driver
@@ -45,6 +46,7 @@
 - [x] Use MemoryRegions to find all regions where memory is used, and set blocks to invalid if so
 - [x] Automatically identity page memory-mapped I/O data from MemoryRegions
 - [ ] Align memory allocations to 16-byte boundaries
+- [ ] Move pages to use a different memory address so we can re-use the FS (maybe the kernel load address?)
 
 ### Roadmap
 - [x] Add paging

@@ -57,6 +57,11 @@ err_handler_common:
     iret
 
 
+global i386_panic
+i386_panic:
+    cli
+    hlt
+
 ; Long list of interrupt handlers. Do not tamper with lest you seek to tempt fate.
 
 ISR_NOERROR 0

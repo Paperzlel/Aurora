@@ -42,7 +42,9 @@
         "tuple": "c",
         "utility": "c",
         "io.h": "c",
-        "defs.h": "c"
+        "defs.h": "c",
+        "kdefs.h": "c",
+        "stdint-gcc.h": "c"
     },
 
     "todohighlight.isEnable": true,
