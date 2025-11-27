@@ -76,12 +76,12 @@ typedef enum {
  * @param flags The general flags
  */
 #define GDT_ENTRY(base, limit, access, flags)                   \
-    (limit & 0xffff),                                           \
+    {(limit & 0xffff),                                          \
     (base & 0xffff),                                            \
     ((base >> 16) & 0xff),                                      \
     access,                                                     \
     (((limit >> 16) & 0xf) | ((flags) & 0xf0)),                 \
-    ((base >> 24) & 0xff)
+    ((base >> 24) & 0xff)}
 
 #define GDT_ADDENTRY(m_entry, m_base, m_limit, m_access, m_flags)                       \
     m_entry.limit = (m_limit & 0xffff);                                                 \

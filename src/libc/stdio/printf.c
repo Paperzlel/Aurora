@@ -1,50 +1,7 @@
-#include "stdio.h"
-
-#include <drivers/video/driver_video.h>
-
-// Included from GCC's freestanding library, as implementing them ourselves is a pain
-#include <stdarg.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-void putc(char c) {
-    driver_video_write_char(c);
-}
-
-void puts(const char *str) {
-    while (*str) {
-        putc(*str);
-        str++;
-    }
-}
-
-static bool a_is_captial = false;
-const char a_hex_lowercase[] = "0123456789abcdef";
-const char a_hex_uppercase[] = "0123456789ABCDEF";
-
-void print_num_unsigned(uint64_t number, int base) {
-    char buf[32]; // Shouldn't be bigger than this
-    int pos = 0;
-
-    do {
-        uint64_t rem = number % base;
-        number /= base;
-        buf[pos++] = a_is_captial ? a_hex_uppercase[rem] : a_hex_lowercase[rem];
-    } while (number > 0);
-
-    while (--pos >= 0) {
-        putc(buf[pos]);
-    }
-}
-
-void print_num_signed(int64_t number, int base) {
-    if (number < 0) {
-        putc('-');
-        print_num_unsigned(-number, base);
-    } else {
-        print_num_unsigned(number, base);
-    }
-}
+#include <stdarg.h>
 
 typedef enum {
     PRINTF_STATE_NORMAL,
@@ -61,6 +18,33 @@ typedef enum {
     LENGTH_LONG_LONG,
 } FmtLength;
 
+static bool a_is_captial = false;
+static const char a_hex_lowercase[] = "0123456789abcdef";
+static const char a_hex_uppercase[] = "0123456789ABCDEF";
+
+static void print_num_unsigned(uint64_t number, int base) {
+    char buf[32]; // Shouldn't be bigger than this
+    int pos = 0;
+
+    do {
+        uint64_t rem = number % base;
+        number /= base;
+        buf[pos++] = a_is_captial ? a_hex_uppercase[rem] : a_hex_lowercase[rem];
+    } while (number > 0);
+
+    while (--pos >= 0) {
+        putc(buf[pos]);
+    }
+}
+
+static void print_num_signed(int64_t number, int base) {
+    if (number < 0) {
+        putc('-');
+        print_num_unsigned(-number, base);
+    } else {
+        print_num_unsigned(number, base);
+    }
+}
 
 void printf(const char *fmt, ...) {
     va_list arg_ptr;
@@ -216,17 +200,4 @@ void printf(const char *fmt, ...) {
     }
 
     va_end(arg_ptr);
-}
-
-void print_buffer(const char *p_msg, const void *p_buffer, uint32_t p_length) {
-    const uint8_t *byte_buf = (const uint8_t *)p_buffer;
-
-    puts(p_msg);
-
-    for (int i = 0; i < p_length; i++) {
-        putc(a_hex_lowercase[byte_buf[i] >> 4]);
-        putc(a_hex_lowercase[byte_buf[i] & 0xf]);
-    }
-
-    puts("\n");
 }

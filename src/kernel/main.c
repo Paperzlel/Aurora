@@ -1,7 +1,7 @@
 #include <stdint.h>
 
-#include "memory.h"
-#include "stdio.h"
+#include <memory.h>
+#include <stdio.h>
 
 #include <boot/bootstructs.h>
 
@@ -45,6 +45,7 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
     }
 
     hal_initialize(boot->boot_device);
+    printf("test");
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs

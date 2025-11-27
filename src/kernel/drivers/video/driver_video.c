@@ -1,5 +1,7 @@
 #include "driver_video.h"
 
+#include <kernel/console.h>
+
 #include <arch/io.h>
 #include <arch/arch.h>
 #include <drivers/driver_load.h>

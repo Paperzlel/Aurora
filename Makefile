@@ -10,13 +10,19 @@ export LIBS=
 export SRC_DIR=src
 export BUILD_DIR=build
 export TOOLS_DIR=toolchain
+export SYSROOT=$(abspath $(BUILD_DIR))/sysroot
+export USR_INCLUDE=/usr/include
+export USR_LIB=/usr/lib
+export INCLUDEDIR=$(SYSROOT)$(USR_INCLUDE)
+export LIBDIR=$(SYSROOT)$(USR_LIB)
 
 export TARGET=i686-elf
 export TARGET_ARCH=i686				# Use -march=[this] to load a specific architecture, add to both GCC and LD
-export TARGET_CC=$(TARGET)-gcc
+export TARGET_CC=$(TARGET)-gcc --sysroot=$(SYSROOT) -isystem=$(USR_INCLUDE)
 export TARGET_CXX=$(TARGET)-g++
-export TARGET_LD=$(TARGET)-gcc
+export TARGET_LD=$(TARGET)-gcc --sysroot=$(SYSROOT) -isystem=$(USR_INCLUDE)
 export TARGET_OBJCOPY=$(TARGET)-objcopy
+export TARGET_AR=$(TARGET)-ar
 export TARGET_ASMFLAGS= 
 export TARGET_CFLAGS=-std=c99 -g -MD -Wall -Wextra -Wno-sign-compare
 export TARGET_CINCLUDES=
@@ -24,9 +30,9 @@ export TARGET_CDEFINES=-D__aurora__ -D__I386__ -D__x86__
 export TARGET_LDFLAGS= 
 export TARGET_LIBS=
 
-all: scaffold bootloader kernel floppy_image
+.PHONY: all scaffold install bootloader kernel floppy_image clean toolchain libc libk
 
-.PHONY: all scaffold bootloader kernel floppy_image clean toolchain
+all: scaffold install bootloader libk kernel floppy_image
 
 #
 # Building the OS itself
@@ -34,14 +40,14 @@ all: scaffold bootloader kernel floppy_image
 
 scaffold:
 	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(BUILD_DIR)/kernel/c
-	@mkdir -p $(BUILD_DIR)/kernel/asm
+	@mkdir -p $(INCLUDEDIR)
+	@mkdir -p $(LIBDIR)
 
 # Floppy image
 
 floppy_image: $(BUILD_DIR)/main_floppy.img
 
-$(BUILD_DIR)/main_floppy.img: bootloader kernel
+$(BUILD_DIR)/main_floppy.img: bootloader libk kernel
 	@dd if=/dev/zero of=$@ bs=512 count=2880 2> /dev/null
 	@mkfs.fat -F 12 -n "AUOS" $@ 2> /dev/null
 	@dd if=$(BUILD_DIR)/stage1.bin of=$@ conv=notrunc 2> /dev/null
@@ -73,6 +79,17 @@ kernel: $(BUILD_DIR)/kernel.elf
 
 $(BUILD_DIR)/kernel.elf: scaffold stage1 stage2
 	@$(MAKE) -C src/kernel BUILD_DIR=$(abspath $(BUILD_DIR))
+
+libc:
+
+libk: $(BUILD_DIR)/libk.a
+
+$(BUILD_DIR)/libk.a: scaffold
+	@$(MAKE) -C src/libc BUILD_DIR=$(abspath $(BUILD_DIR))
+
+install:
+	@$(MAKE) -C src/kernel BUILD_DIR=$(abspath $(BUILD_DIR)) install
+	@$(MAKE) -C src/libc BUILD_DIR=$(abspath $(BUILD_DIR)) install
 
 clean:
 	@rm -rf $(BUILD_DIR)/*

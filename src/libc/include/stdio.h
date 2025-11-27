@@ -23,11 +23,3 @@ void puts(const char *str);
  * @param ... Variadic arguments, for specifying non-character inputs into the string.
  */
 void printf(const char *fmt, ...);
-
-/**
- * @brief Prints a descriptor string and the first n bytes from the given buffer
- * @param p_msg The message to print
- * @param p_buffer The pointer to print bytes from
- * @param p_length The number of bytes to print
- */
-void print_buffer(const char *p_msg, const void *p_buffer, uint32_t p_length);
