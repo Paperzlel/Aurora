@@ -30,12 +30,19 @@
 - [x] Modify CPU architecture so that different drivers are loaded at different times (i.e. GDT/IRQ/TSS should load instantly but not APIC)
 - [ ] Move paging to use an architecture-specific implementation
 
+### Core
+- [ ] Reset stack after handing operation back to the kernel in C
+
+### Debugging
+- [ ] Implement a GDB stub for the OS to output info
+- [ ] Add a `log_[error]()` macro that records the time (post-timer) and the error message to the screen
+
 ### Filesystem
 - [ ] Implement a basic FAT12 filesystem driver
 - [ ] Implement a VFS on top of the FAT12 driver
 - [ ] Expose methods for `fopen` and `fread` in `stdio.h`
 
-## HAL
+### HAL
 - [ ] Add alternative timer settings that aren't PIT for specific systems
 - [x] Mask out unused IRQ lines until needed
 - [ ] Implement CMOS retrieval of the floppy disk controller
@@ -60,3 +67,8 @@
 - [x] Make stdio.c reroute to loaded graphics drivers
 - [ ] Expose a video driver API for non-driver functions to use
 - [ ] Load a charlist and draw chars to the screen
+
+## Libc
+
+- [ ] Implement current stubs as proper functions
+- [ ] Compile libc as a hosted .so file

@@ -26,7 +26,7 @@ export TARGET_AR=$(TARGET)-ar
 export TARGET_ASMFLAGS= 
 export TARGET_CFLAGS=-std=c99 -g -MD -Wall -Wextra -Wno-sign-compare
 export TARGET_CINCLUDES=
-export TARGET_CDEFINES=-D__aurora__ -D__I386__ -D__x86__
+export TARGET_CDEFINES=-D__I386__ -D__x86__
 export TARGET_LDFLAGS= 
 export TARGET_LIBS=
 

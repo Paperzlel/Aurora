@@ -50,7 +50,8 @@
         "varargs.h": "c",
         "stdarg.h": "c",
         "types.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "string.h": "c"
     },
 
     "todohighlight.isEnable": true,
@@ -98,4 +99,7 @@
         "__I386__",
         "__aurora__",
     ],
+    "C_Cpp.doxygen.generatedStyle": "/**",
+    "C_Cpp.doxygen.generateOnType": true,
+    "C_Cpp.formatting": "clangFormat",
 }

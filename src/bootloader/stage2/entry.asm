@@ -24,8 +24,10 @@ entry:
     call check_a20 
     mov ah, 1
     cmp ah, al
-    jne enable_a20      ; If A20 is disabled, then we need to enable it. But if it's not, then there's no need to do so, and we can
+    je .post_a20        ; If A20 is disabled, then we need to enable it. But if it's not, then there's no need to do so, and we can
                         ; move on with our lives.
+    call enable_a20
+.post_a20:
     call load_gdt       ; Load Global Descriptor Table, which will need to be re-configured and re-loaded when we reach the kernel 
 
     mov eax, cr0

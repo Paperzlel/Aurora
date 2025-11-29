@@ -15,11 +15,14 @@
 extern uint8_t __bss_start;
 extern uint8_t __end;
 
+static BootInfo info;
+
 void __attribute__((cdecl)) cstart(BootInfo *boot)
 {
     // Clear BSS data
     memset(&__bss_start, 0, (&__end) - (&__bss_start));
-    
+    memcpy(&info, boot, sizeof(BootInfo));
+
     // Load architecture information (IDT, GDT, ISRs).
     if (!arch_init()) {
         printf("Could not load an architecure backend.\n");

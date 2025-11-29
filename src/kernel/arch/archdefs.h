@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kdefs.h>
+#include <kernel/kdefs.h>
 
 #ifdef __I386__
 

@@ -8,7 +8,7 @@
 
 void free(void *ptr) {
 #if defined (__is_libk)
-    memfree(ptr);
+    kfree(ptr);
 #else
     
 #endif

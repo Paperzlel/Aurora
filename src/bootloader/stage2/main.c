@@ -7,14 +7,13 @@
 #include "framebuffer.h"
 
 #include <boot/bootstructs.h>
-
-// Pointer to the base position of the kernel in memory
-uint8_t *kernel =           (uint8_t *)KERNEL_BASE_ADDR;
 // Pointer to where the kernel is loaded into memory (a different address since the kernel may be larger than expected)
-uint8_t *kernel_load_buf =  (uint8_t *)KERNEL_LOAD_ADDR;
+static uint8_t *kernel_load_buf =  (uint8_t *)KERNEL_LOAD_ADDR;
 
 // Function pointer to the "main" function for our kernel
 typedef void (*kmain)(BootInfo *);
+
+static BootInfo boot = { 0 };
 
 /**
  * @brief Start function for the C part of the bootloader. Obtains basic information about the system, then loads the kernel and passes control over to it.
@@ -24,7 +23,6 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
     // First, clear the screen
     clrscr();
 
-    BootInfo boot;
     boot.boot_device = boot_drive;
     memory_get_mem_map(&boot.memory_map);
 
@@ -66,8 +64,7 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         goto end;
     }
 
-    MemoryRegion rm = boot.memory_map.regions[boot.memory_map.region_count - 1];
-    if (rm.base_address < boot.framebuffer_map.framebuffer.address) {
+    if (boot.memory_map.regions[boot.memory_map.region_count - 1].base_address < boot.framebuffer_map.framebuffer.address) {
         printf("Stage 2: Framebuffer map position is out of range.\n");
         goto end;
     }
@@ -92,10 +89,8 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         boot.kernel_size = read;
         printf("Loading %d bytes from the kernel...\n", read);
     }
-
-    uint8_t *buf = kernel;
+    
     kmain kernel_start = NULL;
-
     if (elf_is_elf(kernel_load_buf)) {
         // Load rest of ELF header; it's segmented so it needs to be loaded differently
 
@@ -119,8 +114,8 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         printf("Stage 2: Could not detect ELF, loading raw bin...\n");
         // Assumes that the file is a .BIN and can be read directly
         // This mode will probably be deprecated in the future
-        memcpy(buf, kernel_load_buf, read);
-        buf += read;
+        uint8_t *kernel = (uint8_t *)KERNEL_BASE_ADDR;
+        memcpy(kernel, kernel_load_buf, read);
 
         kernel_start = (kmain)kernel;
     }

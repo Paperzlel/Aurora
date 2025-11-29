@@ -1,6 +1,6 @@
 #include "pic.h"
 
-#include <kdefs.h>
+#include <kernel/kdefs.h>
 #include <arch/io.h>
 
 #define PIC_1               0x20

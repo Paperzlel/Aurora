@@ -1,6 +1,8 @@
 #ifndef _STRING_H
 #define _STRING_H
 
+#define __need_NULL
+#define __need_size_t
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -34,11 +36,35 @@ void *memset(void *dest, int value, int length);
  */
 int memcmp(const void *str1, const void *str2, int n);
 
+/**
+ * @brief Obtains the length of the inputted string. Assumes it is a null-terminated ASCII string.
+ * @param s The input string.
+ */
 size_t strlen(const char *s);
+
+/**
+ * @brief Copies the contents of `s2` into the string represented by `s1`. Does not reallocate memory if the size of the two strings is different.
+ * @param s1 The string to copy into
+ * @param s2 The string to copy from
+ * @returns The value of `s1` after being written to.
+ */
 char *strcpy(char *restrict s1, const char *restrict s2);
 
+/**
+ * @brief Concatenates two strings together, adding the string `s2` to the string `s1`. Does not reallocate memory if the string size is different.
+ * @param s1 The string to concatenate onto
+ * @param s2 The string to concatenate from
+ * @returns The result of concatenating the two strings.
+ */
 char *strcat(char *restrict s1, const char *restrict s2);
 
+/**
+ * @brief Finds the first instance of the character `c` in the given string and returns the string up to that point. Returns `NULL` if no characters 
+ * of the given type could be found.
+ * @param s The string to look in
+ * @param c The character to look for
+ * @returns The string up to the first instance of the character being found.
+ */
 char *strchr(const char *s, int c);
 
 #ifdef __cplusplus

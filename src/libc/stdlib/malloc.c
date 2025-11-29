@@ -8,8 +8,8 @@
 
 void *malloc(size_t size) {
 #if defined(__is_libk)
-    return memalloc(size);
+    return kalloc(size);
 #else
-
+    return NULL;
 #endif
 }

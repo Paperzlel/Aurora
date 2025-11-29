@@ -1,9 +1,13 @@
 #include <string.h>
 
 char *strchr(const char *s, int c) {
-    while (*s != c && *s != 0) {
-        s++;
+    char *ptr = (char *)s;
+    while (*ptr) {
+        if (*ptr == c) {
+            return ptr;
+        }
+        ptr++;
     }
 
-    return s != NULL ? s : NULL;
+    return NULL;
 }

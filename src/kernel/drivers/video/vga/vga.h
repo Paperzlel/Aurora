@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kdefs.h>
+#include <kernel/kdefs.h>
 #include <videostructs.h>
 
 bool vga_initialize(VideoDriver *out_driver, Framebuffer *p_buffer);

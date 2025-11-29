@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#define __need_NULL
+#define __need_size_t
 #include <stddef.h>
 
 int atexit(void (*func)(void));
