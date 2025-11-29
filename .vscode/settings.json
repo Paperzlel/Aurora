@@ -46,7 +46,11 @@
         "kdefs.h": "c",
         "stdint-gcc.h": "c",
         "arch.h": "c",
-        "console.h": "c"
+        "console.h": "c",
+        "varargs.h": "c",
+        "stdarg.h": "c",
+        "types.h": "c",
+        "unistd.h": "c"
     },
 
     "todohighlight.isEnable": true,

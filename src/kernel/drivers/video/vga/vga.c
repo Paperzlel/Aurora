@@ -1,6 +1,6 @@
 #include "vga.h"
 
-#include <memory.h>
+#include <string.h>
 
 uint8_t *video_memory = (uint8_t *)0xb8000;
 

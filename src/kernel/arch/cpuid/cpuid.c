@@ -1,7 +1,7 @@
 #include "cpuid.h"
 
 #include <cpuid.h>
-#include <memory.h>
+#include <string.h>
 
 const char *feature_list[] = {
     "fpu",
@@ -166,17 +166,6 @@ bool cpuid_initialize(CPU_Config *out_config) {
     return true;
 }
 
-int strcpy(char *dst, const char *src) {
-    int x = 0;
-    while (*src) {
-        dst[x] = *src;
-        src++;
-        x++;
-    }
-
-    return x;
-}
-
 char *cpuid_get_features() {
     if (list[0] != 0) {
         return list;
@@ -186,7 +175,8 @@ char *cpuid_get_features() {
 
     for (int i = 0; i < 32; i++) {
         if (edx_features & (1 << i)) {
-            idx += strcpy(list + idx, feature_list[i]);
+            strcpy(list + idx, feature_list[i]);
+            idx += strlen(feature_list[i]);
             list[idx] = ' ';
             idx++;
         }
@@ -194,7 +184,8 @@ char *cpuid_get_features() {
 
     for (int i = 0; i < 32; i++) {
         if (ecx_features & 1 << i) {
-            idx += strcpy(list + idx, feature_list[i + 32]);
+            strcpy(list + idx, feature_list[i + 32]);
+            idx += strlen(feature_list[i + 32]);
             list[idx] = ' ';
             idx++;
         }

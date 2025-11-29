@@ -6,7 +6,7 @@
 #include <arch/i386/tss.h>
 
 #include <stdint.h>
-#include <memory.h>
+#include <string.h>
 #include <stdio.h>
 
 // Variable that all registers are saved to whenever the OS enters V86 and is loaded whenever the V86 program wants to exit

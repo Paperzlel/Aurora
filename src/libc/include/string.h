@@ -1,6 +1,11 @@
-#pragma once
+#ifndef _STRING_H
+#define _STRING_H
 
-#include <stdint.h>
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Copies size bytes from the pointer src to dest.
@@ -28,3 +33,16 @@ void *memset(void *dest, int value, int length);
  * @returns Zero if both pointers are the same, and the difference between byte str1[n] and byte str2[n] if not.
  */
 int memcmp(const void *str1, const void *str2, int n);
+
+size_t strlen(const char *s);
+char *strcpy(char *restrict s1, const char *restrict s2);
+
+char *strcat(char *restrict s1, const char *restrict s2);
+
+char *strchr(const char *s, int c);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

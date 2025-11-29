@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include <memory.h>
+#include <string.h>
 #include <stdio.h>
 
 #include <boot/bootstructs.h>

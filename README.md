@@ -30,7 +30,7 @@ The command(s) below will install the majority of the required packages for buil
 
 **Debian-based:**
 ```
-$ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo nasm mtools qemu-system-x86 alien
+$ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo nasm mtools qemu-system-x86 alien autoconf2.69
 ```
 (TODO: Update this package list for non-Debian distros; help is appreciated with updating this package list)
 
@@ -42,14 +42,14 @@ sudo dpkg -i [new_package_name].deb
 ```
 This should install the latest version of `bochs` for you properly. We do this as the current `bochs` package on `apt` is version 2.7, which has known issues with its VESA VBE BIOS, and since we use those instructions in the bootloader we require this version of `bochs`. Sorry.
 
-*Please note: This may require you to install a newer version of your distro. Please do so if needed.*
+*Please note: This **may** require you to install a newer version of your distro. Please do so if needed.*
 
 ## Building
 
 ### Toolchain (REQUIRED)
-In order to make an operating system, one must first create the universe. This is not always enjoyable to follow as a process, so we've provided a `make` option to create the universe for you. Running `make toolchain` will install and build `binutils` and `gcc` from scratch, under a folder labelled `toolchain`. These are custom versions specific to your PC, which are compiled in such a manner so that they contain no default references or depedencies and only use the code that we have strictly written.
+In order to make an operating system, one must first create the universe. This is not always enjoyable to follow as a process, so we've provided a `make` option to create the universe for you. Running `make toolchain` will install and build `binutils` and `gcc` from scratch, under a folder labelled `toolchain`. These are custom versions specific to your PC, which are compiled in such a manner so that they contain no default references or depedencies and only use the code that we have strictly written. Patches for both `binutils` and `gcc` are added which prepare the tools for use with Aurora specifically.
 
-If you experience errors during the process, go into your `Makefile` and change the version numbers for `binutils` and `gcc` until they work (downgrading may be better for some people, however this may bring up issues down the line).
+If you experience errors during the process, go into your `Makefile` and change the version numbers for `binutils` and `gcc` until they work (downgrading may be better for some people, however this may bring up issues down the line). There may also be an issue with custom git patches not being applied, in which case I will attempt to fix those as soon as possible
 
 ### Operating System
 To build the OS itself, run `make` normally. This will create 3 binary files: `stage1.bin`, `stage2.bin` and `kernel.bin`, as well as `.map` files for the kernel and stage 2. The entire OS itself is stored inside `main_floppy.img`.

@@ -1,7 +1,7 @@
 #include "apic.h"
 
 #include <stdint.h>
-#include <memory.h>
+#include <string.h>
 #include <stdio.h>
 
 #include <arch/io.h>

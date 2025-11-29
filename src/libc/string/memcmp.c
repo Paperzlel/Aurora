@@ -1,4 +1,4 @@
-#include <memory.h>
+#include <string.h>
 #include <stdint.h>
 
 int memcmp(const void *str1, const void *str2, int n) {

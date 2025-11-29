@@ -3,7 +3,7 @@
 #include "paging.h"
 
 #include <stdio.h>
-#include <memory.h> //TODO: Move include out - THIS is memory!
+#include <string.h> //TODO: Move include out - THIS is memory!
 
 typedef enum {
     BIT_AVAILABLE = 1 << 0,

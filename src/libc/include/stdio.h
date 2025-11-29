@@ -1,7 +1,34 @@
-#pragma once
-#include <stdint.h>
+#ifndef _STDIO_H
+#define _STDIO_H
 
-#define NULL ((void *)0)
+#include <stddef.h>
+
+#include <stdarg.h>
+
+#define SEEK_SET 2
+
+typedef struct { int unused; } FILE;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern FILE *stderr;
+
+int fclose(FILE *stream);
+int fflush(FILE *file);
+FILE *fopen(const char *restrict filename, const char *restrict mode);
+
+size_t fread(void *restrict ptr, size_t size, size_t nmemb, FILE *restrict stream);
+size_t fwrite(const void *restrict ptr, size_t size, size_t nmemb, FILE *restrict stream);
+
+int fseek(FILE *stream, long int offset, int whence);
+long int ftell(FILE *stream);
+
+void setbuf(FILE *restrict stream, char *restrict buf);
+
+int fprintf(FILE *stream, const char *fmt, ...);
+
 
 /**
  * @brief Prints an inputted ASCII character to the current output stream.
@@ -23,3 +50,13 @@ void puts(const char *str);
  * @param ... Variadic arguments, for specifying non-character inputs into the string.
  */
 void printf(const char *fmt, ...);
+
+int sprintf(char *restrict s, const char *restrict format, ...);
+
+int vfprintf(FILE *restrict stream, const char *restrict format, va_list args);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _STDIO_H
