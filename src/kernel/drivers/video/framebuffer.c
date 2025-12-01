@@ -1,6 +1,6 @@
 #include "framebuffer.h"
 
-#include <memory/paging.h>
+#include <kernel/memory.h>
 
 static Framebuffer data;
 
@@ -15,15 +15,11 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     data.bpp = p_info->bpp;
 
     // Page allocate the FB to address 0xb0000000
-    if (!paging_map_region((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8))) {
+    if (!kmap_range((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8))) {
         return false;
     }
     // Re-assign if successful.
     data.address = (uint8_t *)0xb0000000;
-
-    out_driver->clear = framebuffer_clear;
-    out_driver->set_pixel = framebuffer_set_pixel;
-    out_driver->write_char = framebuffer_write_char;
 
     return true;
 }

@@ -1,8 +1,8 @@
 #include "pit.h"
 #include "pic.h"
 
-#include <arch/arch.h>
-#include <arch/io.h>
+#include <kernel/arch/arch.h>
+#include <kernel/arch/io.h>
 
 #include <stdio.h>
 

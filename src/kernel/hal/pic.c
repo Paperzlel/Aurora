@@ -1,7 +1,7 @@
 #include "pic.h"
 
 #include <kernel/kdefs.h>
-#include <arch/io.h>
+#include <kernel/arch/io.h>
 
 #define PIC_1               0x20
 #define PIC_2               0xa0

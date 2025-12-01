@@ -1,7 +1,7 @@
-#include "cpuid.h"
+#include <kernel/arch/cpuid.h>
 
-#include <cpuid.h>
 #include <string.h>
+#include <cpuid.h>
 
 const char *feature_list[] = {
     "fpu",

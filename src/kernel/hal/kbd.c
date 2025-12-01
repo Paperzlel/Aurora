@@ -1,6 +1,6 @@
 #include "kbd.h"
 
-#include <arch/arch.h>
+#include <kernel/arch/arch.h>
 
 bool kbd_handler(Registers *p_regs) {
     arch_send_eoi(p_regs->interrupt);

@@ -4,16 +4,16 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <arch/arch.h>
+#include <kernel/arch/arch.h>
 
 static Framebuffer *a_frame_info;
-uint32_t *vmem = 0;
+static uint32_t *vmem = 0;
 
-uint16_t V_WIDTH = 0;
-uint16_t V_HEIGHT = 0;
-uint16_t V_DEPTH = 0;
-uint16_t V_BPL = 0;
-uint16_t V_BPP = 0;
+static uint16_t V_WIDTH = 0;
+static uint16_t V_HEIGHT = 0;
+static uint16_t V_DEPTH = 0;
+static uint16_t V_BPL = 0;
+static uint16_t V_BPP = 0;
 
 
 bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
@@ -34,9 +34,6 @@ bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
         printf("Could not enable VESA VBE option %d.\n", mode);
         return false;
     }
-
-    out_driver->clear = vesa_clear;
-    out_driver->write_char = vesa_write_char;
 
     return true;
 }
@@ -61,3 +58,13 @@ void vesa_draw_rect(int x, int y, int size_x, int size_y) {
         }
     }
 }
+
+VideoDriver a_vesa_driver = {
+    "vesa",
+    -1,
+    vesa_initialize,
+    NULL,
+    vesa_clear,
+    NULL,
+    vesa_write_char,
+};

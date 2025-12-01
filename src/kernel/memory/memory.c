@@ -1,10 +1,14 @@
-#include "memory_core.h"
+#include <kernel/memory.h>
 #include <kernel/memdefs.h>
+#include <boot/bootstructs.h>
+
 #include "paging.h"
+
+#define AUR_MODULE "memory"
+#include <kernel/debug.h>
 
 #include <stdio.h>
 #include <string.h>
-#include <kernel/memory.h>
 
 typedef enum {
     BIT_AVAILABLE = 1 << 0,
@@ -25,8 +29,12 @@ typedef struct MemoryHeader {
 
 MemoryHeader *root_header = KERNEL_ALLOC_VIRTUAL_ADDRESS;
 
-
 bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
+    // Already mapped memory, return
+    if (is_valid_address(root_header) && root_header->size != 0) {
+        return true;
+    }
+
     MemoryRegion usable_mr = { 0 }; 
     bool found = false;
     uint64_t blocked_ranges[16] = { 0 };        // Block a max of 8 ranges where physical memory cannot be used
@@ -39,7 +47,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
         uint32_t mr_base = (uint32_t)mr.base_address;
         if (mr.type == MEMORY_REGION_ACPI_NVS || (mr.type == MEMORY_REGION_RESERVED && !is_valid_address((void *)mr_base))) {
             if (!paging_map_region((void *)mr_base, (void *)mr_base, mr.length)) {
-                printf("Failed to map region %x (size %x)\n", mr.base_address, mr.length);
+                LOG_ERROR("Failed to map region %x (size %x)\n", mr.base_address, mr.length);
                 continue;
             }
         }
@@ -56,11 +64,11 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
         }
 
         if (ranges > 8) {
-            printf("Memory: Cannot have more than 8 blocked ranges, aborting...\n");
+            LOG_ERROR("Memory: Cannot have more than 8 blocked ranges, aborting...\n");
             return false;
         }
 
-        printf("Region start 0x%llx, region end 0x%llx\n", mr.base_address, mr.base_address + mr.length);
+        LOG_DEBUG("Region start 0x%llx, region end 0x%llx\n", mr.base_address, mr.base_address + mr.length);
     }
 
     // Align kernel size to next 16 bytes
@@ -76,7 +84,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
     mh.next = NULL;
     mh.flags = BIT_AVAILABLE | BIT_KERNEL;
     if (!paging_map_region((void *)mh.physical, KERNEL_ALLOC_VIRTUAL_ADDRESS, 0x1000)) {
-        printf("Failed to map the first memory header to its virtual address.\n");
+        LOG_ERROR("Failed to map the first memory header to its virtual address.\n");
         return false;
     }
     // Commit memory header once done

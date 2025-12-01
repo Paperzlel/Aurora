@@ -1,4 +1,4 @@
-#include "hal.h"
+#include <kernel/hal/hal.h>
 #include "pit.h"
 #include "pic.h"
 #include "kbd.h"

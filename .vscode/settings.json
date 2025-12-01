@@ -55,7 +55,10 @@
         "string_view": "c",
         "rope": "c",
         "*.x": "c",
-        "complex": "c"
+        "complex": "c",
+        "driver_load.h": "c",
+        "driver_common.h": "c",
+        "videostructs.h": "c"
     },
 
     "todohighlight.isEnable": true,

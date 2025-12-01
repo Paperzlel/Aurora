@@ -5,21 +5,31 @@
 
 #include <boot/bootstructs.h>
 
-#include <arch/arch.h>
-#include <arch/cpuid/cpuid.h>
-#include <drivers/driver_load.h>
-#include <drivers/video/framebuffer.h>
-#include <hal/hal.h>
-#include <memory/memory_core.h>
+#include <kernel/memory.h>
+#include <kernel/video/driver_video.h>
+
+#include <kernel/arch/arch.h>
+#include <kernel/arch/cpuid.h>
+#include <kernel/arch/io.h>
+#include <kernel/hal/hal.h>
 
 #define AUR_MODULE "main"
 #include <kernel/debug.h>
+
+/**
+ * @brief Initializes the memory subsystem, including allocators, pre-defined pages, and so on. 
+ * @param p_map Pointer to the memory map of the PC. This mainly concerns unmapped memory (such as the BIOS or APIC devices) and also gives us the info
+ * as to where free memory is.
+ * @param p_kernel_size The size of the kernel in bytes. Since the kernel resides at 0x0010 0000 in physical memory, we can use this to predict where our
+ * allocators can start from. The kernel size is static once compiled, so we don't need to worry about this changing.
+ * @return `true` if we could initialize the memory, and `false` if something went wrong. Any error here should be treated as failed, and cause an OS panic.
+ */
+extern bool initialize_memory(MemoryMap *, uint32_t);
 
 extern uint8_t __bss_start;
 extern uint8_t __end;
 
 static BootInfo info;
-
 
 void __attribute__((cdecl)) cstart(BootInfo *boot)
 {
@@ -32,10 +42,11 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         printf("Could not load an architecure backend.\n");
         goto end;
     }
-
+    
     // "Load" VGA driver. We do this first because otherwise any architecture-loading errors will fail silently.
-    driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_VGA);
-    driver_load_driver(LOAD_TYPE_VIDEO, NULL);
+    if (!driver_video_load(NULL)) {
+        panic();    // Lose our minds if this happens, but it should NEVER occur.
+    }
 
     // Check CPUID for supported features. Needed here as CPU features may be checked by the CPU architecture
     CPU_Config cfg;
@@ -50,25 +61,12 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
         goto end;
     }
     hal_initialize(boot->boot_device);
-
     LOG_INFO("CPU features: %s", cpuid_get_features());
 
-    bool video_driver_loaded = false;
-    // Could be running a VM, check hypervisor bit and if so attempt to load bochs
-    if (cpuid_supports_feature(CPU_FEATURE_HYPERVISOR, 0) || arch_is_virtualized()) {
-        driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_BOCHS);
-        video_driver_loaded = driver_load_driver(LOAD_TYPE_VIDEO, (void *)&boot->framebuffer_map);
-    }
-
-    // Load VBE drivers instead. If this fails, we can't use the screen and should attempt to reset.
-    if (!video_driver_loaded) {
-        driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_VBE);
-        if (!driver_load_driver(LOAD_TYPE_VIDEO, (void *)&boot->framebuffer_map)) {
-            LOG_WARNING("Could not load a valid video driver.");
-            goto end;
-        }
-
-        video_driver_loaded = true;
+    // Load a basic graphics driver (Bochs VBE, VESA) to draw complex objects in.
+    if (!driver_video_load((void *)&boot->framebuffer_map)) {
+        LOG_ERROR("Failed to load a non-VGA video driver. Graphics options will not be available.");
+        goto end;
     }
 
 end:

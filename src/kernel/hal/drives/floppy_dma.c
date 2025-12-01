@@ -1,6 +1,6 @@
 #include "floppy_dma.h"
 
-#include <arch/io.h>
+#include <kernel/arch/io.h>
 
 /* For the sake of simplicity, we are pretending that DMA channels 4-7 don't exist - we only need channel 2 */
 

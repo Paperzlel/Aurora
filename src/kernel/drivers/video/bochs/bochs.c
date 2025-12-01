@@ -1,8 +1,11 @@
 #include "bochs.h"
 
-#include <arch/io.h>
-#include <stdio.h>
-#include <drivers/video/framebuffer.h>
+#include <kernel/arch/io.h>
+
+#define __need_NULL
+#include <stddef.h>
+
+#include "../framebuffer.h"
 
 #define BOCHS_PORT_INDEX 0x01ce
 #define BOCHS_PORT_DATA 0x01cf
@@ -19,7 +22,7 @@
 #define BOCHS_ENABLE 0x01
 #define BOCHS_DISABLE 0x00
 
-uint32_t *a_video_mem = NULL;
+static uint32_t *a_video_mem = NULL;
 
 void bochs_set_register(uint16_t p_index, uint16_t p_value) {
     outw(BOCHS_PORT_INDEX, p_index);
@@ -51,9 +54,17 @@ bool bochs_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
     // TODO: PCI detection, which isn't enabled (yet).
     // We shouldn't need this now, since the VESA framebuffer already does this, but we may need to in the future should that get abstracted.
 
-    out_driver->init = bochs_initialize;
-
     framebuffer_intialize(out_driver, p_info);
 
     return true;
 }
+
+VideoDriver a_bochs_driver = {
+    "bochs",
+    -1,
+    bochs_initialize,
+    NULL,
+    framebuffer_clear,
+    framebuffer_set_pixel,
+    framebuffer_write_char,
+};

@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-uint8_t *video_memory = (uint8_t *)0xb8000;
+static uint8_t *video_memory = (uint8_t *)0xb8000;
 
 const unsigned SCREEN_WIDTH = 80;
 const unsigned SCREEN_HEIGHT = 25;
@@ -74,14 +74,16 @@ void vga_write_char(char c) {
 
 
 bool vga_initialize(VideoDriver *out_driver, Framebuffer *p_buffer) {
-    // Shouldn't have the buffer at this point...
-    if (p_buffer) {
-        return false;
-    }
-
-    out_driver->init = vga_initialize;
-    out_driver->clear = vga_clear;
-    out_driver->write_char = vga_write_char;
-    
+    // Do nothing
     return true;
 }
+
+VideoDriver a_vga_driver = {
+    "vga",
+    -1,
+    vga_initialize,
+    NULL,
+    vga_clear,
+    NULL,
+    vga_write_char,
+};

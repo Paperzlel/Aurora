@@ -1,6 +1,6 @@
 #pragma once
 
-#include <videostructs.h>
+#include <kernel/video/videostructs.h>
 #include <stdbool.h>
 
 bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info);

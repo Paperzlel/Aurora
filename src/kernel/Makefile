@@ -1,7 +1,7 @@
 TARGET_ASMFLAGS += -f elf
 TARGET_CFLAGS += -ffreestanding
 TARGET_LDFLAGS += -T linker.ld -nostdlib
-TARGET_CINCLUDES += -I../libs -Iinclude -I.
+TARGET_CINCLUDES += -I../libs -Iinclude
 TARGET_LIBS += -lgcc -lk
 
 SOURCES_C = $(subst ./,,$(shell find -type f -name "*.c"))
@@ -36,6 +36,7 @@ $(BUILD_DIR)/kernel/asm/%.o: %.asm
 	@$(ASM) $(TARGET_ASMFLAGS) -o $@ $< 
 
 install:
+	@rm -rf $(INCLUDEDIR)/*
 	@cp -R --preserve=timestamps include/. $(INCLUDEDIR)/.
 
 clean:

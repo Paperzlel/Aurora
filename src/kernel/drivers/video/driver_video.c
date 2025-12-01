@@ -1,10 +1,9 @@
-#include "driver_video.h"
-
+#include <kernel/video/driver_video.h>
 #include <kernel/console.h>
 
-#include <arch/io.h>
-#include <arch/arch.h>
-#include <drivers/driver_load.h>
+#include <kernel/arch/cpuid.h>
+#include <kernel/arch/arch.h>
+#include <kernel/arch/io.h>
 
 #include "vga/vga.h"
 #include "vesa/vesa_main.h"
@@ -12,11 +11,18 @@
 
 #include <stdint.h>
 #include <boot/bootstructs.h>
-#include <videostructs.h>
+#include <kernel/video/videostructs.h>
 
-VideoDriver a_driver_state;
+#define AUR_MODULE "video"
+#include <kernel/debug.h>
 
-void vesa_to_driver(VESA_FramebufferMap *p_map, Framebuffer *out_framebuffer) {
+extern VideoDriver a_vga_driver;
+extern VideoDriver a_vesa_driver;
+extern VideoDriver a_bochs_driver;
+
+static VideoDriver a_driver_state;
+
+static void vesa_to_internal(VESA_FramebufferMap *p_map, Framebuffer *out_framebuffer) {
     if (!p_map || !out_framebuffer) {
         return;
     }
@@ -32,57 +38,44 @@ void vesa_to_driver(VESA_FramebufferMap *p_map, Framebuffer *out_framebuffer) {
 }
 
 bool driver_video_load(void *p_data) {
-    // No information; load VGA driver
-
-    VESA_FramebufferMap *map = (VESA_FramebufferMap *)p_data;
     Framebuffer fb;
-    if (p_data) {
-        vesa_to_driver(map, &fb);
+    if (!p_data) {
+        a_driver_state = a_vga_driver;
     } else {
-        // No data, swap to VGA.
-        a_driver_state.hint = DRIVER_HINT_USE_VGA;
-        // Already loaded VGA drivers
-        if (a_driver_state.init != 0) {
-            return true;
+        VESA_FramebufferMap *map = (VESA_FramebufferMap *)p_data;
+        vesa_to_internal(map, &fb);
+        // Failed to map, throw error
+        // VGA _SHOULD_ be loaded here
+        if (!fb.address) {
+            LOG_ERROR("Failed to load VESA information.");
+            LOG_ERROR("Card: %s", map->product_name);
+            LOG_ERROR("Vendor: %s", map->vendor_name);
+            return false;
+        }
+        a_driver_state.mode_opt = map->framebuffer.mode_id;
+
+        // Use bochs driver on VMs if supported. Fallback to VESA if not virtualized or if bochs failed.
+        if (cpuid_supports_feature(CPU_FEATURE_HYPERVISOR, 0) || arch_is_virtualized()) {
+            a_driver_state = a_bochs_driver;
+        } else {
+            a_driver_state = a_vesa_driver;
         }
     }
 
-    switch (a_driver_state.hint) {
-        // BOCHS adapter
-        case DRIVER_HINT_USE_BOCHS: {
-            bool ret = bochs_initialize(&a_driver_state, &fb);
+    bool success = a_driver_state.init(&a_driver_state, &fb);
 
-            if (!ret) {
-                return false;
-            }
-        } break;
-        // VESA VBE driver (default for real PCs)
-        case DRIVER_HINT_USE_VBE: {
-            a_driver_state.hint = map->framebuffer.mode_id;
-            bool res = vesa_initialize(&a_driver_state, &fb);
+    if (!success) {
+        if (!p_data) {
+            return false;
+        }
 
-            if (!res) {
-                return false;
-            }
-        } break;
-        // Backup text-only driver
-        case DRIVER_HINT_USE_VGA:
-        default: {
-            bool res = vga_initialize(&a_driver_state, 0);
-
-            if (!res) {
-                return false;
-            }
-        } break;
+        LOG_ERROR("Failed to load video driver %s, falling back to VGA support...", a_driver_state.name);
+        return driver_video_load((void *)0);
     }
     
+    // Clear screen once done.
     a_driver_state.clear(0, 0, 0);
-
     return true;
-}
-
-void video_driver_set_hint(int p_hint) {
-    a_driver_state.hint = p_hint;
 }
 
 void driver_video_clear() {

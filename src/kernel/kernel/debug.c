@@ -1,7 +1,8 @@
+#define AUR_MODULE "debugger" /* Shouldn't really be defined here, but we DID make a standard for it, so... */
 #include <kernel/debug.h>
 
 #include <kernel/time.h>
-#include <arch/io.h>
+#include <kernel/arch/io.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,7 +28,7 @@ void log_message(LogLevel p_level, const char *p_module, const char *p_message, 
     // Format message
     va_list args;
     va_start(args, p_message);
-    vsprintf(msg + strlen(msg), p_message, args);
+    vsprintf(msg + num_size, p_message, args);
     va_end(args);
 
     size_t max_len = strlen(msg);
@@ -37,7 +38,7 @@ void log_message(LogLevel p_level, const char *p_module, const char *p_message, 
     // Don't bother with formatting
     puts(msg);
 
-    if (p_level == LEVEL_ERROR) {
+    if (p_level == LEVEL_FATAL) {
         panic();
     }
 }

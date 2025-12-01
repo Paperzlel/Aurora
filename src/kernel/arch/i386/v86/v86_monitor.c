@@ -2,8 +2,8 @@
 
 #include "v86_cpu.h"
 
-#include <arch/i386/isr.h>
-#include <arch/i386/tss.h>
+#include "../isr.h"
+#include "../tss.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -168,7 +168,7 @@ bool v86_monitor_exception_handler(Registers *p_regs) {
         } break;
 
         default:
-            LOG_WARNING("Unknown opcode %x", operation);
+            LOG_ERROR("Unknown opcode %x", operation);
             return false;       // Unknown, throw an error
     }
 

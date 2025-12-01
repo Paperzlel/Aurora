@@ -1,8 +1,8 @@
 #include "floppy.h"
-#include <hal/pic.h>
+#include "../pic.h"
 
-#include <arch/arch.h>
-#include <arch/io.h>
+#include <kernel/arch/arch.h>
+#include <kernel/arch/io.h>
 
 typedef enum {
     REGISTER_STATUS_A           = 0x3f0,        // read-only, status of drive A (SRA)

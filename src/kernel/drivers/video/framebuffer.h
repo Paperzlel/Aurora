@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <videostructs.h>
+#include <kernel/video/videostructs.h>
 
 bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info);
 

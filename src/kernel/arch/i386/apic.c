@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <arch/io.h>
+#include <kernel/arch/io.h>
 
 // RSDP/XSDP
 
