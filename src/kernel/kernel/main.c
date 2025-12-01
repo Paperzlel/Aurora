@@ -12,10 +12,14 @@
 #include <hal/hal.h>
 #include <memory/memory_core.h>
 
+#define AUR_MODULE "main"
+#include <kernel/debug.h>
+
 extern uint8_t __bss_start;
 extern uint8_t __end;
 
 static BootInfo info;
+
 
 void __attribute__((cdecl)) cstart(BootInfo *boot)
 {
@@ -36,19 +40,18 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
     // Check CPUID for supported features. Needed here as CPU features may be checked by the CPU architecture
     CPU_Config cfg;
     if (!cpuid_initialize(&cfg)) {
-        printf("Could not initialize CPUID information.");
+        printf("Could not initialize CPUID information.\n");
         goto end;
     }
-    printf("CPU features: %s\n", cpuid_get_features());
 
     // Initialize memory info.
     if (!initialize_memory(&boot->memory_map, boot->kernel_size)) {
         printf("Failed to initialize memory.\n");
         goto end;
     }
-
     hal_initialize(boot->boot_device);
-    printf("test");
+
+    LOG_INFO("CPU features: %s", cpuid_get_features());
 
     bool video_driver_loaded = false;
     // Could be running a VM, check hypervisor bit and if so attempt to load bochs
@@ -61,7 +64,7 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
     if (!video_driver_loaded) {
         driver_set_hint(LOAD_TYPE_VIDEO, DRIVER_HINT_USE_VBE);
         if (!driver_load_driver(LOAD_TYPE_VIDEO, (void *)&boot->framebuffer_map)) {
-            printf("Could not load a valid video driver.\n");
+            LOG_WARNING("Could not load a valid video driver.");
             goto end;
         }
 
@@ -69,6 +72,6 @@ void __attribute__((cdecl)) cstart(BootInfo *boot)
     }
 
 end:
-    printf("%llu ticks since PIT initialized\n", hal_get_ticks());
+    LOG_INFO("%llu ticks since PIT initialized\n", hal_get_ticks());
     for(;;);
 }

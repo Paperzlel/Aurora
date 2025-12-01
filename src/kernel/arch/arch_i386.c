@@ -1,6 +1,6 @@
 #include "arch.h"
 
-#include "io.h"
+#include <arch/io.h>
 
 #include <cpuid.h>
 

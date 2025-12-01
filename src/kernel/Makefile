@@ -22,7 +22,7 @@ scaffold:
 
 kernel: $(BUILD_DIR)/kernel.elf
 
-$(BUILD_DIR)/kernel.elf: $(OBJECTS_ASM) $(OBJECTS_C)
+$(BUILD_DIR)/kernel.elf: $(OBJECTS_ASM) $(OBJECTS_C) $(BUILD_DIR)/libk.a
 	@$(TARGET_LD) $(TARGET_LDFLAGS) -Wl,-Map=$(BUILD_DIR)/kernel.map -o $@ $^ $(TARGET_LIBS)
 	@echo Created kernel.elf
 

@@ -1,5 +1,5 @@
 #include "memory_core.h"
-#include "memdefs.h"
+#include <kernel/memdefs.h>
 #include "paging.h"
 
 #include <stdio.h>

@@ -1,6 +1,6 @@
 #include "paging.h"
 
-#include "memdefs.h"
+#include <kernel/memdefs.h>
 #include <string.h>
 
 #define PAGE_TABLE_COUNT (PAGE_TABLE_MEMORY_SIZE / 4096) - 1

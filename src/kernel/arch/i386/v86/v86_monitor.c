@@ -9,6 +9,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#define AUR_MODULE "v86"
+#include <kernel/debug.h>
+
 // Variable that all registers are saved to whenever the OS enters V86 and is loaded whenever the V86 program wants to exit
 Registers a_reg_state;
 
@@ -165,7 +168,7 @@ bool v86_monitor_exception_handler(Registers *p_regs) {
         } break;
 
         default:
-            printf("Unknown opcode %x\n", operation);
+            LOG_WARNING("Unknown opcode %x", operation);
             return false;       // Unknown, throw an error
     }
 

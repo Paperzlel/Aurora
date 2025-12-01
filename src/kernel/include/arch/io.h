@@ -35,4 +35,10 @@ static inline void wrmsr(uint32_t p_msr, uint64_t p_value)
     __asm__ volatile("wrmsr" : : "c" (p_msr), "A" (p_value));
 }
 
+static inline void panic()
+{
+    __asm__ volatile("cli");
+    __asm__ volatile("hlt");
+}
+
 #endif

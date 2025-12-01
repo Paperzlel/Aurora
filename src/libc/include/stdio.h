@@ -49,12 +49,15 @@ void puts(const char *str);
  * pointers and so on.
  * @param fmt The format string. To add a character from the varargs, add a % symbol followed by its type in command codes.
  * @param ... Variadic arguments, for specifying non-character inputs into the string.
+ * @returns The number of characters transmitted (sent) to stdout, or a negative value if an encoding error occured.
  */
-void printf(const char *fmt, ...);
+int printf(const char *restrict fmt, ...);
 
 int sprintf(char *restrict s, const char *restrict format, ...);
 
 int vfprintf(FILE *restrict stream, const char *restrict format, va_list args);
+
+int vsprintf(char *restrict s, const char *restrict format, va_list args);
 
 #ifdef __cplusplus
 }
