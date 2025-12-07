@@ -10,4 +10,4 @@
  * @param p_out_framebuffer The output framebuffer map to fill in
  * @returns True if successful, and false if an error occurs, mainly due to a lower version or an inability to obtain the function data.
  */
-bool VESA_get_framebuffer(VESA_FramebufferMap *p_out_framebuffer);
+bool VESA_get_framebuffer(struct VESA_FramebufferInfo *p_out_framebuffer);

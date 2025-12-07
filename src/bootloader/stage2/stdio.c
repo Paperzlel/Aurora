@@ -19,24 +19,30 @@ const unsigned DEFAULT_COLOUR = 0x07;       // change bit 1 for background, bit 
 int p_screen_x = 0;
 int p_screen_y = 0;
 
-void putchr(int x, int y, char c) {
+void putchr(int x, int y, char c)
+{
     video_memory[2 * (y * SCREEN_WIDTH + x)] = c; // y * scr_width + x is cell offset, mul by two because of the two-byte size
 }
 
-void putcolour(int x, int y, uint8_t colour) {
+void putcolour(int x, int y, uint8_t colour)
+{
     video_memory[2 * (y * SCREEN_WIDTH + x) + 1] = colour;
 }
 
-void clrscr() {
-    for (int y = 0; y < SCREEN_HEIGHT; y++) {
-        for (int x = 0; x < SCREEN_WIDTH; x++) {
+void clrscr()
+{
+    for (int y = 0; y < SCREEN_HEIGHT; y++)
+    {
+        for (int x = 0; x < SCREEN_WIDTH; x++)
+        {
             putchr(x, y, '\0');
             putcolour(x, y, DEFAULT_COLOUR);
         }
     }
 }
 
-void movecursor(int x, int y) {
+void movecursor(int x, int y)
+{
     uint16_t res = (y * SCREEN_WIDTH + x);
 
     x86_outb(FB_COMMAND_PORT, 14);
@@ -45,25 +51,31 @@ void movecursor(int x, int y) {
     x86_outb(FB_DATA_PORT, res & 0x00ff);
 }
 
-void scroll_screen(uint32_t p_amount) {
-    for (int i = p_amount; i < SCREEN_HEIGHT; i++) {
+void scroll_screen(uint32_t p_amount)
+{
+    for (int i = p_amount; i < SCREEN_HEIGHT; i++)
+    {
         memcpy((uint8_t *)&video_memory[2 * (i - p_amount) * SCREEN_WIDTH], (uint8_t *)&video_memory[2 * i * SCREEN_WIDTH], 2 * SCREEN_WIDTH);
     }
 
-    for (int x = 0; x < SCREEN_WIDTH; x++) {
+    for (int x = 0; x < SCREEN_WIDTH; x++)
+    {
         putchr(x, SCREEN_HEIGHT - 1, '\0');
     }
 }
 
 
-void putc(char c) {
-    switch (c) {
+void putc(char c)
+{
+    switch (c)
+    {
         case '\n':
             p_screen_x = 0;
             p_screen_y++;
             break;
         case '\t':
-            for (int i = 0; i < 4 - (p_screen_x % 4); i++) {
+            for (int i = 0; i < 4 - (p_screen_x % 4); i++)
+            {
                 putc(' ');
             }
             break;
@@ -76,12 +88,14 @@ void putc(char c) {
             break;
     }
 
-    if (p_screen_x >= SCREEN_WIDTH) {
+    if (p_screen_x >= SCREEN_WIDTH)
+    {
         p_screen_x = 0;
         p_screen_y++;
     }
 
-    if (p_screen_y >= SCREEN_HEIGHT) {
+    if (p_screen_y >= SCREEN_HEIGHT)
+    {
         p_screen_y = SCREEN_HEIGHT - 1;
         scroll_screen(1);
     }
@@ -89,8 +103,10 @@ void putc(char c) {
     movecursor(p_screen_x, p_screen_y);
 }
 
-void puts(const char *str) {
-    while (*str) {
+void puts(const char *str)
+{
+    while (*str)
+    {
         putc(*str);
         str++;
     }
@@ -100,61 +116,75 @@ static bool a_is_captial = false;
 const char a_hex_lowercase[] = "0123456789abcdef";
 const char a_hex_uppercase[] = "0123456789ABCDEF";
 
-void print_num_unsigned(uint64_t number, int base) {
+void print_num_unsigned(uint64_t number, int base)
+{
     char buf[32]; // Shouldn't be bigger than this
     int pos = 0;
 
-    do {
+    do
+    {
         uint64_t rem = number % base;
         number /= base;
         buf[pos++] = a_is_captial ? a_hex_uppercase[rem] : a_hex_lowercase[rem];
-    } while (number > 0);
+    } 
+    while (number > 0);
 
-    while (--pos >= 0) {
+    while (--pos >= 0)
+    {
         putc(buf[pos]);
     }
 }
 
-void print_num_signed(int64_t number, int base) {
-    if (number < 0) {
+void print_num_signed(int64_t number, int base)
+{
+    if (number < 0)
+    {
         putc('-');
         print_num_unsigned(-number, base);
-    } else {
+    }
+    else
+    {
         print_num_unsigned(number, base);
     }
 }
 
-typedef enum {
+enum PrintfState
+{
     PRINTF_STATE_NORMAL,
     PRINTF_STATE_IDENTIFIER,
     PRINTF_STATE_LENGTH_SHORT,
     PRINTF_STATE_LENGTH_LONG,
-} PrintfState;
+};
 
-typedef enum {
+enum FmtLength
+{
     LENGTH_SHORT_SHORT,
     LENGTH_SHORT,
     LENGTH_DEFAULT,
     LENGTH_LONG,
     LENGTH_LONG_LONG,
-} FmtLength;
+};
 
 
-void printf(const char *fmt, ...) {
+void printf(const char *fmt, ...)
+{
     va_list arg_ptr;
     va_start(arg_ptr, fmt);
 
-    PrintfState state = PRINTF_STATE_NORMAL;
-    FmtLength length = LENGTH_DEFAULT;
+    enum PrintfState state = PRINTF_STATE_NORMAL;
+    enum FmtLength length = LENGTH_DEFAULT;
     int base = 10;
     bool number = false;
     bool is_signed = false;
 
-    while (*fmt) {
-        
-        switch (state) {
-            case PRINTF_STATE_NORMAL: {
-                switch (*fmt) {
+    while (*fmt)
+    {
+        switch (state)
+        {
+            case PRINTF_STATE_NORMAL:
+            {
+                switch (*fmt)
+                {
                     case '%':
                         state = PRINTF_STATE_IDENTIFIER;
                         break;
@@ -164,30 +194,39 @@ void printf(const char *fmt, ...) {
                 }
             } break;
 
-            case PRINTF_STATE_LENGTH_SHORT: {
-                if (*fmt == 'h') {
+            case PRINTF_STATE_LENGTH_SHORT:
+            {
+                if (*fmt == 'h')
+                {
                     length = LENGTH_SHORT_SHORT;
                     state = PRINTF_STATE_IDENTIFIER;
                     break;
-                } else {
+                }
+                else
+                {
                     goto PRINTF_STATE_IDENTIFIER_;
                 }
             } break;
 
 
-            case PRINTF_STATE_LENGTH_LONG: {
-                if (*fmt == 'l') {
+            case PRINTF_STATE_LENGTH_LONG:
+            {
+                if (*fmt == 'l')
+                {
                     length = LENGTH_LONG_LONG;
                     state = PRINTF_STATE_IDENTIFIER;
                     break;
-                } else {
+                }
+                else
+                {
                     goto PRINTF_STATE_IDENTIFIER_;
                 }
             }
 
             case PRINTF_STATE_IDENTIFIER:
             PRINTF_STATE_IDENTIFIER_:
-                switch (*fmt) {
+                switch (*fmt)
+                {
                     case '%':
                         putc(*fmt);
                         state = PRINTF_STATE_NORMAL;
@@ -242,9 +281,12 @@ void printf(const char *fmt, ...) {
                         break;      // Ignore undefined types for now (f/F, e/E, g/G, a/A, n)
                 }
 
-                if (number) {
-                    if (is_signed) {
-                        switch (length) {
+                if (number)
+                {
+                    if (is_signed)
+                    {
+                        switch (length)
+                        {
                             case LENGTH_SHORT_SHORT:
                                 print_num_signed((int8_t)va_arg(arg_ptr, int), base);
                                 break;
@@ -261,8 +303,11 @@ void printf(const char *fmt, ...) {
                                 print_num_signed(va_arg(arg_ptr, int64_t), base);
                                 break;
                         }
-                    } else {
-                        switch (length) {
+                    }
+                    else
+                    {
+                        switch (length)
+                        {
                             case LENGTH_SHORT_SHORT:
                                 print_num_unsigned((uint8_t)va_arg(arg_ptr, uint32_t), base);
                                 break;
@@ -296,12 +341,14 @@ void printf(const char *fmt, ...) {
     va_end(arg_ptr);
 }
 
-void print_buffer(const char *p_msg, const void *p_buffer, uint32_t p_length) {
+void print_buffer(const char *p_msg, const void *p_buffer, uint32_t p_length)
+{
     const uint8_t *byte_buf = (const uint8_t *)p_buffer;
 
     puts(p_msg);
 
-    for (int i = 0; i < p_length; i++) {
+    for (int i = 0; i < p_length; i++)
+    {
         putc(a_hex_lowercase[byte_buf[i] >> 4]);
         putc(a_hex_lowercase[byte_buf[i] & 0xf]);
     }

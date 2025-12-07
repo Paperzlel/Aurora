@@ -4,19 +4,21 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <kernel/arch/io.h>
+#include <asm/io.h>
 
 // RSDP/XSDP
 
-typedef struct {
+struct __attribute__((packed)) RSDP
+{
     char signature[8];
     uint8_t checksum;
     char oem_id[6];
     uint8_t revision;
     uint32_t rsdt_address;
-} __attribute__((packed)) RSDP;
+};
 
-typedef struct {
+struct __attribute__((packed)) XSDP
+{
     char signature[8];
     uint8_t checksum;
     char oem_id[6];
@@ -27,7 +29,7 @@ typedef struct {
     uint64_t xsdt_address;
     uint8_t extended_checksum;
     uint8_t reserved[3];
-} __attribute__((packed)) XSDP;
+};
 
 char signature[8] = { 'R', 'S', 'D', ' ', 'P', 'T', 'R', ' ' };
 char rsdp_oem[6];
@@ -36,7 +38,8 @@ char rsdp_oem[6];
 
 // RSDT/XSDT
 
-typedef struct {
+struct __attribute__((packed)) RSDT_Header
+{
     char signature[4];
     uint32_t length;
     uint8_t revision;
@@ -46,27 +49,30 @@ typedef struct {
     uint32_t oem_revision;
     uint32_t creator_id;
     uint32_t creator_revision;
-} __attribute__((packed)) RSDT_Header;
+};
 
-typedef struct {
-    RSDT_Header header;
+struct __attribute__((packed)) RSDT
+{
+    struct RSDT_Header header;
     uint32_t other_tables[];             // Pointer to the other ACPI tables. Amount is read from the header.
-} __attribute__((packed)) RSDT;
+};
 
 // MADT
 
-typedef struct {
+struct __attribute__((packed)) MADT_Data
+{
     uint8_t entry_type;
     uint8_t record_length;
     uint8_t data[14];
-} __attribute__((packed)) MADT_Data;
+};
 
-typedef struct {
-    RSDT_Header header;
+struct __attribute__((packed)) MADT
+{
+    struct RSDT_Header header;
     uint32_t local_apic_address;
     uint32_t flags;
-    MADT_Data *data;
-} __attribute__((packed)) MADT;
+    struct MADT_Data *data;
+};
 
 // CPU information
 
@@ -74,23 +80,26 @@ typedef struct {
 #define IA32_APIC_BASE_MSR_BSP 0x100
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
 
-typedef struct {
+struct CPU_Information
+{
     void *local_apic_address;
     int acpi_processor_id;
-} CPU_Information;
+};
 
-CPU_Information cpu_info;
+static struct CPU_Information a_cpu_info;
 
 // Other tables
-typedef enum {
+enum RSDT_TableIndex
+{
     RSDT_MADT,
     RSDT_FADT,
     RSDT_DSDT,
     RSDT_SSDT,
-} RSDT_TableIndex;
+};
 
 
-char table_names[][5] = {
+static char *table_names[5] =
+{
     "APIC",
     "FACP",
     "DSDT",
@@ -98,24 +107,29 @@ char table_names[][5] = {
 };
 
 
-bool check_rsdp_checksum(RSDP *p_table) {
+bool check_rsdp_checksum(struct RSDP *p_table)
+{
     uint32_t sum = 0;
     int i = 0;
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++)
+    {
         sum += p_table->signature[i];
     }
 
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < 6; i++)
+    {
         sum += p_table->oem_id[i];
     }
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 4; i++)
+    {
         sum += *((uint8_t *)(&p_table->rsdt_address) + i);
     }
 
     sum += p_table->revision;
     sum += p_table->checksum;
-    if (sum & 0xff) {
+    if (sum & 0xff)
+    {
         return false;
     }
 
@@ -123,10 +137,12 @@ bool check_rsdp_checksum(RSDP *p_table) {
 }
 
 
-bool check_xsdp_checksum(XSDP *p_table) {
+bool check_xsdp_checksum(struct XSDP *p_table)
+{
     uint32_t sum = 0;
     int i = 0;
-    for (i = 0; i < sizeof(XSDP) - sizeof(RSDP); i++) {
+    for (i = 0; i < sizeof(struct XSDP) - sizeof(struct RSDP); i++)
+    {
         sum += *((uint8_t *)(p_table) + i);
     }
 
@@ -134,9 +150,11 @@ bool check_xsdp_checksum(XSDP *p_table) {
 }
 
 
-bool check_rsdt_header_checksum(RSDT_Header *p_header) {
+bool check_rsdt_header_checksum(struct RSDT_Header *p_header)
+{
     uint32_t sum = 0;
-    for (int i = 0; i < sizeof(RSDT_Header); i++) {
+    for (int i = 0; i < sizeof(struct RSDT_Header); i++)
+    {
         sum += *((uint8_t *)(p_header) + i);
     }
 
@@ -144,18 +162,22 @@ bool check_rsdt_header_checksum(RSDT_Header *p_header) {
 }
 
 
-bool apic_get_rsdt(void **out_location) {
+bool apic_get_rsdt(void **out_location)
+{
 
     uint32_t ebda_addr = *(uint16_t *)(0x40e) << 4;
-    if (!ebda_addr) {
+    if (!ebda_addr)
+    {
         return false;
     }
 
     // Check EBDA first
     uint8_t *memory = (uint8_t *)ebda_addr;
     bool found = false;
-    while (memory < (uint8_t *)0x9ffff) {
-        if (!memcmp(memory, signature, 8)) {
+    while (memory < (uint8_t *)0x9ffff)
+    {
+        if (!memcmp(memory, signature, 8))
+        {
             found = true;
             break;
         }
@@ -164,10 +186,13 @@ bool apic_get_rsdt(void **out_location) {
     }
 
     // Check rest of BIOS memory to find it
-    if (!found) {
+    if (!found)
+    {
         memory = SEARCH_BACKUP_START;
-        while (memory < (uint8_t *)0xfffff) {
-            if (!memcmp(memory, signature, 8)) {
+        while (memory < (uint8_t *)0xfffff)
+        {
+            if (!memcmp(memory, signature, 8))
+            {
                 found = true;
                 break;
             }
@@ -177,39 +202,46 @@ bool apic_get_rsdt(void **out_location) {
     }
 
     // TODO: Throw an error.
-    if (!found) {
+    if (!found)
+    {
         return false;
     }
 
-    RSDP sdp_base;
-    memcpy(&sdp_base, memory, sizeof(RSDP));
+    struct RSDP sdp_base;
+    memcpy(&sdp_base, memory, sizeof(struct RSDP));
 
-    if (!check_rsdp_checksum(&sdp_base)) {
+    if (!check_rsdp_checksum(&sdp_base))
+    {
         return false;
     }
 
     uint32_t pointer = 0;           // Should really be 64-bit, but we only support x86 for the meantime
     // uint32_t size = 0;
 
-    if (sdp_base.revision == 2) {
-        XSDP sdp_v2;
-        memcpy(&sdp_v2, memory, sizeof(XSDP));
+    if (sdp_base.revision == 2)
+    {
+        struct XSDP sdp_v2;
+        memcpy(&sdp_v2, memory, sizeof(struct XSDP));
 
         // Checksum validation
-        if (!check_xsdp_checksum(&sdp_v2)) {
+        if (!check_xsdp_checksum(&sdp_v2))
+        {
             return false;
         }
 
         pointer = sdp_v2.xsdt_address;
         // size = sdp_v2.length;
-    } else {
+    }
+    else
+    {
         pointer = sdp_base.rsdt_address;
     }
 
     // Copy in OEM ID
     memcpy(rsdp_oem, sdp_base.oem_id, 6);
 
-    if (!pointer) {
+    if (!pointer)
+    {
         return false;
     }
 
@@ -219,23 +251,28 @@ bool apic_get_rsdt(void **out_location) {
 }
 
 
-bool apic_parse_madt(void *p_madt) {
-    MADT *m = (MADT *)p_madt;
+bool apic_parse_madt(void *p_madt)
+{
+    struct MADT *m = (struct MADT *)p_madt;
 
-    cpu_info.local_apic_address = (void *)m->local_apic_address;
-    int bytes_left = m->header.length - sizeof(RSDT_Header);
+    a_cpu_info.local_apic_address = (void *)m->local_apic_address;
+    int bytes_left = m->header.length - sizeof(struct RSDT_Header);
     int i = 0;
-    while (bytes_left > 0) {
+    while (bytes_left > 0)
+    {
         // Read APIC info
-
         uint8_t type = m->data[i].entry_type;
-        switch (type) {
+        switch (type)
+        {
             // Processor-local APIC
-            case 0: {
+            case 0:
+            {
                 // See if the processor can be enabled
-                if (!(m->data[i].data[2] & 1)) {
+                if (!(m->data[i].data[2] & 1))
+                {
                     // Cannot enable the CPU
-                    if (!(m->data[i].data[2] & 1)) {
+                    if (!(m->data[i].data[2] & 1))
+                    {
                         break;
                     }
                     
@@ -243,9 +280,11 @@ bool apic_parse_madt(void *p_madt) {
                 }
             } break;
             // I/O APIC
-            case 1: {
+            case 1:
+            {
 
             } break;
+
             default:
                 break;
         }
@@ -269,7 +308,8 @@ bool apic_parse_madt(void *p_madt) {
 }
 
 
-bool apic_initialize() {
+bool apic_initialize()
+{
     // Look for the RSDP
 
     void *rsdt = NULL;
@@ -277,33 +317,38 @@ bool apic_initialize() {
         return false;
     }
 
-    RSDT *root_table = (RSDT *)rsdt;
-    if (check_rsdt_header_checksum(&root_table->header)) {
+    struct RSDT *root_table = (struct RSDT *)rsdt;
+    if (check_rsdt_header_checksum(&root_table->header))
+    {
         return false;
     }
 
     // Look for MADT
     void *madt = NULL;
     int entry_count = (root_table->header.length - sizeof(root_table->header)) / 4;         // If XSDT, should be 8
-    for (int i = 0; i < entry_count; i++) {
-        RSDT_Header *next = (RSDT_Header *)root_table->other_tables[i];
+    for (int i = 0; i < entry_count; i++)
+    {
+        struct RSDT_Header *next = (struct SDT_Header *)root_table->other_tables[i];
         
         // if (!check_rsdt_header_checksum(next)) {
         //     continue;
         // }
         
-        if (next && memcmp(next, table_names[RSDT_MADT], 4) == 0) {
+        if (next && memcmp(next, table_names[RSDT_MADT], 4) == 0)
+        {
             madt = (void *)next;
             break;
         }
     }
 
-    if (!madt) {
+    if (!madt)
+    {
         return false;
     }
 
     // Parse MADT
-    if (!apic_parse_madt(madt)) {
+    if (!apic_parse_madt(madt))
+    {
         return false;
     }
 

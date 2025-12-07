@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <kernel/arch/arch.h>
+#include <aurora/arch/arch.h>
 
-static Framebuffer *a_frame_info;
+static struct Framebuffer *a_frame_info;
 static uint32_t *vmem = 0;
 
 static uint16_t V_WIDTH = 0;
@@ -16,8 +16,10 @@ static uint16_t V_BPL = 0;
 static uint16_t V_BPP = 0;
 
 
-bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
-    if (!p_info) {
+bool vesa_initialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)
+{
+    if (!p_info)
+    {
         return false;
     }
     a_frame_info = p_info;
@@ -30,7 +32,8 @@ bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
 
     uint8_t mode = out_driver->mode_opt;
 
-    if (!arch_run_v86_task(&__vesa_start, &__vesa_end, &mode, 1)) {
+    if (!arch_run_v86_task(&__vesa_start, &__vesa_end, &mode, 1))
+    {
         printf("Could not enable VESA VBE option %d.\n", mode);
         return false;
     }
@@ -38,28 +41,36 @@ bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
     return true;
 }
 
-void vesa_clear(uint8_t r, uint8_t g, uint8_t b) {
-    for (int x = 0; x < V_WIDTH; x++) {
-        for (int y = 0; y < V_HEIGHT; y++) {
+void vesa_clear(uint8_t r, uint8_t g, uint8_t b)
+{
+    for (int x = 0; x < V_WIDTH; x++)
+    {
+        for (int y = 0; y < V_HEIGHT; y++)
+        {
             vmem[x + y * V_BPL] = (r << 24) + (g << 16) + (b << 8);
         }
     }
 }
 
-void vesa_write_char(char c) {
+void vesa_write_char(char c)
+{
     vesa_draw_rect(0, 0, 100, 100);
     return;
 }
 
-void vesa_draw_rect(int x, int y, int size_x, int size_y) {
-    for (int y_ofs = y; y_ofs < size_y; y_ofs++) {
-        for (int x_ofs = x; x_ofs < size_x; x_ofs++) {
+void vesa_draw_rect(int x, int y, int size_x, int size_y)
+{
+    for (int y_ofs = y; y_ofs < size_y; y_ofs++)
+    {
+        for (int x_ofs = x; x_ofs < size_x; x_ofs++)
+        {
             vmem[x_ofs + y_ofs * V_BPL] |= 0x00ff0000;
         }
     }
 }
 
-VideoDriver a_vesa_driver = {
+struct VideoDriver a_vesa_driver =
+{
     "vesa",
     -1,
     vesa_initialize,

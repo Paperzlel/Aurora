@@ -1,5 +1,6 @@
 #include <stdio.h>
 
-long int ftell(FILE *stream) {
+long int ftell(FILE *stream)
+{
     return -1;
 }

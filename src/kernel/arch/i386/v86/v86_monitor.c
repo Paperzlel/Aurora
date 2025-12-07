@@ -10,13 +10,13 @@
 #include <stdio.h>
 
 #define AUR_MODULE "v86"
-#include <kernel/debug.h>
+#include <aurora/debug.h>
 
 // Variable that all registers are saved to whenever the OS enters V86 and is loaded whenever the V86 program wants to exit
-Registers a_reg_state;
+static struct Registers a_reg_state;
 
-uint8_t *a_arglist = 0;
-int a_argc = 0;
+static uint8_t *a_arglist = 0;
+static int a_argc = 0;
 
 /**
  * @brief Obtains the byte at the given segment:offset.
@@ -24,7 +24,8 @@ int a_argc = 0;
  * @param p_ofs The offset to read from
  * @returns The byte found.
  */
-uint8_t getb(uint16_t p_seg, uint16_t p_ofs) {
+uint8_t getb(uint16_t p_seg, uint16_t p_ofs)
+{
     return *(uint8_t *)((p_seg << 4) + p_ofs);
 }
 
@@ -34,7 +35,8 @@ uint8_t getb(uint16_t p_seg, uint16_t p_ofs) {
  * @param p_ofs The offset to read from
  * @returns The word found
  */
-uint16_t getw(uint16_t p_seg, uint16_t p_ofs) {
+uint16_t getw(uint16_t p_seg, uint16_t p_ofs)
+{
     return *(uint16_t *)((p_seg << 4) + p_ofs);
 }
 
@@ -43,12 +45,14 @@ uint16_t getw(uint16_t p_seg, uint16_t p_ofs) {
  * @param p_regs Pointer to all registers, including SS:SP
  * @param p_word The word to push to the stack
  */
-void pushw(Registers *p_regs, uint16_t p_word) {
+void pushw(struct Registers *p_regs, uint16_t p_word)
+{
     p_regs->sp -= 2;
     *(uint16_t *)((p_regs->ss << 4) + p_regs->sp) = p_word;
 }
 
-uint16_t popw(Registers *p_regs) {
+uint16_t popw(struct Registers *p_regs)
+{
     uint16_t ret = getw(p_regs->ss, p_regs->sp);
     p_regs->sp += 2;
     return ret;
@@ -58,8 +62,9 @@ uint16_t popw(Registers *p_regs) {
  * @brief Entry handler to get into V86 mode from. Since we can't get the register values from C easily, we use an interrupt handler instead.
  * @param p_regs Pointer to all registers in their state from an interrupt
  */
-bool v86_monitor_entry_handler(Registers *p_regs) {
-    memcpy((void *)&a_reg_state, p_regs, sizeof(Registers));
+bool v86_monitor_entry_handler(struct Registers *p_regs)
+{
+    memcpy((void *)&a_reg_state, p_regs, sizeof(struct Registers));
     i386_tss_set_esp(v86_cpu_get_esp());
     i386_tss_set_eip(v86_cpu_get_eip());
     v86_enter_v86(p_regs->eax, p_regs->ebx, p_regs->ecx, p_regs->edx);
@@ -70,10 +75,12 @@ bool v86_monitor_entry_handler(Registers *p_regs) {
  * @brief Exception handler for V86 tasks. Will be called whenever a GPF occurs, and intends to emulate certain instructions for a V86 task.
  * @param p_regs Pointer to all registers from their state when an interrupt occurs
  */
-bool v86_monitor_exception_handler(Registers *p_regs) {
+bool v86_monitor_exception_handler(struct Registers *p_regs)
+{
     
     // Flee if not a VM86 fault
-    if (!(p_regs->eflags & (1 << 17))) {
+    if (!(p_regs->eflags & (1 << 17)))
+    {
         return false;
     }
 
@@ -81,22 +88,27 @@ bool v86_monitor_exception_handler(Registers *p_regs) {
 
     // [value] for any opcode refers to obtaining immediate values in code
     // registers may not be specific to the given value
-    switch (operation) {
-        case 0x9c: {    // pushf
+    switch (operation)
+    {
+        case 0x9c:      // pushf
+        {
             pushw(p_regs, p_regs->flags);
             ++p_regs->ip;
         } break;
 
-        case 0x9d: {    // popf
+        case 0x9d:      // popf
+        {
             p_regs->flags = popw(p_regs);  // Instruction seems to mess up the stack, claims CS is C007 and is now invalid?
             ++p_regs->ip;
         } break;
 
-        case 0xcd: {    // INT nn
+        case 0xcd:      // INT nn
+        {
             uint8_t int_id = getb(p_regs->cs, ++p_regs->ip); // Increment SP to move along to the next instruction
             // Copy old state over and return quickly
-            if (int_id == 0xfe) {
-                memcpy(p_regs, (void *)&a_reg_state, sizeof(Registers));
+            if (int_id == 0xfe)
+            {
+                memcpy(p_regs, (void *)&a_reg_state, sizeof(struct Registers));
                 break;
             }
             pushw(p_regs, p_regs->flags);      // Push FLAGS
@@ -107,62 +119,73 @@ bool v86_monitor_exception_handler(Registers *p_regs) {
             p_regs->ip = getw(0x0000, 4 * int_id);     // Set to IVT offset
         } break;
 
-        case 0xcf: {    // iret
+        case 0xcf:      // iret
+        {
             p_regs->ip = popw(p_regs);
             p_regs->cs = popw(p_regs);
             p_regs->flags = popw(p_regs);
         } break;
         
-        case 0xe4: {    // in (al, [value])
+        case 0xe4:      // in (al, [value])
+        {
             uint16_t port = getb(p_regs->cs, ++p_regs->ip);
             p_regs->ax = inb(port);
             ++p_regs->ip;
         } break;
 
-        case 0xe5: {    // in (ax, [value])
+        case 0xe5:      // in (ax, [value])
+        {
             uint16_t port = getb(p_regs->cs, ++p_regs->ip);
             p_regs->ax = inw(port);
             ++p_regs->ip;
         } break;
 
-        case 0xe6: {    // out ([value], al)
+        case 0xe6:      // out ([value], al)
+        {
             uint16_t port = getb(p_regs->cs, ++p_regs->ip);
             outb(port, p_regs->ax);
             ++p_regs->ip;
         } break;
 
-        case 0xe7: {    // out ([value], ax)
+        case 0xe7:      // out ([value], ax)
+        {
             uint16_t port = getb(p_regs->cs, ++p_regs->ip);
             outw(port, p_regs->ax);
             ++p_regs->ip;
         } break;
 
-        case 0xec: {    // in (al, dx)
+        case 0xec:      // in (al, dx)
+        {
             p_regs->ax = inb(p_regs->dx);
             ++p_regs->ip;
         } break;
 
-        case 0xed: {    // in (dx, ax)
+        case 0xed:      // in (dx, ax)
+        {
             p_regs->ax = inw(p_regs->dx);
             ++p_regs->ip;
         } break;
 
-        case 0xee: {    // out (dx, al)
+        case 0xee:      // out (dx, al)
+        {
             outb(p_regs->dx, p_regs->ax);
             ++p_regs->ip;
         } break;
 
-        case 0xef: {    // out (dx, ax)
+        case 0xef:      // out (dx, ax)
+        {
             outw(p_regs->dx, p_regs->ax);
             ++p_regs->ip;
         } break;
 
-        case 0xFA: {    // cli
+        case 0xFA:      // cli
+        {
             p_regs->flags &= ~(1 << 9);    // Disable IF
             ++p_regs->ip;
         } break;
 
-        case 0xFB: {    // sti
+        case 0xFB:      // sti
+        {
             p_regs->flags |= 1 << 9;   // Enable IF
             ++p_regs->ip;
         } break;
@@ -175,11 +198,13 @@ bool v86_monitor_exception_handler(Registers *p_regs) {
     return true;
 }
 
-void v86_monitor_initialize() {
+void v86_monitor_initialize()
+{
     // Do nothing for now
 }
 
-bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc) {
+bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc)
+{
     // Load task into code segment
     uint32_t size = p_task_end - p_task_start;
     memset((void *)(V86_CODE_SEGMENT << 4), 0, size);
@@ -188,7 +213,8 @@ bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_a
     a_arglist = p_args;
     a_argc = p_argc;
 
-    for (int i = 0; i < p_argc; i++) {
+    for (int i = 0; i < p_argc; i++)
+    {
         *((uint8_t *)(V86_STACK_SEGMENT << 4) + i * 2) = p_args[i];
     }
 

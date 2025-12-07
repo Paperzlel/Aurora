@@ -1,7 +1,7 @@
-#include "pic.h"
+#include <aurora/arch/interrupts.h>
 
-#include <kernel/kdefs.h>
-#include <kernel/arch/io.h>
+#include <aurora/kdefs.h>
+#include <asm/io.h>
 
 #define PIC_1               0x20
 #define PIC_2               0xa0
@@ -28,15 +28,21 @@
 
 #define PIC_EOI     0x20
 
-void pic_send_eoi(uint8_t p_interrupt) {
-    if (p_interrupt > 8) {
+void send_end_of_interrupt(uint8_t p_irq)
+{
+    p_irq -= 0x20;
+    if (p_irq > 8)
+    {
         outb(PIC_2_COMMAND, PIC_EOI);
-    } else {
+    }
+    else
+    {
         outb(PIC_1_COMMAND, PIC_EOI);
     }
 }
 
-void pic_initialize() {
+void pic_initialize()
+{
     // Remap all PICs to different values.
     // Should be done over ignoring them, as they will still give off interrupts regardless.
     outb(PIC_1_COMMAND, ICW1_INIT | ICW1_ENV_DATA);
@@ -56,10 +62,12 @@ void pic_initialize() {
     outb(PIC_2_DATA, 0xff);
 }
 
-void pic_mask_irq(uint8_t p_irq) {
+void mask_irq(uint8_t p_irq)
+{
     uint16_t port = PIC_1_DATA;
     uint8_t value = 0;
-    if (p_irq >= 8) {
+    if (p_irq >= 8)
+    {
         port = PIC_2_DATA;
         p_irq -= 8;
     }
@@ -69,11 +77,13 @@ void pic_mask_irq(uint8_t p_irq) {
     outb(port, value);
 }
 
-void pic_unmask_irq(uint8_t p_irq) {
+void unmask_irq(uint8_t p_irq)
+{
     p_irq -= 0x20;
     uint16_t port = PIC_1_DATA;
     uint8_t value = 0;
-    if (p_irq >= 8) {
+    if (p_irq >= 8)
+    {
         port = PIC_2_DATA;
         p_irq -= 8;
     }

@@ -1,10 +1,11 @@
 #include "floppy_dma.h"
 
-#include <kernel/arch/io.h>
+#include <asm/io.h>
 
 /* For the sake of simplicity, we are pretending that DMA channels 4-7 don't exist - we only need channel 2 */
 
-typedef enum {
+enum DMA_Registers
+{
     DMA_START_1         = 0x02,
     DMA_COUNT_1         = 0x03,
     DMA_START_2         = 0x04,
@@ -25,9 +26,10 @@ typedef enum {
     DMA_PAGE_ADDR_1     = 0x83,
     DMA_PAGE_ADDR_2     = 0x81,
     DMA_PAGE_ADDR_3     = 0x82,
-} DMA_Registers;
+};
 
-typedef enum {
+enum DMA_Bits
+{
     CHANNEL_MASK_ON     = 1 << 2,
     CHANNEL_SELECT_0    = 0,
     CHANNEL_SELECT_1    = 1 << 0,
@@ -56,9 +58,10 @@ typedef enum {
     STATUS_REQUEST_PENDING_1    = 1 << 5,
     STATUS_REQUEST_PENDING_2    = 1 << 6,
     STATUS_REQUEST_PENDING_3    = 1 << 7,
-} DMA_Bits;
+};
 
-void floppy_dma_setup_for_location(void *p_address, uint16_t p_size) {
+void floppy_dma_setup_for_location(void *p_address, uint16_t p_size)
+{
     p_size -= 1;
     // Mask channels we want to use
     outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2);
@@ -83,7 +86,8 @@ void floppy_dma_setup_for_location(void *p_address, uint16_t p_size) {
 
 // NOTE: Should use demand transfer for "advanced" floppy disks
 
-void floppy_dma_read() {
+void floppy_dma_read()
+{
     // Mask channels we want to use
     outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2);
     // Set DMA flags
@@ -92,9 +96,10 @@ void floppy_dma_read() {
     outb(DMA_CHANNEL_MASK, CHANNEL_SELECT_2);
 }
 
-void floppy_dma_write() {
+void floppy_dma_write()
+{
     // Mask channels we want to use
-    outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2 | CHANNEL_SELECT_0);
+    outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2);
     // Set DMA flags
     outb(DMA_MODE, MODE_MODE_SINGLE_TRANSFER | MODE_AUTO | MODE_TRANSFER_READ | MODE_SELECT_2);
     // Re-mask the channel for use

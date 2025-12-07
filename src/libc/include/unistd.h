@@ -5,7 +5,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 typedef signed int *intptr_t;
 
@@ -19,6 +19,6 @@ pid_t fork(void);
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-#endif
+#endif // _UNISTD_H

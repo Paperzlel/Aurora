@@ -8,4 +8,4 @@
  * @param p_out_map Pointer to the memory map structure we are filling
  * @returns True if the function is successful, and false if something went wrong with the function.
  */
-bool memory_get_mem_map(MemoryMap *p_out_map);
+bool memory_get_mem_map(struct MemoryMap *p_out_map);

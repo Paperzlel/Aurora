@@ -12,7 +12,7 @@ typedef struct { int unused; } FILE;
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 extern FILE *stderr;
 
@@ -61,6 +61,6 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args);
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
 #endif // _STDIO_H

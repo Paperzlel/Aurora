@@ -1,7 +1,7 @@
-#ifndef _KERNEL_MEMORY_H
-#define _KERNEL_MEMORY_H
+#ifndef _AURORA_MEMORY_H
+#define _AURORA_MEMORY_H
 
-#include <kernel/kdefs.h>
+#include <aurora/kdefs.h>
 
 /**
  * @brief Allocates N bytes of memory for use, with kernel-level permissions. Use whenever dynamic allocations are required.
@@ -34,4 +34,4 @@ bool kmap_range(void *p_physical, void *p_virtual, uint32_t p_size);
  */
 bool is_4kib_aligned(void *p_address);
 
-#endif // _KERNEL_MEMORY_H
+#endif // _AURORA_MEMORY_H

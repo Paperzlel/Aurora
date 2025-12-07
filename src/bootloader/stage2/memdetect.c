@@ -6,7 +6,7 @@
 
 #define MEMORY_MAX_REGIONS 256
 
-MemoryRegion a_regions[MEMORY_MAX_REGIONS];
+struct MemoryRegion a_regions[MEMORY_MAX_REGIONS];
 int a_region_count;
 
 /**
@@ -14,23 +14,27 @@ int a_region_count;
  * @param p_out_map The desired output map for the memory map.
  * @returns True if the function was able to get a proper map, and false if not.
  */
-bool memory_get_mem_map(MemoryMap *p_out_map) {
-    MemoryRegion region;
+bool memory_get_mem_map(struct MemoryMap *p_out_map)
+{
+    struct MemoryRegion region;
     region.extended_attribs = 1;
 
     uint16_t current_region = 0;
     uint16_t next_region = 1;
 
-    while (next_region != 0) {
+    while (next_region != 0)
+    {
         uint8_t size = x86_Memory_GetMemoryRegion(current_region, &next_region, &region);
 
-        if (size == 255) {
+        if (size == 255)
+        {
             printf("Memory: Attempting to get map region #%d failed.\n", next_region);
             return false;
         }
 
         // Ignore region
-        if (region.length == 0) {
+        if (region.length == 0)
+        {
             continue;
         }
 

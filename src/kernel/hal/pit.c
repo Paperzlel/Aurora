@@ -1,8 +1,7 @@
 #include "pit.h"
-#include "pic.h"
 
-#include <kernel/arch/arch.h>
-#include <kernel/arch/io.h>
+#include <aurora/arch/interrupts.h>
+#include <asm/io.h>
 
 #include <stdio.h>
 
@@ -21,17 +20,20 @@ static uint64_t tick_count;
 static uint32_t frequency;
 static bool initialized = false;
 
-bool pit_irq_handler(Registers *p_regs) {
-    if (initialized) {
+bool pit_irq_handler(struct Registers *p_regs)
+{
+    if (initialized)
+    {
         tick_count++;
     }
 
-    arch_send_eoi(p_regs->interrupt);
+    send_end_of_interrupt(p_regs->interrupt);
     return true;
 }
 
-void pit_initialize() {
-    arch_register_isr_handler(0x20, pit_irq_handler);
+void pit_initialize()
+{
+    register_interrupt_handler(INT_IRQ_0, pit_irq_handler);
     
     // Set timer to tick every 100us (~119us)
     frequency = 10000;
@@ -47,13 +49,15 @@ void pit_initialize() {
 
     initialized = true;
     // Unmask timer IRQ, ready to handle interrupts!
-    pic_unmask_irq(IRQ_0);
+    unmask_irq(INT_IRQ_0);
 }
 
-uint64_t pit_get_ticks() {
+uint64_t pit_get_ticks()
+{
     return tick_count;
 }
 
-uint32_t pit_get_frequency() {
+uint32_t pit_get_frequency()
+{
     return frequency;
 }

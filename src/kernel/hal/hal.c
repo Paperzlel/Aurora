@@ -1,13 +1,17 @@
-#include <kernel/hal/hal.h>
+#include <aurora/hal/hal.h>
 #include "pit.h"
-#include "pic.h"
-#include "kbd.h"
 
 #include "drives/floppy.h"
 
 #include <sys/time.h>
 
-void hal_initialize(uint16_t p_driver_no) {
+/* Pre-define needed HAL functions without needing to add a header */
+
+extern void pic_initialize();
+extern void kbd_initialize();
+
+void hal_initialize(uint16_t p_driver_no)
+{
     // Initialize the PIC first to get all interrupts going
     pic_initialize();
     // Then initialize PIT to get a logging timer
@@ -18,23 +22,29 @@ void hal_initialize(uint16_t p_driver_no) {
     // Enable client interrupts again, to begin collecting timer info and allow us to use IRQ6 for the floppy disk
     __asm__ volatile ("sti");
     
-    if (p_driver_no < 0x80) {
+    if (p_driver_no < 0x80)
+    {
         // Initialize FDC
         floppy_initialize();
-    } else {
+    }
+    else
+    {
         // Initialize hard disk controller
     }
 
 }
 
-uint64_t hal_get_ticks() {
+uint64_t hal_get_ticks()
+{
     return pit_get_ticks();
 }
 
-bool timer_get_time(timer_t *p_timer) {
+bool timer_get_time(timer_t *p_timer)
+{
     p_timer->ticks = pit_get_ticks();
     uint32_t frequency_ms = pit_get_frequency() / 1000;
-    if (frequency_ms == 0) {
+    if (frequency_ms == 0)
+    {
         return false;
     }
 
@@ -47,15 +57,19 @@ bool timer_get_time(timer_t *p_timer) {
     return true;
 }
 
-void timer_sleep(uint64_t p_ms) {
+void timer_sleep(uint64_t p_ms)
+{
     uint64_t ticks_start = pit_get_ticks();
     uint32_t frequency_ms = pit_get_frequency() / 1000;
-    if (!frequency_ms) {
+    if (!frequency_ms)
+    {
         return;
     }
 
-    while (true) {
-        if (((pit_get_ticks() - ticks_start) / frequency_ms) >= p_ms) {
+    while (true)
+    {
+        if (((pit_get_ticks() - ticks_start) / frequency_ms) >= p_ms)
+        {
             break;
         }
     }

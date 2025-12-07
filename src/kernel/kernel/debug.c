@@ -1,8 +1,8 @@
 #define AUR_MODULE "debugger" /* Shouldn't really be defined here, but we DID make a standard for it, so... */
-#include <kernel/debug.h>
+#include <aurora/debug.h>
 
 #include <sys/time.h>
-#include <kernel/arch/io.h>
+#include <asm/io.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -11,14 +11,16 @@
 
 static timer_t timer;
 
-void log_message(LogLevel p_level, const char *p_module, const char *p_message, ...) {
+void log_message(enum LogLevel p_level, const char *p_module, const char *p_message, ...)
+{
     // Big stack variable, but should be enough
     char msg[MESSAGE_MAX];
     memset(msg, 0, MESSAGE_MAX);
 
     uint64_t time_ms = 0;
     uint8_t time_us = 0;
-    if (timer_get_time(&timer)) {
+    if (timer_get_time(&timer))
+    {
         time_ms = timer.time_ms;
         time_us = timer.time_us;
     }
@@ -38,7 +40,8 @@ void log_message(LogLevel p_level, const char *p_module, const char *p_message, 
     // Don't bother with formatting
     puts(msg);
 
-    if (p_level == LEVEL_FATAL) {
+    if (p_level == LEVEL_FATAL)
+    {
         panic();
     }
 }

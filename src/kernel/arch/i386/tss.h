@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 
-typedef struct {
+struct __attribute__((packed)) TSS
+{
     uint32_t link;
     uint32_t esp0;
     uint32_t ss0;
@@ -31,14 +32,15 @@ typedef struct {
     uint16_t reserved;
     uint16_t iobp;
     uint32_t ssp;
-} __attribute__((packed)) TSS;
+};
 
-typedef struct {
+struct __attribute__((packed)) TSS_Descriptor
+{
     uint32_t size;
-    TSS *address;
-} __attribute__((packed)) TSS_Descriptor;
+    struct TSS *address;
+};
 
-TSS_Descriptor *i386_tss_get_descriptor();
+struct TSS_Descriptor *i386_tss_get_descriptor();
 
 void i386_tss_initialize();
 

@@ -1,11 +1,13 @@
-#pragma once
+#ifndef _AURORA_CPUID_H
+#define _AURORA_CPUID_H
 
 #include <stdint.h>
 #include <stdbool.h>
 
 // 64-bit enums are a C11 thing, sadly
 
-typedef enum {
+enum CPU_Features
+{
     // EDX values
 
     CPU_FEATURE_X87 =                   1 << 0,
@@ -75,10 +77,11 @@ typedef enum {
     CPU_FEATURE_F16C =                  1 << 29,
     CPU_FEATURE_RDRAND =                1 << 30,
     CPU_FEATURE_HYPERVISOR =            1 << 31
-} CPU_Features;
+};
 
 
-typedef struct {
+struct CPU_Config
+{
     char vendor_name[13];
     char model_name[49];
     uint32_t features_edx;
@@ -91,10 +94,12 @@ typedef struct {
     uint8_t local_apic_id;
 
     bool can_use_msrs;
-} CPU_Config;
+};
 
-bool cpuid_supports_feature(CPU_Features p_feature, int reg);
+bool cpuid_supports_feature(enum CPU_Features p_feature, int reg);
 
-bool cpuid_initialize(CPU_Config *out_config);
+bool cpuid_initialize(struct CPU_Config *out_config);
 
 char *cpuid_get_features();
+
+#endif // _AURORA_CPUID_H

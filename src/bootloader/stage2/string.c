@@ -1,12 +1,16 @@
 #include "string.h"
 
-const char *strchr(const char *str, char c) {
-    if (!str) {
+const char *strchr(const char *str, char c)
+{
+    if (!str)
+    {
         return NULL;
     }
 
-    while (*str) {
-        if (*str == c) {
+    while (*str)
+    {
+        if (*str == c)
+        {
             return str;
         }
 
@@ -16,10 +20,12 @@ const char *strchr(const char *str, char c) {
     return NULL;
 }
 
-unsigned strlen(const char *str) {
+unsigned strlen(const char *str)
+{
     unsigned len = 0;
 
-    while (*str) {
+    while (*str)
+    {
         ++len;
         ++str;
     }

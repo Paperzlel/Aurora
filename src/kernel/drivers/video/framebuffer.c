@@ -1,11 +1,13 @@
 #include "framebuffer.h"
 
-#include <kernel/memory.h>
+#include <aurora/memory.h>
 
-static Framebuffer data;
+static struct Framebuffer data;
 
-bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
-    if (!p_info || !p_info->address || data.address != 0) {
+bool framebuffer_intialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)
+{
+    if (!p_info || !p_info->address || data.address != 0)
+    {
         return false;
     }
 
@@ -15,7 +17,8 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     data.bpp = p_info->bpp;
 
     // Page allocate the FB to address 0xb0000000
-    if (!kmap_range((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8))) {
+    if (!kmap_range((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8)))
+    {
         return false;
     }
     // Re-assign if successful.
@@ -24,11 +27,14 @@ bool framebuffer_intialize(VideoDriver *out_driver, Framebuffer *p_info) {
     return true;
 }
 
-void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b) {
+void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b)
+{
     uint8_t bytes_per_pixel = data.bpp / 8;
 
-    for (int y = 0; y < data.height; y++) {
-        for (int x = 0; x < data.width; x++) {
+    for (int y = 0; y < data.height; y++)
+    {
+        for (int x = 0; x < data.width; x++)
+        {
             int pixel = (x + y * data.width) * bytes_per_pixel;
             data.address[pixel] = b;
             data.address[pixel + 1] = g;
@@ -37,12 +43,14 @@ void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b) {
     }
 }
 
-void framebuffer_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b) {
+void framebuffer_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b)
+{
     data.address[x * (data.bpp / 8) + y * data.width + 1] = r;
     data.address[x * (data.bpp / 8) + y * data.width + 2] = g;
     data.address[x * (data.bpp / 8) + y * data.width + 3] = b;
 }
 
-void framebuffer_write_char(char c) {
+void framebuffer_write_char(char c)
+{
     
 }

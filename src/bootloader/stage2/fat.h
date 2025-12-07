@@ -3,7 +3,7 @@
 #include "disk.h"
 
 // Packed data structure that represents the layout of data in a FAT12 directory entry.
-typedef struct {
+struct __attribute__((packed)) FAT_DirectoryEntry {
     uint8_t file_name[11];                          // ASCII file name for the file (if the name > 11 bytes, is a LFN). Not NULL terminated.
     uint8_t attribs;                                // Bitmask for file attributes
     uint8_t reserved;                               // Reserved value
@@ -16,18 +16,19 @@ typedef struct {
     uint16_t last_modification_date;                // Last modification date. Same format as creation date.
     uint16_t first_cluster_no_low;                  // Lower 16 bits of this entry's first cluster number. Used to find the first cluster for this entry.
     uint32_t size;                                  // Size of the file in bytes.
-} __attribute__((packed)) FAT_DirectoryEntry;
+};
 
 // Structure that represents an entry in the FAT filesystem. 
-typedef struct {
+struct FAT_File {
     int handle;                 // Handle to the internal data of this entry.
     bool is_directory;          // Says whether the entry is a directory or a file.
     uint32_t size;              // The size of the entry in bytes; 0 for a directory.
     uint32_t position;          // The offset from the initial position of the entry in memory.
-} FAT_File;
+};
 
 // Enum that represents the different attributes an entry can have, in a bitmask.
-typedef enum {
+enum FAT_Attributes
+{
     // The FAT entry is in read-only mode
     FAT_READ_ONLY = 0x01,
     // The FAT entry is not visible to the regular user
@@ -42,14 +43,14 @@ typedef enum {
     FAT_ARCHIVE =   0x20,
     // The FAT entry has a long file name (> 11 bytes) and needs to be read accordingly
     FAT_LFN = FAT_READ_ONLY | FAT_HIDDEN | FAT_SYSTEM | FAT_VOLUME_ID
-} FAT_Attributes;
+};
 
 /**
  * @brief Initializes the FAT file system, by loading the boot sector,FAT (File Allocation Table) and root directory into memory.
  * @param p_disk The drive to load the FAT information from. WARNING: This data may not be in the FAT format.
  * @returns True if the operation succeeded, and false if something failed otherwise.
  */
-bool fat_initialize(DISK *p_disk);
+bool fat_initialize(struct DISK *p_disk);
 
 /**
  * @brief Looks for and opens the FAT entry found at the given path. This function uses UNIX-style directories.
@@ -57,7 +58,7 @@ bool fat_initialize(DISK *p_disk);
  * @param p_path The path to the file one wants to load
  * @returns A file handle if successful, and NULL if not.
  */
-FAT_File *fat_open(DISK *p_disk, const char *p_path);
+struct FAT_File *fat_open(struct DISK *p_disk, const char *p_path);
 
 /**
  * @brief Reads a number of bytes from the given FAT file into an array which can be used at a later point.
@@ -67,7 +68,7 @@ FAT_File *fat_open(DISK *p_disk, const char *p_path);
  * @param p_out_data The output buffer to read memory into
  * @returns The number of bytes read from the data into the output buffer
  */
-uint32_t fat_read(DISK *p_disk, FAT_File *p_file, uint32_t p_bytes, void *p_out_data);
+uint32_t fat_read(struct DISK *p_disk, struct FAT_File *p_file, uint32_t p_bytes, void *p_out_data);
 
 /**
  * @brief Reads a FAT directory entry structure from the given disk. 
@@ -76,10 +77,10 @@ uint32_t fat_read(DISK *p_disk, FAT_File *p_file, uint32_t p_bytes, void *p_out_
  * @param p_out_entry The output directory entry to read data into
  * @returns True if successful, and false if not.
  */
-bool fat_read_dir_entry(DISK *p_disk, FAT_File *p_file, FAT_DirectoryEntry *p_out_entry);
+bool fat_read_dir_entry(struct DISK *p_disk, struct FAT_File *p_file, struct FAT_DirectoryEntry *p_out_entry);
 
 /**
  * @brief Closes a file handle, allowing the specific handle ID and its memory to be reused.
  * @param p_file The file handle to close
  */
-void fat_close(FAT_File *p_file);
+void fat_close(struct FAT_File *p_file);

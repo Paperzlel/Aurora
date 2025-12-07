@@ -1,9 +1,10 @@
-#include <kernel/arch/cpuid.h>
+#include <aurora/arch/cpuid.h>
 
 #include <string.h>
 #include <cpuid.h>
 
-const char *feature_list[] = {
+const char *feature_list[] =
+{
     "fpu",
     "vme",
     "de",
@@ -81,20 +82,25 @@ static uint32_t ecx_features;
  * @param p_feature The feature to check for. Defined in the header.
  * @param reg The register to check from. If the value is in ECX, this is 0. If the value is in EDX, this is 1.
  */
-bool cpuid_supports_feature(CPU_Features p_feature, int reg) {
-    if (reg > 0 && edx_features & p_feature) {
+bool cpuid_supports_feature(enum CPU_Features p_feature, int reg)
+{
+    if (reg > 0 && edx_features & p_feature)
+    {
         return true;
     }
 
-    if (reg <= 0 && ecx_features & p_feature) {
+    if (reg <= 0 && ecx_features & p_feature)
+    {
         return true;
     }
 
     return false;
 }
 
-bool cpuid_initialize(CPU_Config *out_config) {
-    if (!out_config) {
+bool cpuid_initialize(struct CPU_Config *out_config)
+{
+    if (!out_config)
+    {
         return false;
     }
     
@@ -102,7 +108,8 @@ bool cpuid_initialize(CPU_Config *out_config) {
     char vendor_id[13] = {0};
     __get_cpuid(0, regs, &regs[1], &regs[3], &regs[2]);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         memcpy(vendor_id + (i * 4), &regs[i + 1], 4);
     }
     // Copy vendor name into CPUID
@@ -119,18 +126,21 @@ bool cpuid_initialize(CPU_Config *out_config) {
     uint32_t eax = regs[0];
     out_config->family_id = eax >> 8;
     out_config->model_id = eax >> 4;
-    if ((eax >> 8) == 15 || (eax >> 8) == 6) {
+    if ((eax >> 8) == 15 || (eax >> 8) == 6)
+    {
         uint32_t tmp = eax >> 16;
         tmp <<= 4;
         out_config->model_id = tmp + (eax >> 4);
 
-        if ((eax >> 8) == 15) {
+        if ((eax >> 8) == 15)
+        {
             out_config->family_id = (eax >> 20) + (eax >> 8);
         }
     }
 
     // Set APIC location
-    if (out_config->family_id >= 5 && edx_features & CPU_FEATURE_APIC) {
+    if (out_config->family_id >= 5 && edx_features & CPU_FEATURE_APIC)
+    {
         out_config->local_apic_id = regs[1] >> 24;
     }
 
@@ -151,13 +161,16 @@ bool cpuid_initialize(CPU_Config *out_config) {
     unsigned int string[12];
     __get_cpuid(0x80000000, &string[0], &string[1], &string[2], &string[3]);
 
-    if (regs[0] >= 0x8000004) {
+    if (regs[0] >= 0x8000004)
+    {
         __get_cpuid(0x80000002, &string[0], &string[1], &string[2], &string[3]);
         __get_cpuid(0x80000003, &string[4], &string[5], &string[6], &string[7]);
         __get_cpuid(0x80000004, &string[8], &string[9], &string[10], &string[11]);
 
         memcpy(out_config->model_name, string, 48);
-    } else {
+    }
+    else
+    {
         // Make empty string
         memset(out_config->model_name, 0, 48);
     }
@@ -166,15 +179,19 @@ bool cpuid_initialize(CPU_Config *out_config) {
     return true;
 }
 
-char *cpuid_get_features() {
-    if (list[0] != 0) {
+char *cpuid_get_features()
+{
+    if (list[0] != 0)
+    {
         return list;
     }
 
     int idx = 0;
 
-    for (int i = 0; i < 32; i++) {
-        if (edx_features & (1 << i)) {
+    for (int i = 0; i < 32; i++)
+    {
+        if (edx_features & (1 << i))
+        {
             strcpy(list + idx, feature_list[i]);
             idx += strlen(feature_list[i]);
             list[idx] = ' ';
@@ -182,8 +199,10 @@ char *cpuid_get_features() {
         }
     }
 
-    for (int i = 0; i < 32; i++) {
-        if (ecx_features & 1 << i) {
+    for (int i = 0; i < 32; i++)
+    {
+        if (ecx_features & 1 << i)
+        {
             strcpy(list + idx, feature_list[i + 32]);
             idx += strlen(feature_list[i + 32]);
             list[idx] = ' ';

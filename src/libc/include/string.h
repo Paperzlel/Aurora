@@ -7,7 +7,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 /**
  * @brief Copies size bytes from the pointer src to dest.
@@ -69,6 +69,6 @@ char *strchr(const char *s, int c);
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-#endif
+#endif // _STRING_H

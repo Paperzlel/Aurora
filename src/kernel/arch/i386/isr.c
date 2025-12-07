@@ -46,18 +46,24 @@ void __attribute__((cdecl)) i386_panic();
  * @brief Default interrupt handler. Will likely need a system to register more handlers in the future,.
  * @param p_regs Registers pushed to the stack by our ASM interrupt handler.
  */
-void __attribute__((cdecl)) i386_interrupt_handler(Registers *p_regs) {
+void __attribute__((cdecl)) i386_interrupt_handler(struct Registers *p_regs)
+{
     // First launch into the handled interrupt, if it exists
-    if (a_handlers[p_regs->interrupt] != NULL) {
+    if (a_handlers[p_regs->interrupt] != NULL)
+    {
         bool ret = a_handlers[p_regs->interrupt](p_regs);
-        if (ret) {
+        if (ret)
+        {
             return;
         }
     }
 
-    if (p_regs->interrupt < 22) {
+    if (p_regs->interrupt < 22)
+    {
         printf("Unhandled exception %d: %s\n", p_regs->interrupt, a_exception_errors[p_regs->interrupt]);
-    } else {
+    }
+    else
+    {
         printf("Unhandled exception %d\n", p_regs->interrupt);
     }
 
@@ -72,16 +78,20 @@ void __attribute__((cdecl)) i386_interrupt_handler(Registers *p_regs) {
     i386_panic();
 }
 
-void i386_isr_initialize() {
+void i386_isr_initialize()
+{
     i386_idt_register_isrs();
 
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++)
+    {
         i386_idt_enable_isr(i);
     }
 }
 
-bool i386_isr_register_handler(int p_interrupt, InterruptHandler p_handler) {
-    if (a_handlers[p_interrupt] != NULL) {
+bool i386_isr_register_handler(int p_interrupt, InterruptHandler p_handler)
+{
+    if (a_handlers[p_interrupt] != NULL)
+    {
         return false;
     }
 
@@ -89,6 +99,7 @@ bool i386_isr_register_handler(int p_interrupt, InterruptHandler p_handler) {
     return true;
 }
 
-void i386_isr_unregister_handler(int p_interrupt) {
+void i386_isr_unregister_handler(int p_interrupt)
+{
     a_handlers[p_interrupt] = NULL;
 }

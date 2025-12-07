@@ -5,7 +5,7 @@
 ### Overall
 - [ ] Add support for FAT16/FAT32 file types
 - [ ] Add support for non-FAT file types
-- [ ] Add video mode hint to VESA boot info
+- [x] Add video mode hint to VESA boot info
 
 ### Stage 1
 - [x] Optimise file size for extra information
@@ -45,8 +45,8 @@
 ### HAL
 - [ ] Add alternative timer settings that aren't PIT for specific systems
 - [x] Mask out unused IRQ lines until needed
-- [ ] Implement CMOS retrieval of the floppy disk controller
-- [ ] Add a timer sleep function that waits for a given period of time
+- [x] Implement CMOS retrieval of the floppy disk controller
+- [x] Add a timer sleep function that waits for a given period of time
 
 ### Memory
 - [x] Implement dynamic paging

@@ -1,11 +1,13 @@
-#pragma once
+#ifndef _AURORA_ARCHDEFS_H
+#define _AURORA_ARCHDEFS_H
 
-#include <kernel/kdefs.h>
+#include <aurora/kdefs.h>
 
 #ifdef __I386__
 
 // Struct defining the different registers that are pushed to the stack during an interrupt. Contains both 16 and 32 bit registers
-typedef struct {
+struct __attribute__((packed)) Registers
+{
     uint32_t ds;                    // Executing data segment
     union {
         uint32_t edi;                   // EDI register contents
@@ -59,16 +61,18 @@ typedef struct {
     };
 
     uint32_t ss;                    // Stack segement, only pushed during ring changes, random value otherwise (like esp)
-} __attribute__((packed)) Registers;
+};
 
-typedef bool (*InterruptHandler)(Registers *);
+typedef bool (*InterruptHandler)(struct Registers *);
 
 #else
 
-typedef struct {
+struct __attribute__((packed)) Registers
+{
 
-} __attribute__((packed)) Registers;
+};
 
-typedef bool (*InterruptHandler)(Registers *);
+typedef bool (*InterruptHandler)(struct Registers *);
 
-#endif
+#endif // __I386__
+#endif // _AURORA_ARCHDEFS_H

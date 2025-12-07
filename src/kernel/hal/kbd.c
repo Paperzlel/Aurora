@@ -1,12 +1,12 @@
-#include "kbd.h"
+#include <aurora/arch/interrupts.h>
 
-#include <kernel/arch/arch.h>
-
-bool kbd_handler(Registers *p_regs) {
-    arch_send_eoi(p_regs->interrupt);
+bool kbd_handler(struct Registers *p_regs)
+{
+    send_end_of_interrupt(p_regs->interrupt);
     return true;
 }
 
-void kbd_initialize() {
-    arch_register_isr_handler(0x21, kbd_handler);
+void kbd_initialize()
+{
+    register_interrupt_handler(0x21, kbd_handler);
 }

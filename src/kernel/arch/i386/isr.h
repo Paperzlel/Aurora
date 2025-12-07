@@ -1,7 +1,7 @@
 #pragma once
 
 // Shouldn't use this include, but since we need it upstream for the interrupt handlers, define some common code here :)
-#include <kernel/arch/archdefs.h>
+#include <aurora/arch/archdefs.h>
 
 /**
  * @brief Initializes the ISR functions, or in other words loads all the needed data into the IDT and enables all the interrupts. Should save one or two for kernel

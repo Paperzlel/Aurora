@@ -1,9 +1,9 @@
 #pragma once
 
-#include <kernel/video/videostructs.h>
+#include <aurora/video/videostructs.h>
 #include <stdbool.h>
 
-bool vesa_initialize(VideoDriver *out_driver, Framebuffer *p_info);
+bool vesa_initialize(struct VideoDriver *out_driver, struct Framebuffer *p_info);
 
 void vesa_clear(uint8_t r, uint8_t g, uint8_t b);
 void vesa_write_char(char c);

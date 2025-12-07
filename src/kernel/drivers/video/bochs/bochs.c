@@ -1,6 +1,6 @@
 #include "bochs.h"
 
-#include <kernel/arch/io.h>
+#include <asm/io.h>
 
 #define __need_NULL
 #include <stddef.h>
@@ -24,21 +24,25 @@
 
 static uint32_t *a_video_mem = NULL;
 
-void bochs_set_register(uint16_t p_index, uint16_t p_value) {
+void bochs_set_register(uint16_t p_index, uint16_t p_value)
+{
     outw(BOCHS_PORT_INDEX, p_index);
     outw(BOCHS_PORT_DATA, p_value);
 }
 
-bool bochs_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
+bool bochs_initialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)
+{
     // Check if info is null, if so, return.
-    if (!p_info) {
+    if (!p_info)
+    {
         return false;
     }
 
     // Check for support, if available
     outw(BOCHS_PORT_INDEX, BOCHS_INDEX_ID);
     uint16_t usable = inw(BOCHS_PORT_DATA);
-    if (usable < BOCHS_BGA_LATEST) {
+    if (usable < BOCHS_BGA_LATEST)
+    {
         return false;
     }
 
@@ -59,7 +63,8 @@ bool bochs_initialize(VideoDriver *out_driver, Framebuffer *p_info) {
     return true;
 }
 
-VideoDriver a_bochs_driver = {
+struct VideoDriver a_bochs_driver =
+{
     "bochs",
     -1,
     bochs_initialize,

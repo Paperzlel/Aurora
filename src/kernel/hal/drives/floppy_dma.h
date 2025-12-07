@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/kdefs.h>
+#include <aurora/kdefs.h>
 
 /**
  * File for DMA transfers to and from floppy disks.

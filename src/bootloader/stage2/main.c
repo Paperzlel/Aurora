@@ -11,15 +11,16 @@
 static uint8_t *kernel_load_buf =  (uint8_t *)KERNEL_LOAD_ADDR;
 
 // Function pointer to the "main" function for our kernel
-typedef void (*kmain)(BootInfo *);
+typedef void (*kmain)(struct BootInfo *);
 
-static BootInfo boot = { 0 };
+static struct BootInfo boot = { 0 };
 
 /**
  * @brief Start function for the C part of the bootloader. Obtains basic information about the system, then loads the kernel and passes control over to it.
  * @param boot_drive The drive that the bootloader was selected from
  */
-void __attribute__((cdecl)) start(uint16_t boot_drive) {
+void __attribute__((cdecl)) start(uint16_t boot_drive)
+{
     // First, clear the screen
     clrscr();
 
@@ -28,8 +29,9 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
 
     bool can_map_kernel = false;
     // Confirm if the kernel can be loaded at its address
-    for (int i = 0; i < boot.memory_map.region_count; i++) {
-        MemoryRegion r = boot.memory_map.regions[i];
+    for (int i = 0; i < boot.memory_map.region_count; i++)
+    {
+        struct MemoryRegion r = boot.memory_map.regions[i];
 
         // Check if the memory region is usable
         if (!(r.extended_attribs & MEMORY_REGION_USABLE)) {
@@ -51,51 +53,59 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
 
     // Kernel doesn't map to the given address, panic
     // Some form of re-addressing should happen, but it's 2025 and most PCs will have more than 1 MiB of RAM to use so this should never happen in the
-    // reak world.
-    if (!can_map_kernel) {
+    // real world.
+    if (!can_map_kernel)
+    {
         printf("Could not load the kernel to address 0x%x as there was no memory available.\n", KERNEL_BASE_ADDR);
         goto end;
     }
     
     // There is a small chance we COULD run the OS without any framebuffer information, but since we need it for everything else we're going to throw
     // an error here instead.
-    if (!VESA_get_framebuffer(&boot.framebuffer_map)) {
+    if (!VESA_get_framebuffer(&boot.framebuffer_map))
+    {
         printf("Failed to obtain VESA framebuffers, unable to draw.\n");
         goto end;
     }
 
-    if (boot.memory_map.regions[boot.memory_map.region_count - 1].base_address < boot.framebuffer_map.framebuffer.address) {
+    if (boot.memory_map.regions[boot.memory_map.region_count - 1].base_address < boot.framebuffer_map.framebuffer.address)
+    {
         printf("Stage 2: Framebuffer map position is out of range.\n");
         goto end;
     }
 
-    DISK out_disk;
-    if (!disk_initialize(&out_disk, boot_drive)) {
+    struct DISK out_disk;
+    if (!disk_initialize(&out_disk, boot_drive))
+    {
         printf("Failed to initialize disk controller; unable to launch kernel.\n");
         goto end;
     }
 
-    if (!fat_initialize(&out_disk)) {
+    if (!fat_initialize(&out_disk))
+    {
         printf("Failed to initialize the FAT file system.\n");
         goto end;
     }
 
-    FAT_File *file = fat_open(&out_disk, "kernel.elf");
+    struct FAT_File *file = fat_open(&out_disk, "kernel.elf");
     // Load kernel into buffer
     uint32_t read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf);
     fat_close(file);
     
-    if (read) {
+    if (read)
+    {
         boot.kernel_size = read;
         printf("Loading %d bytes from the kernel...\n", read);
     }
     
     kmain kernel_start = NULL;
-    if (elf_is_elf(kernel_load_buf)) {
+    if (elf_is_elf(kernel_load_buf))
+    {
         // Load rest of ELF header; it's segmented so it needs to be loaded differently
 
         printf("Stage 2: Checking ELF data is the correct format.\n");
-        if (!elf_is_valid_format((ELF_Header *)kernel_load_buf)) {
+        if (!elf_is_valid_format((struct ELF_Header *)kernel_load_buf))
+        {
             printf("Invalid format for ELF file.\n");
             goto end;
         }
@@ -103,14 +113,17 @@ void __attribute__((cdecl)) start(uint16_t boot_drive) {
         void *entrypoint = NULL;
 
         printf("Stage 2: Loading ELF file data into memory...\n");
-        if (!elf_read((ELF_Header *)kernel_load_buf, kernel_load_buf, &entrypoint)) {
+        if (!elf_read((struct ELF_Header *)kernel_load_buf, kernel_load_buf, &entrypoint))
+        {
             printf("Unable to read ELF file.\n");
             goto end;
         }
 
         printf("Stage 2: Loaded ELF successfully and found kernel entrypoint at %x.\n", entrypoint);
         kernel_start = (kmain)entrypoint;
-    } else {
+    }
+    else
+    {
         printf("Stage 2: Could not detect ELF, loading raw bin...\n");
         // Assumes that the file is a .BIN and can be read directly
         // This mode will probably be deprecated in the future

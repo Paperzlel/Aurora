@@ -1,26 +1,29 @@
 #include "gdt.h"
 #include "tss.h"
 
-#include <kernel/kdefs.h>
+#include <aurora/kdefs.h>
 
 // Struct that describes any entry in the GDT. Some parts contain more than one item
-typedef struct {
+struct __attribute__((packed)) GDT_Entry
+{
     uint16_t limit;                 // First 16 bits of the limit (20 bits total)
     uint16_t base_low;              // First 16 bits of the base (32 bits total)
     uint8_t base_mid;               // Next 8 bits of the base
     uint8_t access;                 // Access flags, see GDT_AccessFlags
     uint8_t flags_limit;            // General flags + last 4 bits of limit
     uint8_t base_high;              // Last 8 bits of the base
-} __attribute__((packed)) GDT_Entry;
+};
 
 // Struct that describes the overall data within the GDT.
-typedef struct {
+struct __attribute__((packed)) GDT_Description
+{
     uint16_t size;                  // Total size of the GDT - 1
-    GDT_Entry *gdt_addr;            // Pointer to the GDT in memory
-} __attribute__((packed)) GDT_Description;
+    struct GDT_Entry *gdt_addr;     // Pointer to the GDT in memory
+};
 
 // Enum for the access flag in the GDT.
-typedef enum {
+enum GDT_AccessFlags
+{
     GDT_ACCESSED = 1 << 0,              // Bit that is marked by the CPU when accessed
     
     GDT_READABLE = 1 << 1,              // Readable code segment.
@@ -39,34 +42,37 @@ typedef enum {
     GDT_SYSTEM_SEGMENT = 0,             // Defines a system segment, i.e. a TSS.
 
     GDT_PRESENT = 1 << 7                // Present bit. Must be set for the segment to be valid.
-} GDT_AccessFlags;
+};
 
 // Enum for different rings. Used for the DPL bit
-typedef enum {
+enum GDT_Rings
+{
     GDT_RING0 = 0 << 5,     // Ring 0 / kernel
     GDT_RING1 = 1 << 5,     // Ring 1 / drivers
     GDT_RING2 = 2 << 5,     // Ring 2 / drivers
     GDT_RING3 = 3 << 5      // Ring 3 / userspace
-} GDT_Rings;
+};
 
 // Enum for flags within the GDT.
-typedef enum {
+enum GDT_Flags
+{
     GDT_64BIT = 1 << 5,             // Use a 64-bit register
     GDT_32BIT = 1 << 6,             // Use a 32-bit register (if both are unset, then the descriptor is 16-bit)
     GDT_16BIT = 0,                  // Use a 16-bit register
 
     GDT_GRANULARITY_4KIB = 1 << 7,      // Use 4-KiB blocks/page granularity 
     GDT_GRANULARITY_1B = 0              // Use 1-byte blocks/byte granularity
-} GDT_Flags;
+};
 
 // Enum for the system segment descriptor flags
-typedef enum {
+enum GDT_SystemFlags
+{
     GDT_TYPE_TSS16_AV = 1 << 0,
     GDT_TYPE_LDT = 1 << 1,
     GDT_TYPE_TSS16_BU = 3,
     GDT_TYPE_TSS32_AV = 9,
     GDT_TYPE_TSS32_BU = 0xB,
-} GDT_SystemFlags;
+};
 
 /**
  * @brief Macro that describes one entry within the GDT.
@@ -93,7 +99,8 @@ typedef enum {
 
 // Same segments as bootloader/stage2/entry.asm
 
-GDT_Entry a_gdt_entries[6] = {
+struct GDT_Entry a_gdt_entries[6] =
+{
     GDT_ENTRY(0, 0, 0, 0),
     // Code segment
     GDT_ENTRY(0, 0xfffff, GDT_PRESENT | GDT_RING0 | GDT_CODE_SEGMENT | GDT_CODE_DATA_SEGMENT | GDT_READABLE, GDT_GRANULARITY_4KIB | GDT_32BIT),
@@ -114,7 +121,8 @@ GDT_Entry a_gdt_entries[6] = {
 // Meaning 0x08 is our segment selector for CS, 0x10 for our DS
 // The TSS will be after the 16-bit registers (values 0x18 and 0x20, to value 0x28)
 
-GDT_Description a_desc = {
+struct GDT_Description a_desc =
+{
     sizeof(a_gdt_entries) - 1,
     a_gdt_entries
 };
@@ -125,11 +133,11 @@ GDT_Description a_desc = {
  * @param p_code_segment The code segment to use
  * @param p_data_segment The data segment to use
  */
-void __attribute__((cdecl)) i386_gdt_load(GDT_Description *p_gdt, uint8_t p_code_segment, uint8_t p_data_segment);
+void __attribute__((cdecl)) i386_gdt_load(struct GDT_Description *p_gdt, uint8_t p_code_segment, uint8_t p_data_segment);
 
-void i386_gdt_initialize() {
-
-    TSS_Descriptor *p_desc = i386_tss_get_descriptor();
+void i386_gdt_initialize()
+{
+    struct TSS_Descriptor *p_desc = i386_tss_get_descriptor();
 
     GDT_ADDENTRY(a_gdt_entries[5], (uint32_t)p_desc->address, p_desc->size, 
         GDT_PRESENT | GDT_RING0 | GDT_SYSTEM_SEGMENT | GDT_TYPE_TSS32_AV, 

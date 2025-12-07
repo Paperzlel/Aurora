@@ -3,13 +3,13 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 typedef int pid_t;
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
 
-#endif
+#endif // _SYS_TYPES_H

@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 #define __need_NULL
 #define __need_size_t
@@ -32,6 +32,6 @@ int abs(int j);
 
 #ifdef __cplusplus
 };
-#endif
+#endif // __cplusplus
 
-#endif
+#endif // _STDLIB_H

@@ -3,21 +3,23 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum {
+enum PrintState
+{
     PRINT_STATE_NORMAL,
     PRINT_STATE_IDENTIFIER,
     PRINT_STATE_LEN_SHORT,
     PRINT_STATE_LEN_LONG,
     PRINT_STATE_SPACE_COUNT,
-} PrintState;
+};
 
-typedef enum _FmtLen {
+enum FmtLen
+{
     LEN_SHORT_SHORT,
     LEN_SHORT,
     LEN_DEFAULT,
     LEN_LONG,
     LEN_LONG_LONG
-} FmtLen;
+};
 
 static bool a_is_captial = false;
 static bool a_prepend_chars = false;
@@ -26,23 +28,28 @@ static uint8_t a_format_count = 0;
 static const char a_hex_lowercase[] = "0123456789abcdef";
 static const char a_hex_uppercase[] = "0123456789ABCDEF";
 
-static void print_num_unsigned(uint64_t number, int base, char *s, int *count) {
+static void print_num_unsigned(uint64_t number, int base, char *s, int *count)
+{
     char buf[32]; // Shouldn't be bigger than this
     int pos = 0;
 
-    do {
+    do
+    {
         uint64_t rem = number % base;
         number /= base;
         buf[pos++] = a_is_captial ? a_hex_uppercase[rem] : a_hex_lowercase[rem];
-    } while (number > 0);
+    }
+    while (number > 0);
 
     s += *count;
     // Only prepend values if there is space to do so
-    if (a_prepend_chars && pos < a_format_count) {
+    if (a_prepend_chars && pos < a_format_count)
+    {
         int rem = a_format_count - pos;
 
         *count += rem;
-        while (--rem >= 0) {
+        while (--rem >= 0)
+        {
             *s = a_are_zeroes ? '0' : ' ';
             s++;
         }
@@ -50,30 +57,38 @@ static void print_num_unsigned(uint64_t number, int base, char *s, int *count) {
     }
 
     *count += pos;
-    while (--pos >= 0) {
+    while (--pos >= 0)
+    {
         *s = buf[pos];
         s++;
     }
 
 }
 
-static void print_num_signed(int64_t number, int base, char *s, int *count) {
-    if (number < 0) {
+static void print_num_signed(int64_t number, int base, char *s, int *count)
+{
+    if (number < 0)
+    {
         s[*count] = '-';
         *count += 1;
         print_num_unsigned(-number, base, s, count);
-    } else {
+    }
+    else
+    {
         print_num_unsigned(number, base, s, count);
     }
 }
 
-static void print_string(char *s, const char *in, int *count) {
+static void print_string(char *s, const char *in, int *count)
+{
     s += *count;
     size_t len = strlen(in);
-    if (a_prepend_chars && len < a_format_count) {
+    if (a_prepend_chars && len < a_format_count)
+    {
         int rem = a_format_count - len;
 
-        while (--rem >= 0) {
+        while (--rem >= 0)
+        {
             *s = ' ';
             s++;
         }
@@ -82,25 +97,31 @@ static void print_string(char *s, const char *in, int *count) {
     }
 
     *count += len;
-    while (*in) {
+    while (*in)
+    {
         *s = *in;
         s++;
         in++;
     }
 }
 
-int vsprintf(char *restrict s, const char *restrict format, va_list args) {
+int vsprintf(char *restrict s, const char *restrict format, va_list args)
+{
     int count = 0;
-    PrintState state = PRINT_STATE_NORMAL;
-    FmtLen len = LEN_DEFAULT;
+    enum PrintState state = PRINT_STATE_NORMAL;
+    enum FmtLen len = LEN_DEFAULT;
     int base = 10;
     bool is_signed = false;
     bool is_num = false;
 
-    while (*format) {
-        switch (state) {
-            case PRINT_STATE_NORMAL: {
-                switch (*format) {
+    while (*format)
+    {
+        switch (state)
+        {
+            case PRINT_STATE_NORMAL:
+            {
+                switch (*format)
+                {
                     case '%':
                         state = PRINT_STATE_IDENTIFIER;
                         break;
@@ -111,8 +132,10 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args) {
                 }
             } break;
 
-            case PRINT_STATE_LEN_SHORT: {
-                if (*format == 'h') {
+            case PRINT_STATE_LEN_SHORT:
+            {
+                if (*format == 'h')
+                {
                     len = LEN_SHORT_SHORT;
                 }
 
@@ -120,17 +143,21 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args) {
             } break;
 
 
-            case PRINT_STATE_LEN_LONG: {
-                if (*format == 'l') {
+            case PRINT_STATE_LEN_LONG:
+            {
+                if (*format == 'l')
+                {
                     len = LEN_LONG_LONG;
                 }
 
                 state = PRINT_STATE_IDENTIFIER;
             } break;
 
-            case PRINT_STATE_SPACE_COUNT: {
+            case PRINT_STATE_SPACE_COUNT:
+            {
                 a_format_count = *format - 48;
-                if (a_format_count == 0 || a_format_count > 9) {
+                if (a_format_count == 0 || a_format_count > 9)
+                {
                     a_format_count = 0;
                     format--;
                     break;
@@ -140,8 +167,10 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args) {
                 state = PRINT_STATE_IDENTIFIER;
             } break;
 
-            case PRINT_STATE_IDENTIFIER: {
-                switch (*format) {
+            case PRINT_STATE_IDENTIFIER:
+            {
+                switch (*format)
+                {
                     case '%':
                         s[count] = *format;
                         state = PRINT_STATE_NORMAL;
@@ -216,9 +245,12 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args) {
                         break;      // Ignore undefined types for now (f/F, e/E, g/G, a/A, n)
                 }
 
-                if (is_num) {
-                    if (is_signed) {
-                        switch (len) {
+                if (is_num)
+                {
+                    if (is_signed)
+                    {
+                        switch (len)
+                        {
                             case LEN_SHORT_SHORT:
                                 print_num_signed((int8_t)va_arg(args, int), base, s, &count);
                                 break;
@@ -235,8 +267,11 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args) {
                                 print_num_signed(va_arg(args, int64_t), base, s, &count);
                                 break;
                         }
-                    } else {
-                        switch (len) {
+                    }
+                    else 
+                    {
+                        switch (len)
+                        {
                             case LEN_SHORT_SHORT:
                                 print_num_unsigned((uint8_t)va_arg(args, uint32_t), base, s, &count);
                                 break;

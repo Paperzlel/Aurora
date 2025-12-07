@@ -262,7 +262,8 @@ void __attribute__((cdecl)) i386_ISR_255();
 /**
  * @brief Registers all of the ISRs to their respective locations. Each ISR is defined in ASM at the bottom of "isr_asm.asm".
  */
-void i386_idt_register_isrs() {
+void i386_idt_register_isrs()
+{
     i386_idt_register_isr(0, i386_ISR_0, KERNEL32_CODE_SEGMENT, IDT_RING0 | IDT_INTERRUPT32);
     i386_idt_register_isr(1, i386_ISR_1, KERNEL32_CODE_SEGMENT, IDT_RING0 | IDT_INTERRUPT32);
     i386_idt_register_isr(2, i386_ISR_2, KERNEL32_CODE_SEGMENT, IDT_RING0 | IDT_INTERRUPT32);
