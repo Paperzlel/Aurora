@@ -5,7 +5,7 @@
 
 #include "drives/floppy.h"
 
-#include <kernel/time.h>
+#include <sys/time.h>
 
 void hal_initialize(uint16_t p_driver_no) {
     // Initialize the PIC first to get all interrupts going
@@ -45,4 +45,18 @@ bool timer_get_time(timer_t *p_timer) {
     p_timer->time_us = p_timer->ticks % frequency_ms;
 
     return true;
+}
+
+void timer_sleep(uint64_t p_ms) {
+    uint64_t ticks_start = pit_get_ticks();
+    uint32_t frequency_ms = pit_get_frequency() / 1000;
+    if (!frequency_ms) {
+        return;
+    }
+
+    while (true) {
+        if (((pit_get_ticks() - ticks_start) / frequency_ms) >= p_ms) {
+            break;
+        }
+    }
 }

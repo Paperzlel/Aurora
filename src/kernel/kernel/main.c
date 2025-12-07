@@ -16,6 +16,8 @@
 #define AUR_MODULE "main"
 #include <kernel/debug.h>
 
+#include <sys/time.h>
+
 /**
  * @brief Initializes the memory subsystem, including allocators, pre-defined pages, and so on. 
  * @param p_map Pointer to the memory map of the PC. This mainly concerns unmapped memory (such as the BIOS or APIC devices) and also gives us the info

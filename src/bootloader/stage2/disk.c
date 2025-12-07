@@ -22,10 +22,10 @@ void disk_lba_to_chs(DISK *p_disk, uint16_t lba, uint16_t *p_out_cylinder, uint1
     *p_out_sector = (lba % p_disk->sectors) + 1;
 
     // (LBA / sectors_per_track) / Heads = cylinder
-    *p_out_cylinder = (lba / p_disk->sectors) / p_disk->heads;
+    *p_out_cylinder = lba / (p_disk->sectors * p_disk->heads);
 
     // (LBA / sectors_per_track) % Heads = head
-    *p_out_head = (lba / p_disk->sectors) % p_disk->heads;
+    *p_out_head = (lba % (p_disk->sectors * p_disk->heads)) / p_disk->sectors;
 }
 
 bool disk_read_sectors(DISK *p_disk, uint16_t lba, uint16_t p_sector_count, void *p_out_data) {

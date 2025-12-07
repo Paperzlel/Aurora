@@ -1,7 +1,7 @@
 #define AUR_MODULE "debugger" /* Shouldn't really be defined here, but we DID make a standard for it, so... */
 #include <kernel/debug.h>
 
-#include <kernel/time.h>
+#include <sys/time.h>
 #include <kernel/arch/io.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,7 +23,7 @@ void log_message(LogLevel p_level, const char *p_module, const char *p_message, 
         time_us = timer.time_us;
     }
 
-    int num_size = sprintf(msg, "[%5lli.%04lli%01hhi] %s: ", time_ms / 1000, time_ms, time_us, p_module);
+    int num_size = sprintf(msg, "[%5lli.%03lli%01hhi] %s: ", time_ms / 1000, time_ms % 1000, time_us, p_module);
 
     // Format message
     va_list args;

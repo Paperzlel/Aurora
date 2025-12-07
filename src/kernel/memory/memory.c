@@ -47,7 +47,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
         uint32_t mr_base = (uint32_t)mr.base_address;
         if (mr.type == MEMORY_REGION_ACPI_NVS || (mr.type == MEMORY_REGION_RESERVED && !is_valid_address((void *)mr_base))) {
             if (!paging_map_region((void *)mr_base, (void *)mr_base, mr.length)) {
-                LOG_ERROR("Failed to map region %x (size %x)\n", mr.base_address, mr.length);
+                LOG_ERROR("Failed to map region %x (size %x)", mr.base_address, mr.length);
                 continue;
             }
         }
@@ -64,11 +64,11 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
         }
 
         if (ranges > 8) {
-            LOG_ERROR("Memory: Cannot have more than 8 blocked ranges, aborting...\n");
+            LOG_ERROR("Memory: Cannot have more than 8 blocked ranges, aborting...");
             return false;
         }
 
-        LOG_DEBUG("Region start 0x%llx, region end 0x%llx\n", mr.base_address, mr.base_address + mr.length);
+        LOG_DEBUG("Region start 0x%llx, region end 0x%llx", mr.base_address, mr.base_address + mr.length);
     }
 
     // Align kernel size to next 16 bytes
@@ -84,7 +84,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
     mh.next = NULL;
     mh.flags = BIT_AVAILABLE | BIT_KERNEL;
     if (!paging_map_region((void *)mh.physical, KERNEL_ALLOC_VIRTUAL_ADDRESS, 0x1000)) {
-        LOG_ERROR("Failed to map the first memory header to its virtual address.\n");
+        LOG_ERROR("Failed to map the first memory header to its virtual address.");
         return false;
     }
     // Commit memory header once done
@@ -110,7 +110,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
             // Set offset
             offset += ptr->size + blocked_ranges[(2 * i) + 1] + sizeof(MemoryHeader);
             if (!paging_map_region((void *)sub_mh.physical, KERNEL_ALLOC_VIRTUAL_ADDRESS + offset, 0x1000)) {
-                printf("Failed to map sub-region of memory, aborting...\n");
+                printf("Failed to map sub-region of memory, aborting...");
                 return false;
             }
             sub_mh.virtual = (uint32_t)KERNEL_ALLOC_VIRTUAL_ADDRESS + offset;
@@ -127,7 +127,7 @@ bool initialize_memory(MemoryMap *p_map, uint32_t p_kernel_size) {
 
     MemoryHeader *root = root_header;
     while (root) {
-        printf("Available memory region: Base address %x | end %x\n", root->virtual, root->size + root->virtual);
+        LOG_INFO("Available memory region: Base address %x | end %x", root->virtual, root->size + root->virtual);
         root = root->next;
     }
 
@@ -144,7 +144,7 @@ void *kalloc(uint32_t p_size) {
 
     // All lists are occupied (should never happen)
     if (!list) {
-        printf("ERROR: OUT OF MEMORY EXCEPTION.\n");
+        LOG_ERROR("System ran out of memory.");
         return NULL;
     }
 
@@ -159,7 +159,7 @@ void *kalloc(uint32_t p_size) {
     // Map header and 4KiB region as usable
     if (!is_valid_address((void *)new_mh.virtual)) {
         if (!paging_map_region((void *)new_mh.physical, (void *)new_mh.virtual, 0x1000)) {
-            printf("ERROR: Could not map the new memory header.\n");
+            LOG_ERROR("Could not map the new memory header.");
             return NULL;
         }
     }
@@ -177,7 +177,7 @@ void *kalloc(uint32_t p_size) {
 
     // Map new region (returns early if already mapped)
     if (!paging_map_region((void *)list->physical, (void *)list->virtual, list->size)) {
-        printf("ERROR: Could not map the new memory region.\n");
+        LOG_ERROR("Could not map the new memory region from address 0x%x to address 0x%x", list->physical, list->virtual);
         return NULL;
     }
 
@@ -194,7 +194,7 @@ void kfree(void *p_mem) {
 
     // TODO: Should segfault here.
     if (!list || list->flags & BIT_AVAILABLE) {
-        printf("ERROR: pretend this is a segfault. Double free occured.\n");
+        LOG_ERROR("Pretend this is a segfault. Double free occured.");
         return;
     }
     

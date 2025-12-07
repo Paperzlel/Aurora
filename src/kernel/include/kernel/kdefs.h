@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define GCC_PRAGMA(m_content) _Pragma(#m_content)
 #define GCC_PUSH_WARNING GCC_PRAGMA(GCC diagnostic push)

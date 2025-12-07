@@ -11,4 +11,6 @@ typedef struct {
 
 bool timer_get_time(timer_t *p_timer);
 
+void timer_sleep(uint64_t p_ms);
+
 #endif // _KERNEL_TIMER_H

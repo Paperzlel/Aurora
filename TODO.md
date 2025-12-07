@@ -35,7 +35,7 @@
 
 ### Debugging
 - [ ] Implement a GDB stub for the OS to output info
-- [ ] Add a `log_[error]()` macro that records the time (post-timer) and the error message to the screen
+- [x] Add a `log_[error]()` macro that records the time (post-timer) and the error message to the screen
 
 ### Filesystem
 - [ ] Implement a basic FAT12 filesystem driver
@@ -46,6 +46,7 @@
 - [ ] Add alternative timer settings that aren't PIT for specific systems
 - [x] Mask out unused IRQ lines until needed
 - [ ] Implement CMOS retrieval of the floppy disk controller
+- [ ] Add a timer sleep function that waits for a given period of time
 
 ### Memory
 - [x] Implement dynamic paging
@@ -54,6 +55,7 @@
 - [x] Automatically identity page memory-mapped I/O data from MemoryRegions
 - [ ] Align memory allocations to 16-byte boundaries
 - [ ] Move pages to use a different memory address so we can re-use the FS (maybe the kernel load address?)
+- [ ] Separate kernel memory data and kernel libraries from user code (re-map kernel to higher half?)
 
 ### Roadmap
 - [x] Add paging

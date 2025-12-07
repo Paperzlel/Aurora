@@ -61,7 +61,7 @@ typedef enum {
 void floppy_dma_setup_for_location(void *p_address, uint16_t p_size) {
     p_size -= 1;
     // Mask channels we want to use
-    outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2 | CHANNEL_SELECT_0);
+    outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2);
     // Reset master flip-flop, can pass any value
     outb(DMA_FLIPFLOP, 0xff);
 
@@ -72,8 +72,8 @@ void floppy_dma_setup_for_location(void *p_address, uint16_t p_size) {
     // Reset flip-flop (again)
     outb(DMA_FLIPFLOP, 0xff);
     // Set count - 1
-    outb(DMA_COUNT_1, (uint8_t)(p_size & 0xff));
-    outb(DMA_COUNT_1, (uint8_t)((p_size >> 8) & 0xff));
+    outb(DMA_COUNT_2, (uint8_t)(p_size & 0xff));
+    outb(DMA_COUNT_2, (uint8_t)((p_size >> 8) & 0xff));
     // Set last 24-byte part of address
     outb(DMA_PAGE_ADDR_2, (uint8_t)((address >> 16) & 0xff));
 
@@ -85,7 +85,7 @@ void floppy_dma_setup_for_location(void *p_address, uint16_t p_size) {
 
 void floppy_dma_read() {
     // Mask channels we want to use
-    outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2 | CHANNEL_SELECT_0);
+    outb(DMA_CHANNEL_MASK, CHANNEL_MASK_ON | CHANNEL_SELECT_2);
     // Set DMA flags
     outb(DMA_MODE, MODE_MODE_SINGLE_TRANSFER | MODE_AUTO | MODE_TRANSFER_WRITE | MODE_SELECT_2);
     // Re-mask the channel for use
