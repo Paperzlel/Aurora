@@ -68,7 +68,7 @@
         {
             "label": "Run (bochs)",
             "type": "shell",
-            "command": "./debug.sh",
+            "command": "bochs -q -dbg -f bochs_config",
             "problemMatcher": [
                 "$gcc"
             ]

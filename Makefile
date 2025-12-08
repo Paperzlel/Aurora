@@ -54,8 +54,8 @@ $(BUILD_DIR)/main_floppy.img: bootloader libk kernel
 	@mcopy -i $@ $(BUILD_DIR)/stage2.bin "::stage2.bin" 2> /dev/null
 	@mcopy -i $@ $(BUILD_DIR)/kernel.elf "::kernel.elf" 2> /dev/null
 	@mmd -i $@ "::dev" 2> /dev/null
-	@mcopy -i $@ test.txt "::dev/test.txt" 2> /dev/null
-	@mcopy -i $@ $(PWD)/resources/Lat2-Fixed16.psf "::font.psf" 2> /dev/null
+	@mcopy -i $@ $(PWD)/resources/test.txt "::dev/test.txt" 2> /dev/null
+	@mcopy -i $@ $(PWD)/resources/Lat2-Fixed16.psf "::dev/font.psf" 2> /dev/null
 	@echo Created $@
 
 # Bootloader
@@ -114,9 +114,9 @@ BINUTILS_DIFF_FILE=binutils.diff
 toolchain_binutils: $(PREFIX)/bin/$(TARGET)-ld
 
 $(PREFIX)/bin/$(TARGET)-ld: $(BINUTILS_SRC)
-	./apply_diff.sh binutils $(BINUTILS_VERSION)
-	@cp elf_i386_aurora.sh $(TOOLS_DIR)/binutils-$(BINUTILS_VERSION)/ld/emulparams/elf_i386_aurora.sh
-	@cp elf_x86_64_aurora.sh $(TOOLS_DIR)/binutils-$(BINUTILS_VERSION)/ld/emulparams/elf_x86_64_aurora.sh
+	./scripts/apply_diff.sh binutils $(BINUTILS_VERSION)
+	@cp scripts/elf_i386_aurora.sh $(TOOLS_DIR)/binutils-$(BINUTILS_VERSION)/ld/emulparams/elf_i386_aurora.sh
+	@cp scripts/elf_x86_64_aurora.sh $(TOOLS_DIR)/binutils-$(BINUTILS_VERSION)/ld/emulparams/elf_x86_64_aurora.sh
 	@mkdir -p $(BINUTILS_BUILD)
 	@cd $(BINUTILS_BUILD) && ../binutils-$(BINUTILS_VERSION)/configure \
 			--prefix="$(PREFIX)"			\
@@ -143,8 +143,8 @@ GCC_DIFF_FILE=gcc.diff
 toolchain_gcc: $(PREFIX)/bin/$(TARGET)-gcc
 
 $(PREFIX)/bin/$(TARGET)-gcc: $(PREFIX)/bin/$(TARGET)-ld $(GCC_SRC)
-	./apply_diff.sh gcc $(GCC_VERSION)
-	cp aurora.h $(TOOLS_DIR)/gcc-$(GCC_VERSION)/gcc/config/aurora.h
+	./scripts/apply_diff.sh gcc $(GCC_VERSION)
+	cp scripts/aurora.h $(TOOLS_DIR)/gcc-$(GCC_VERSION)/gcc/config/aurora.h
 	@mkdir -p $(GCC_BUILD)
 	@cd $(GCC_BUILD) && CFLAGS= ASMFLAGS= CC= CXX= LD= ASM= LINKFLAGS= LIBS= ../gcc-$(GCC_VERSION)/configure \
 			--prefix="$(PREFIX)"		\

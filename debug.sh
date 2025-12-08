@@ -1,1 +1,0 @@
-bochs -q -dbg -f bochs_config

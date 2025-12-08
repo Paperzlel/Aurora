@@ -62,7 +62,7 @@ For any extra references, see [this link](https://stackoverflow.com/questions/14
 
 ## Running with bochs
 
-1. Run `./debug.sh`
+1. Run bochs using the command list (Ctrl+Shift+# in VS Code)
 2. Navigate to View - Disassemble (or press Ctrl+D) and type `0x7C00` and press OK on both prompts
 3. Double-click on the first instruction to set a breakpoint. The line should turn red.
 4. Press Continue
