@@ -16,4 +16,6 @@ void abort()
 #else
     
 #endif
+    while (1) { }
+    __builtin_unreachable();
 }

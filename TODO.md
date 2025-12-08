@@ -32,15 +32,17 @@
 
 ### Core
 - [ ] Reset stack after handing operation back to the kernel in C
+- [ ] Improve terminal handling by storing messages in a buffer that is flushed to disk every N bytes (writing to a file)
 
 ### Debugging
 - [ ] Implement a GDB stub for the OS to output info
 - [x] Add a `log_[error]()` macro that records the time (post-timer) and the error message to the screen
 
 ### Filesystem
+- [ ] Abstract reading from disk and the filesystem
+- [ ] Add "mountpoints" where the non-boot drives host their files
 - [ ] Implement a basic FAT12 filesystem driver
 - [ ] Implement a VFS on top of the FAT12 driver
-- [ ] Expose methods for `fopen` and `fread` in `stdio.h`
 
 ### HAL
 - [ ] Add alternative timer settings that aren't PIT for specific systems
@@ -73,4 +75,5 @@
 ## Libc
 
 - [ ] Implement current stubs as proper functions
+- [ ] Expose methods for `fopen` and `fread` in `stdio.h`
 - [ ] Compile libc as a hosted .so file

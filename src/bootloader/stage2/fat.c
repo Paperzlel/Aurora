@@ -54,7 +54,8 @@ struct FAT_FileData
 
 struct FAT_Data
 {
-    union {
+    union
+    {
         struct FAT_BootSector boot_sector;
         uint8_t data[SECTOR_SIZE];
     } bs;
@@ -128,7 +129,7 @@ bool fat_find_entry(struct DISK *p_disk, struct FAT_File *p_current, const char 
         }
     }
 
-    return true;
+    return false;
 }
 
 struct FAT_File *fat_open_entry(struct DISK *p_disk, struct FAT_DirectoryEntry *p_directory)
@@ -233,8 +234,8 @@ bool fat_initialize(struct DISK *p_disk)
     return true;
 }
 
-struct FAT_File *fat_open(struct DISK *p_disk, const char *p_path) {
-
+struct FAT_File *fat_open(struct DISK *p_disk, const char *p_path)
+{
     // 255-byte filename + NULL terminator. Here we copy in the file 
     char name[MAX_PATH_SIZE];
 
@@ -265,7 +266,7 @@ struct FAT_File *fat_open(struct DISK *p_disk, const char *p_path) {
             is_last = true;
         }
 
-        // Load a file handler somehow
+        // Load a file handler
         struct FAT_DirectoryEntry entry;
         if (!fat_find_entry(p_disk, current, name, &entry))
         {
