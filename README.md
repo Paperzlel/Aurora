@@ -49,7 +49,7 @@ This should install the latest version of `bochs` for you properly. We do this a
 ### Toolchain (REQUIRED)
 In order to make an operating system, one must first create the universe. This is not always enjoyable to follow as a process, so we've provided a `make` option to create the universe for you. Running `make toolchain` will install and build `binutils` and `gcc` from scratch, under a folder labelled `toolchain`. These are custom versions specific to your PC, which are compiled in such a manner so that they contain no default references or depedencies and only use the code that we have strictly written. Patches for both `binutils` and `gcc` are added which prepare the tools for use with Aurora specifically.
 
-If you experience errors during the process, go into your `Makefile` and change the version numbers for `binutils` and `gcc` until they work (downgrading may be better for some people, however this may bring up issues down the line). There may also be an issue with custom git patches not being applied, in which case I will attempt to fix those as soon as possible
+If you experience errors during the process, go into your `Makefile` and change the version numbers for `binutils` and `gcc` until they work (downgrading may be better for some people, however this may bring up issues down the line). There may also be an issue with custom git patches not being applied, in which case I will attempt to fix those as soon as possible.
 
 ### Operating System
 To build the OS itself, run `make` normally. This will create 3 binary files: `stage1.bin`, `stage2.bin` and `kernel.bin`, as well as `.map` files for the kernel and stage 2. The entire OS itself is stored inside `main_floppy.img`.

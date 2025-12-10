@@ -3,21 +3,16 @@
 #include <aurora/memdefs.h>
 #include <string.h>
 
-#define PAGE_TABLE_COUNT (PAGE_TABLE_MEMORY_SIZE / 4096) - 1
-#define PAGE_TABLE_CONFIG_SIZE (PAGE_TABLE_MEMORY_SIZE % 4096)
+#define AUR_MODULE "paging"
+#include <aurora/debug.h>
 
-#define NULL ((void *)0)
+#define PAGE_TABLE_COUNT (PAGE_TABLE_MEMORY_SIZE / 4096)
+
+#define MIN_VIRTUAL_ADDRESS_LOCATION 
 
 struct __attribute__((aligned(4096))) PageTable
 {
     uint32_t entry[1024];
-};
-
-struct PageTableElement
-{
-    struct PageTableElement *next;
-    struct PageTable *table;
-    uint16_t packed_idx_ofs;
 };
 
 struct PageTableConfig
@@ -25,8 +20,9 @@ struct PageTableConfig
     uint8_t page_info[PAGE_TABLE_COUNT];
     struct PageTable *next_free;
     uint32_t available_space;
-    uint8_t available_tables;
-    bool intialized;
+    uint16_t available_tables;
+    uint32_t kernel_vmem_start;                     // The point where kernel virtual memory can be allocated from
+    uint32_t user_vmem_start;                       // The point where userspace virtual memory can be allocated from
 };
 
 // Only use the first 3 bits so far for information, may use the rest at some point.
@@ -42,16 +38,19 @@ enum PageInfoBits
 // (PAGE_TABLE_VIRTUAL_ADDRESS + PAGE_TABLE_MEMORY_SIZE - PAGE_TABLE_CONFIG_SIZE)
 
 // HACK: We use this to reserve memory in the kernel for the page table config as it is otherwise unmapped memory. Move this at some point.
-uint8_t __ptc_reserved[sizeof(struct PageTableConfig)] = { 0 };
+static uint8_t __ptc_reserved[sizeof(struct PageTableConfig)] = { 0 };
+
+const int x = sizeof(struct PageTableConfig);
 
 struct PageTableConfig *config = (struct PageTableConfig *)&__ptc_reserved;
-
 struct PageTable *allocated_tables = PAGE_TABLE_VIRTUAL_ADDRESS;
 int used_table_count = 0;
 
 extern uint32_t page_directory[1024];
+extern uint8_t __end;                       // Address at the end of the kernel
 
 void __attribute__((cdecl)) __tlb_flush(void *p_address);
+
 
 // Utility function (rounds up)
 uint32_t ceil(uint32_t x, uint32_t y)
@@ -59,14 +58,6 @@ uint32_t ceil(uint32_t x, uint32_t y)
     return x % y == 0 ? x / y : (x / y) + 1;
 }
 
-
-void _init_paging_config()
-{
-    config->available_space = PAGE_TABLE_MEMORY_SIZE - PAGE_TABLE_CONFIG_SIZE;
-    config->available_tables = PAGE_TABLE_COUNT;
-    config->next_free = allocated_tables;
-    config->intialized = true;
-}
 
 struct PageTable *_alloc_new_table()
 {
@@ -112,6 +103,7 @@ struct PageTable *_alloc_new_table()
     return ret;
 }
 
+
 void _pt_free(struct PageTable *p_table)
 {
     uint16_t idx = -1;
@@ -135,6 +127,7 @@ void _pt_free(struct PageTable *p_table)
     config->available_tables++;
     used_table_count--;
 }
+
 
 // 1024 PT entries --> 4096 KiB = 4 MiB = 0x400000 in hex per PT
 // 1024 PD entries --> 4096 * 1024 = 4194304 KiB = 4096 MiB = 4 GiB
@@ -161,36 +154,116 @@ int _get_directory_count(uint32_t p_virtual, uint32_t p_size)
     return ceil(p_size, 0x400000) + 1;
 }
 
-bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size)
+
+uint32_t find_next_free_region(uint32_t p_size)
 {
-    if (!config->intialized)
+    uint32_t ret = config->kernel_vmem_start;
+    int i = 0, j = 0;
+    struct PageTable *pt = NULL;
+    for (i = (ret & 0xffc00000) >> 22; i < 1024; i++)
     {
-        _init_paging_config();
+        pt = (struct PageTable *)(page_directory[i] & 0xfffff000);
+        if (!pt)
+        {
+            ret = i << 22;
+            break;
+        }
+
+        bool found = false;
+        for (j = 0; j < 1024; j++)
+        {
+            if (pt->entry[j] == 0)
+            {
+                ret = (i << 22) | (j << 12);
+                found = true;
+                break;
+            }
+        }
+
+        if (found) break;
     }
 
+    // Validate if the needed value of page directories can use the whole address space. It doesn't matter if separate blocks are non-contingous, but
+    // per-allocation blocks MUST be in order for the system to work. Returning NULL here allows the code to catch that an allocation failed for
+    // this specific reason.
+    int count = _get_directory_count(ret, p_size);
+    if (pt)
+    {
+        for (int k = j; k < 1024; k++)
+        {
+            if (pt->entry[k] != 0)
+            {
+                LOG_WARNING("Memory region mappign to region %x was blocked by other allocation %x.", ret, pt->entry[k]);
+                return 0;
+            }
+        }
+    }
+
+    if (count > 1)
+    {
+        for (int k = i + 1; k < i + count; k++)
+        {
+            if (!(page_directory[k] & 0xfffff000)) continue;
+
+            pt = (struct PageTable *)(page_directory[k] & 0xfffff000);
+            for (int l = 0; l < 1024; l++)
+            {
+                if (pt->entry[l] != 0)
+                {
+                    LOG_WARNING("Memory region mapping to region %x was blocked by other allocation %x.", ret, pt->entry[l]);
+                    return 0;
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
+void paging_initialize(uint32_t *p_phys_mem_start)
+{
+    config->available_space = PAGE_TABLE_MEMORY_SIZE;
+    config->available_tables = PAGE_TABLE_COUNT;
+    config->next_free = allocated_tables;
+
+    // NOTE: This is the first (non-aligned) memory address available after the end of the kernel. 
+    config->kernel_vmem_start = &__end;
+    config->user_vmem_start = USER_ALLOC_VIRTUAL_ADDRESS;
+
+    uint32_t additional_mem_size = KERNEL_VIRTUAL_ADDRESS - 0xc00f0000;
+    if (!paging_map_region(*p_phys_mem_start, 0xc00f0000, additional_mem_size))
+    {
+        LOG_FATAL("Failed to initialize paging, unable to plug memory hole.");
+    }
+    // Add additionally allocated memory in.
+    *p_phys_mem_start += additional_mem_size;
+}
+
+
+bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
+{
     // Already mapped, no need to remap
     if (is_valid_range(p_virtual, p_virtual + p_size))
     {
         return true;
     }
 
-    int directory_count = _get_directory_count((uint32_t)p_virtual, p_size);
-    void *phys_address = p_physical;
-    uint16_t page_index = ((uint32_t)p_virtual & 0xffc00000) >> 22;
+    int directory_count = _get_directory_count(p_virtual, p_size);
+    uint16_t page_index = (p_virtual & 0xffc00000) >> 22;
 
     for (int i = 0; i < directory_count; i++)
     {
-        // TODO: set an error
-        if (used_table_count >= PAGE_TABLE_COUNT)
-        {
-            return false;
-        }
-
         struct PageTable *table = NULL;
 
         // Page index is unused, allocate a page index
         if (!(page_directory[page_index + i] & 1))
         {
+            if (used_table_count >= PAGE_TABLE_COUNT)
+            {
+                LOG_ERROR("Number of tables used now exceeds the valid page table count. The mapped memory may not be entirely usable.s");
+                return false;
+            }
+
             // Need a new table, get one
             table = _alloc_new_table();
         }
@@ -201,9 +274,9 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size)
             table = (struct PageTable *)(page_directory[page_index + i] & 0xfffff000);
         }
 
-        // TODO: Throw an error of some kind
         if (!table)
         {
+            LOG_ERROR("No available page tables for mapping memory. The mapped memory range may not be entirely usable.");
             return false;
         }
 
@@ -221,15 +294,15 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size)
             table_end = (table_end > 1024) ? 1024 : table_end;
         }
 
-        for (int j = table_start; j < table_end; j++, phys_address += 4096)
+        for (int j = table_start; j < table_end; j++, p_physical += 4096)
         {
-            // TODO: Some kind of error message here
             if (table->entry[j] != 0)
             {
+                LOG_ERROR("Table entry found within memory region range. The mapped memory range may not be entirely usable.");
                 return false;
             }
 
-            uint32_t ptr = ((uint32_t)phys_address & 0xfffff000) | 3;
+            uint32_t ptr = (p_physical & 0xfffff000) | 3;
             table->entry[j] = ptr;
         }
 
@@ -243,13 +316,39 @@ bool paging_map_region(void *p_physical, void *p_virtual, uint32_t p_size)
     return true;
 }
 
-void paging_free_region(void *p_virtual, uint32_t p_size)
+
+void *paging_allocate_region(uint32_t p_address, uint32_t p_size)
 {
-    int directory_count = _get_directory_count((uint32_t)p_virtual, p_size);
+    uint32_t virtual = physical_to_virtual(p_address);
+    if (virtual && is_valid_range(virtual, virtual + p_size))
+    {
+        LOG_WARNING("Requested region %x is already mapped to virtual memory.", p_address);
+        return (void *)virtual;
+    }
+
+    // Look out for the next valid address
+    virtual = find_next_free_region(p_size);
+    if (!virtual)
+    {
+        return NULL;
+    }
+
+    if (!paging_map_region(p_address, virtual, p_size))
+    {
+        return NULL;
+    }
+
+    return (void *)virtual;
+}
+
+
+void paging_free_region(uint32_t p_virtual, uint32_t p_size)
+{
+    int directory_count = _get_directory_count(p_virtual, p_size);
 
     for (int i = 0; i < directory_count; i++)
     {
-        uint16_t page_index = ((uint32_t)p_virtual & 0xffc00000) >> 22;
+        uint16_t page_index = (p_virtual & 0xffc00000) >> 22;
         struct PageTable *table = (struct PageTable *)(page_directory[page_index + i] & 0xfffff000);
         page_directory[page_index + i] &= 2;            // Clear all bits except bit 1 (r/w bit)
 
@@ -257,11 +356,11 @@ void paging_free_region(void *p_virtual, uint32_t p_size)
         uint16_t table_end = 1024;
         if (i == 0)
         {
-            table_start = ((uint32_t)p_virtual & 0x003ff000) >> 12;
+            table_start = (p_virtual & 0x003ff000) >> 12;
         }
         if (i == directory_count - 1)
         {
-            table_end = ceil((((uint32_t)p_virtual + p_size - 1) % 0x400000), 4096);
+            table_end = ceil(((p_virtual + p_size - 1) % 0x400000), 4096);
             table_end = (table_end > 1024) ? 1024 : table_end;
         }
 
@@ -333,6 +432,42 @@ uint32_t virtual_to_physical(uint32_t p_virtual)
     }
 
     return ret + (p_virtual & 0x00000fff);
+}
+
+uint32_t physical_to_virtual(uint32_t p_address)
+{
+    // We know that memory between 0x0 and 0x10000 is identity-mapped (for DMA and BIOS reasons) so we can return that address quickly.
+    if (p_address < 0x10000)
+    {
+        return p_address;
+    }
+    // Page offset bits
+    uint32_t offset = p_address & 0x00000fff;
+    // AND the result so we align to the page memory
+    p_address &= 0xfffff000;
+
+    // Check allocated pages first (most uses of page lookups come from here)
+    for (int i = 0; i < PAGE_TABLE_COUNT; i++)
+    {
+        // Found an allocated table
+        if (config->page_info[i] & 1)
+        {
+            struct PageTable *pt = &allocated_tables[i];
+            for (int j = 0; i < 1024; i++)
+            {
+                if (pt->entry[j] == 0) continue;
+
+                // Found page
+                if (p_address == pt->entry[j])
+                {
+                    return (i << 22) | (j << 12) | offset;
+                }
+            }
+        }
+    }
+
+    // Unmapped physical address; could be kernel but don't use unmapped memory there
+    return 0;
 }
 
 bool is_valid_address(void *p_virtual)

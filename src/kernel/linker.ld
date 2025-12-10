@@ -25,25 +25,30 @@ SECTIONS
   . += virt;
   
   /* All here is within virtual addresses. */
-  .text  : AT(ADDR(.text) - virt)
+  .text  : AT(ADDR(.text) - virt) ALIGN(4K)
   {
     __text_start = .;        *(.text)      
   }
+  __text_end = .;
   
-  .data  : AT(ADDR(.data) - virt)
+  .data  : AT(ADDR(.data) - virt) ALIGN(4K)
   {
     __data_start = .;        *(.data)      
   }
+  __data_end = .;
   
-  .rodata  : AT(ADDR(.rodata) - virt)
+  .rodata  : AT(ADDR(.rodata) - virt) ALIGN(4K)
   {
-    __entry_start = .;       *(.rodata)
+    __rodata_start = .;       *(.rodata)
   }
+  __rodata_end = .;
   
-  .bss  : AT(ADDR(.bss) - virt)
+  .bss  : AT(ADDR(.bss) - virt) ALIGN(4K)
   {
     __bss_start = .;         *(.bss)
   }
+  __bss_end = .;
 
+  . = ALIGN(4K);
   __end = .;
 }

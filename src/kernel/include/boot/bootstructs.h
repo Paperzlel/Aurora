@@ -7,14 +7,14 @@ struct MemoryRegion
 {
     uint64_t base_address;          // The physical base address this memory region begins at
     uint64_t length;                // The size of the memory region in bytes
-    uint32_t type;                  // Whether the region is accessible or not (see MmroryRegionType)
-    uint32_t extended_attribs;      // Extended optional attributes about the meory region
+    uint32_t type;                  // Whether the region is accessible or not (see MemoryRegionType)
+    uint32_t extended_attribs;      // Extended optional attributes about the memory region
 };
 
 // Structure that defines the overall memory map for the system. 
 struct MemoryMap
 {
-    int region_count;               // Number of total regions
+    int region_count;                      // Number of total regions
     struct MemoryRegion *regions;          // Pointer to an array of said regions
 };
 
@@ -57,8 +57,8 @@ struct VESA_FramebufferInfo
 // Structure that contains all boot info that is passed from the bootloader to the kernel.
 struct BootInfo
 {
-    struct VESA_FramebufferInfo framebuffer_map;        // Strucure containing the desired framebuffer map
-    struct MemoryMap memory_map;                        // Map of the physical system memory
     uint16_t boot_device;                               // ID of the boot device that is being used
     uint32_t kernel_size;                               // Size of the kernel in bytes
+    struct MemoryMap memory_map;                        // Map of the physical system memory
+    struct VESA_FramebufferInfo framebuffer_map;        // Strucure containing the desired framebuffer map
 };

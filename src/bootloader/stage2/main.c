@@ -68,12 +68,6 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
         goto end;
     }
 
-    if (boot.memory_map.regions[boot.memory_map.region_count - 1].base_address < boot.framebuffer_map.framebuffer.address)
-    {
-        printf("Stage 2: Framebuffer map position is out of range.\n");
-        goto end;
-    }
-
     struct DISK out_disk;
     if (!disk_initialize(&out_disk, boot_drive))
     {
@@ -92,11 +86,12 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
     uint32_t read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf);
     fat_close(file);
     
-    if (read)
+    if (!read)
     {
-        boot.kernel_size = read;
-        printf("Loading %d bytes from the kernel...\n", read);
+        printf("Stage 2: Failed to read the FAT data into memory.\n");
+        goto end;
     }
+    printf("Loading %d bytes from the kernel...\n", read);
     
     kmain kernel_start = NULL;
     if (elf_is_elf(kernel_load_buf))
@@ -113,12 +108,13 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
         void *entrypoint = NULL;
 
         printf("Stage 2: Loading ELF file data into memory...\n");
-        if (!elf_read((struct ELF_Header *)kernel_load_buf, kernel_load_buf, &entrypoint))
+        if (!elf_read((struct ELF_Header *)kernel_load_buf, kernel_load_buf, &read, &entrypoint))
         {
             printf("Unable to read ELF file.\n");
             goto end;
         }
 
+        boot.kernel_size = read;
         printf("Stage 2: Loaded ELF successfully and found kernel entrypoint at %x.\n", entrypoint);
         kernel_start = (kmain)entrypoint;
     }
@@ -129,6 +125,7 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
         // This mode will probably be deprecated in the future
         uint8_t *kernel = (uint8_t *)KERNEL_BASE_ADDR;
         memcpy(kernel, kernel_load_buf, read);
+        boot.kernel_size = read;
 
         kernel_start = (kmain)kernel;
     }

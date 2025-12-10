@@ -41,13 +41,24 @@ bool memory_get_mem_map(struct MemoryMap *p_out_map)
         a_regions[a_region_count].base_address = region.base_address;
         a_regions[a_region_count].length = region.length;
         a_regions[a_region_count].type = region.type;
-        a_regions[a_region_count].extended_attribs = region.extended_attribs;
+        a_regions[a_region_count].extended_attribs = (region.extended_attribs != 0 ? region.extended_attribs : 1);
 
         current_region = next_region;
         a_region_count++;
 
         printf("Memory: region found, base=0x%llx length=0x%llx type=0x%x\n", region.base_address, region.length, region.type);
     }
+    
+    // Manually add regions to the list that aren't present already
+#define AUR_BOOT_ADD_REGION(m_base, m_size)                         \
+        a_regions[a_region_count].base_address = m_base;            \
+        a_regions[a_region_count].length = m_size;                  \
+        a_regions[a_region_count].type = MEMORY_REGION_RESERVED;    \
+        a_regions[a_region_count].extended_attribs = 1;             \
+        a_region_count++
+
+    AUR_BOOT_ADD_REGION(0xa0000, 0x50000);          // Manually block the bootloader
+    AUR_BOOT_ADD_REGION(0x7c00, 0x200);             // Block the boot sector (we need the data in the BPB)
 
     p_out_map->regions = a_regions;
     p_out_map->region_count = a_region_count;

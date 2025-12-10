@@ -1,7 +1,7 @@
 TARGET_ASMFLAGS += -f elf
 TARGET_CFLAGS += -ffreestanding
 TARGET_LDFLAGS += -T linker.ld -nostdlib
-TARGET_CINCLUDES += -I../../libs
+TARGET_CINCLUDES += -I../../kernel/include
 TARGET_LIBS += -lgcc
 
 SOURCES_C = $(wildcard *.c)

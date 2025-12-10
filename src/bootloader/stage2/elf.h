@@ -89,4 +89,4 @@ bool elf_is_valid_format(struct ELF_Header *p_file);
  * @param p_out_entry_point The entry point of the executable, if it exists
  * @returns True if successful, and false if something failed or was invalid.
  */
-bool elf_read(struct ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry_point);
+bool elf_read(struct ELF_Header *p_header, uint8_t *p_buffer, uint32_t *p_out_size, void **p_out_entry_point);

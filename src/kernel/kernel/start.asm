@@ -89,9 +89,17 @@ _post_identity_pages:
     mov edx, 4
     mul edx                             ; Find index into page table for this page
 
+    xor ecx, ecx
     add esi, eax
     mov edi, KERNEL_PHYSICAL_ADDRESS
-    
+
+    ; BootInfo is pushed to the stack for us. Calculate the minimum number of tables to map the kernel with
+    mov edx, [esp + 4]
+    mov eax, dword [edx + 4]            ; Kernel size
+    xor edx, edx                        ; div uses EDX:EAX so make sure it is 0
+    mov ebx, 4096
+    div ebx                             ; Get page count in EAX
+
     ; Set all addresses from 0x0010 0000 --> 0x003f ffff to 0xc010 0000 and upwards
 _set_kernel_pages:
     and edi, 0xfffff000
@@ -100,7 +108,7 @@ _set_kernel_pages:
     add esi, 4
     add edi, 4096
     inc ecx
-    cmp ecx, 1024
+    cmp ecx, eax
     jl _set_kernel_pages
 
     ; Allocate memory for our dynamic page tables. They manually reside at 0x00010000, where our FAT filesystem was originally loaded.

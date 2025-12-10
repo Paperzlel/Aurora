@@ -3,6 +3,9 @@
 #include "stdio.h"
 #include "memory.h"
 
+// Macro to align a memory address to N number of bytes. m_bytes must be a power of 2.
+#define ALIGN(m_addr, m_bytes) (m_addr + (m_bytes - 1)) & ~(m_bytes - 1)
+
 struct ELF_ProgramHeader 
 {
     uint32_t type;
@@ -115,11 +118,11 @@ bool elf_is_valid_format(struct ELF_Header *p_file)
     return true;
 }
 
-bool elf_read(struct ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry_point) 
+bool elf_read(struct ELF_Header *p_header, uint8_t *p_buffer, uint32_t *p_out_size, void **p_out_entry_point) 
 {
-    // First load program headers at their desired addresses
+    *p_out_size = 0;
+    // First load program headers at their desired addresses (PH)
     uint16_t header_size = p_header->program_header_entry_size;
-
     for (int i = 0; i < p_header->program_header_entry_count; i++)
     {
         struct ELF_ProgramHeader ph;
@@ -133,14 +136,12 @@ bool elf_read(struct ELF_Header *p_header, uint8_t *p_buffer, void **p_out_entry
 
         memset((uint32_t *)ph.physical_address, 0, ph.memory_size);
         memcpy((uint32_t *)ph.physical_address, p_buffer + ph.offset, ph.memory_size);
+        *p_out_size += ALIGN(ph.memory_size, ph.align);
     }
 
     // Pre-emptively get the section header name
     // ELF_SectionHeader *sh_name = (ELF_SectionHeader *)(p_buffer + p_header->sect_header_offset + 
     //             (p_header->section_header_entry_section_names * p_header->section_header_entry_size));
-
-    // Change header size, then start loading section headers
-    header_size = p_header->section_header_entry_size;
 
     // Finally, set the entry point to whatever it needs to be;
     *p_out_entry_point = (void *)p_header->entry_point;

@@ -17,7 +17,7 @@ bool framebuffer_intialize(struct VideoDriver *out_driver, struct Framebuffer *p
     data.bpp = p_info->bpp;
 
     // Page allocate the FB to address 0xb0000000
-    if (!kmap_range((void *)data.address, (void *)0xb0000000, data.width * data.height * (data.bpp / 8)))
+    if (!kmap_range((uint32_t)data.address, 0xb0000000, data.width * data.height * (data.bpp / 8)))
     {
         return false;
     }
