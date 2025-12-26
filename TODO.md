@@ -58,10 +58,10 @@
 - [x] Align memory allocations to 16-byte boundaries
 - [ ] Move pages to use a different memory address so we can re-use the FS (maybe the kernel load address?)
 - [x] Separate kernel memory data and kernel libraries from user code (re-map kernel to higher half?)
-- [ ] Properly manage physical memory (no current use of the memory map)
-- [ ] Implement `realloc()` for the kernel (basically needed from here)
+- [x] Properly manage physical memory (no current use of the memory map)
+- [x] Implement `realloc()` for the kernel (basically needed from here)
 - [ ] Decide on either removing unused tables (faster; more memory usability) or using a bitmask
-- [ ] Ensure that heap headers are aligned to the start of a page
+- [x] Ensure that heap headers are aligned to the start of a page (decided to not do, heaps are handled differently now)
 - [ ] Add userspace allocations (uses different memory beginnings and permissions)
 - [ ] Allocate the other 768 missing page tables (totals to 3MiB, have 1.8MiB for FB and 127MiB elsewhere)
 - [ ] Set proper R/W bits on pages that can and can't be written to

@@ -23,6 +23,14 @@ bool initialize_memory(struct MemoryMap *p_map, uint32_t p_kernel_size);
 void *kalloc(uint32_t p_size);
 
 /**
+ * @brief Modifies the amount of data pointed to by ptr to the new value passed in.
+ * @param ptr The pointer to modify
+ * @param p_size The number of bytes to reallocate to
+ * @return The pointer to the new object, which may have changed.
+ */
+void *krealloc(void *ptr, size_t p_size);
+
+/**
  * @brief Frees the memory from the allocator, if it is valid. If not, throws an error.
  * @param p_mem The memory region to free.
  */

@@ -12,7 +12,7 @@
 
 // Macro to align a memory address to N number of bytes. m_bytes must be a power of 2.
 #define ALIGN(m_addr, m_bytes) ((m_addr + (m_bytes - 1)) & ~(m_bytes - 1))
-
+#define ALIGN32(m_addr) ALIGN(m_addr, 0x20)
 
 enum MemoryFlags
 {
@@ -31,23 +31,6 @@ struct MemoryHeader
     uint32_t size;                          // Number of bytes allocated to the header (32-byte aligned)
     uint32_t parent_flags;                  // Pointer to the parent heap + 4 bits worth of flags
 };
-
-/**
- * Allocation:
- * - Find free header (size/pointer is 0)
- * - Add size and pointer to vmem
- * - Update heap
- * - Return
- */
-
-/**
- * Free:
- * - Find heap from page offset (page_start?)
- * - Trawl heap for header (could be a lot w/ large number of allocations)
- * - Add free memory to previous allocation
- * - Update heap
- * - Return
- */
 
 struct HeapHeader
 {
@@ -121,9 +104,6 @@ bool initialize_memory(struct MemoryMap *p_map, uint32_t p_kernel_size)
 
 void *kalloc(uint32_t p_size)
 {
-    // Align to the next 32 byte interval
-    p_size = ALIGN(p_size, 0x20);
-
     struct HeapHeader *heap = heap_root;
     while (heap)
     {
@@ -158,7 +138,7 @@ void *kalloc(uint32_t p_size)
 
     // Clear available bit 
     header->parent_flags &= ~BIT_AVAILABLE;
-    heap->available_space -= header->size;
+    heap->available_space -= ALIGN32(p_size);
     heap->allocations++;
     return (void *)header->virt_address;
 }
@@ -191,15 +171,70 @@ void kfree(void *p_mem)
     h->parent_flags |= BIT_AVAILABLE;
     struct MemoryHeader *n = h->next;
     header->allocations--;
+    header->available_space += ALIGN32(h->size);
     // NOTE: Current implementation only works forwards, backwards sorting may be needed.
     while (n)
     {
         if (!(n->parent_flags & BIT_AVAILABLE)) break;
         h->size += n->size;
-        // Only decrement alloc count if more than one region is being merged
-        if (h->next != n) header->allocations--;
         n = n->next;
     }
+}
+
+
+void *krealloc(void *ptr, size_t p_size)
+{
+    if (!ptr)
+    {
+        return kalloc(p_size);
+    }
+
+    struct HeapHeader *header = heap_root;
+    while (header)
+    {
+        if (!(header->flags & BIT_HEADERS) && header->virt_address < (uint32_t)ptr && header->virt_address + header->size > (uint32_t)ptr) break;
+        header = header->next;
+    }
+
+    // Trawl allocation list
+    struct MemoryHeader *h = header->list;
+    while (h)
+    {
+        if (h->virt_address == (uint32_t)ptr) break;
+        h = h->next;
+    }
+
+    // NOTE: Since realloc() on a freed bit of memory is UB, we'll give the info a pass for the kernel, but should be warned about in any other context.
+
+    // Different block size, do something
+    if (ALIGN32(h->size) != ALIGN32(p_size))
+    {
+        // Memory allocations are always linear, so checking this way should always be fine
+        if (h->virt_address + p_size > h->next->virt_address)
+        {
+            h->parent_flags |= BIT_AVAILABLE;
+            header->allocations--;
+            void *ret = kalloc(p_size);
+            memcpy(ret, (void *)h->virt_address, h->size);
+            return ret;
+        }
+        else
+        {
+            // Subtract new size from available memory
+            if (ALIGN32(h->size) > ALIGN32(p_size))
+            {
+                header->available_space += (ALIGN32(h->size) - ALIGN32(p_size));
+            }
+            else
+            {
+                header->available_space -= (ALIGN32(p_size) - ALIGN32(h->size));
+            }
+        }
+    }
+
+    // Assign new size
+    h->size = p_size;
+    return ptr;
 }
 
 
@@ -350,9 +385,8 @@ static void _a_mmap_create(struct MemoryMap *map)
         AUR_MMAP_DEFAULT();
     }
 
-    // Properly align size and get the proper remaining space.
-    a_mmap_header->size = ALIGN(a_mmap_header->size, 0x20);
-    ((struct HeapHeader *)(a_mmap_header->parent_flags & 0xfffffff0))->available_space -= a_mmap_header->size;
+    // Assign the properly aligned space.
+    ((struct HeapHeader *)(a_mmap_header->parent_flags & 0xfffffff0))->available_space -= ALIGN(a_mmap_header->size, 0x20);
 
     for (int i = 0; i < a_mmap_info->region_count; i++)
     {
@@ -433,7 +467,7 @@ static void *_a_heap_reserve_memory(size_t p_size)
 
     void *next = (void *)header + header->size - header->available_space;
     header->allocations++;
-    header->available_space -= p_size;
+    header->available_space -= ALIGN32(p_size);
     return next;
 }
 
@@ -551,7 +585,7 @@ static struct MemoryHeader *_a_header_alloc(size_t p_size)
 
     mem->next = NULL;
     mem->size = p_size;
-    mem->virt_address = heap->virt_address + (heap->size - heap->available_space);
+    mem->virt_address = heap->virt_address + heap->size - heap->available_space;
     mem->parent_flags = ((uint32_t)heap & 0xfffffff0) | BIT_AVAILABLE | BIT_KERNEL;
 
     // Create first memory header, if non-existent
