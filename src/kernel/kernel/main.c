@@ -3,6 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 
+// TODO: Temp
+#include <stdlib.h>
+
 #include <boot/bootstructs.h>
 
 #include <aurora/memory.h>

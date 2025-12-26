@@ -5,8 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/toolchain/i686-aurora/lib/gcc/i686-aurora/11.2.0/include",
                 "${workspaceFolder}/src/bootloader",
-                "${workspaceFolder}/build/sysroot/usr/include",
-                "${workspaceFolder}/src/libs"
+                "${workspaceFolder}/build/sysroot/usr/include"
             ],
             "compilerPath": "${workspaceFolder}/toolchain/i686-aurora/bin/i686-aurora-gcc",
             "compilerArgs": [

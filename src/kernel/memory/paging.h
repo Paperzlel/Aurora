@@ -75,4 +75,4 @@ bool is_valid_address(void *p_virtual);
  * @param p_end The end address in the range
  * @return `true` if yes, `false` if no.
  */
-bool is_valid_range(void *p_start, void *p_end);
+bool is_valid_range(uint32_t p_start, uint32_t p_end);

@@ -43,7 +43,7 @@ static uint8_t __ptc_reserved[sizeof(struct PageTableConfig)] = { 0 };
 const int x = sizeof(struct PageTableConfig);
 
 struct PageTableConfig *config = (struct PageTableConfig *)&__ptc_reserved;
-struct PageTable *allocated_tables = PAGE_TABLE_VIRTUAL_ADDRESS;
+struct PageTable *allocated_tables = (void *)PAGE_TABLE_VIRTUAL_ADDRESS;
 int used_table_count = 0;
 
 extern uint32_t page_directory[1024];
@@ -227,7 +227,7 @@ void paging_initialize(uint32_t *p_phys_mem_start)
     config->next_free = allocated_tables;
 
     // NOTE: This is the first (non-aligned) memory address available after the end of the kernel. 
-    config->kernel_vmem_start = &__end;
+    config->kernel_vmem_start = (uint32_t)&__end;
     config->user_vmem_start = USER_ALLOC_VIRTUAL_ADDRESS;
 
     uint32_t additional_mem_size = KERNEL_VIRTUAL_ADDRESS - 0xc00f0000;
@@ -270,7 +270,7 @@ bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
         else
         {
             // Flush TLB to update after availability changes
-            __tlb_flush(p_virtual);
+            __tlb_flush((void *)p_virtual);
             table = (struct PageTable *)(page_directory[page_index + i] & 0xfffff000);
         }
 
@@ -441,6 +441,14 @@ uint32_t physical_to_virtual(uint32_t p_address)
     {
         return p_address;
     }
+
+    // Address is in kernel-mapped memory
+    if (p_address >= KERNEL_PHYSICAL_ADDRESS && p_address <= virtual_to_physical((uint32_t)&__end))
+    {
+        // Kernel offset is the same, bits are overriden.
+        return p_address | KERNEL_VIRTUAL_ADDRESS;
+    }
+
     // Page offset bits
     uint32_t offset = p_address & 0x00000fff;
     // AND the result so we align to the page memory
@@ -453,7 +461,13 @@ uint32_t physical_to_virtual(uint32_t p_address)
         if (config->page_info[i] & 1)
         {
             struct PageTable *pt = &allocated_tables[i];
-            for (int j = 0; i < 1024; i++)
+
+            if (!pt)
+            {
+                return 0;
+            }
+
+            for (int j = 0; j < 1024; j++)
             {
                 if (pt->entry[j] == 0) continue;
 
@@ -466,7 +480,7 @@ uint32_t physical_to_virtual(uint32_t p_address)
         }
     }
 
-    // Unmapped physical address; could be kernel but don't use unmapped memory there
+    // Unmapped physical address
     return 0;
 }
 
@@ -475,17 +489,17 @@ bool is_valid_address(void *p_virtual)
     return virtual_to_physical((uint32_t)p_virtual) != 0;
 }
 
-bool is_valid_range(void *p_start, void *p_end)
+bool is_valid_range(uint32_t p_start, uint32_t p_end)
 {
     // Start and end may need to be mapped
-    if (virtual_to_physical((uint32_t)p_start) == 0 || virtual_to_physical((uint32_t)p_end) == 0)
+    if (virtual_to_physical(p_start) == 0 || virtual_to_physical(p_end) == 0)
     {
         return false;
     }
 
-    int range_size = (uint32_t)(p_end - p_start);
+    int range_size = p_end - p_start;
     while (range_size > 0) {
-        if (virtual_to_physical((uint32_t)(p_end - range_size)) == 0)
+        if (virtual_to_physical(p_end - range_size) == 0)
         {
             return false;
         }
