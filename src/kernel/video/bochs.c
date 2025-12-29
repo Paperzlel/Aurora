@@ -1,11 +1,9 @@
-#include "bochs.h"
-
 #include <asm/io.h>
 
 #define __need_NULL
 #include <stddef.h>
 
-#include "../framebuffer.h"
+#include <aurora/video/framebuffer.h>
 
 #define BOCHS_PORT_INDEX 0x01ce
 #define BOCHS_PORT_DATA 0x01cf
@@ -21,8 +19,6 @@
 #define BOCHS_USE_LFB 0x40
 #define BOCHS_ENABLE 0x01
 #define BOCHS_DISABLE 0x00
-
-static uint32_t *a_video_mem = NULL;
 
 void bochs_set_register(uint16_t p_index, uint16_t p_value)
 {

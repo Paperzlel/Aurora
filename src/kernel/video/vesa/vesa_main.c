@@ -1,10 +1,10 @@
-#include "vesa_main.h"
 #include "vesa_set_mode.h"
 
 #include <stdint.h>
 #include <stdio.h>
 
 #include <aurora/arch/arch.h>
+#include <aurora/video/framebuffer.h>
 
 static struct Framebuffer *a_frame_info;
 static uint32_t *vmem = 0;
@@ -52,12 +52,6 @@ void vesa_clear(uint8_t r, uint8_t g, uint8_t b)
     }
 }
 
-void vesa_write_char(char c)
-{
-    vesa_draw_rect(0, 0, 100, 100);
-    return;
-}
-
 void vesa_draw_rect(int x, int y, int size_x, int size_y)
 {
     for (int y_ofs = y; y_ofs < size_y; y_ofs++)
@@ -67,6 +61,12 @@ void vesa_draw_rect(int x, int y, int size_x, int size_y)
             vmem[x_ofs + y_ofs * V_BPL] |= 0x00ff0000;
         }
     }
+}
+
+void vesa_write_char(char c)
+{
+    vesa_draw_rect(0, 0, 100, 100);
+    return;
 }
 
 struct VideoDriver a_vesa_driver =

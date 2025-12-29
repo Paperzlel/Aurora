@@ -391,8 +391,6 @@ void floppy_initialize()
     }
 
     fc.initialized = true;
-    uint8_t *data = (uint8_t *)floppy_read(0, 0, (void *)0x7e00, 512);
-    LOG_DEBUG("Data as string is the following: %s", (const char *)data);
 }
 
 void *floppy_read(uint8_t p_drive, uint16_t p_lba, void *p_to, size_t p_size)

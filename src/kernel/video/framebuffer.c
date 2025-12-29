@@ -1,4 +1,4 @@
-#include "framebuffer.h"
+#include <aurora/video/framebuffer.h>
 
 #include <aurora/memory.h>
 
@@ -45,9 +45,10 @@ void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b)
 
 void framebuffer_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b)
 {
-    data.address[x * (data.bpp / 8) + y * data.width + 1] = r;
-    data.address[x * (data.bpp / 8) + y * data.width + 2] = g;
-    data.address[x * (data.bpp / 8) + y * data.width + 3] = b;
+    int pixel = (x + y * data.width) * (data.bpp / 8);
+    data.address[pixel] = b;
+    data.address[pixel + 1] = g;
+    data.address[pixel + 2] = r;
 }
 
 void framebuffer_write_char(char c)

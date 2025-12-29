@@ -6,7 +6,7 @@
 #include <boot/bootstructs.h>
 
 #include <aurora/memory.h>
-#include <aurora/video/driver_video.h>
+#include <aurora/video/video.h>
 
 #include <aurora/arch/arch.h>
 #include <aurora/arch/cpuid.h>
@@ -37,7 +37,7 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     }
     
     // "Load" VGA driver. We do this first because otherwise any architecture-loading errors will fail silently.
-    if (!driver_video_load(NULL))
+    if (!video_load_driver(NULL))
     {
         panic();    // Lose our minds if this happens, but it should NEVER occur.
     }
@@ -59,8 +59,10 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     hal_initialize(boot->boot_device);
     LOG_INFO("CPU features: %s", cpuid_get_features());
 
+    // Oh hey now we need to load our PSF somehow
+
     // Load a basic graphics driver (Bochs VBE, VESA) to draw complex objects in.
-    if (!driver_video_load((void *)&boot->framebuffer_map))
+    if (!video_load_driver((void *)&boot->framebuffer_map))
     {
         LOG_ERROR("Failed to load a non-VGA video driver. Graphics options will not be available.");
         goto end;

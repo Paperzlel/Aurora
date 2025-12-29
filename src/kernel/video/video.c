@@ -1,13 +1,8 @@
-#include <aurora/video/driver_video.h>
-#include <aurora/console.h>
+#include <aurora/video/video.h>
 
 #include <aurora/arch/cpuid.h>
 #include <aurora/arch/arch.h>
 #include <asm/io.h>
-
-#include "vga/vga.h"
-#include "vesa/vesa_main.h"
-#include "bochs/bochs.h"
 
 #include <stdint.h>
 #include <boot/bootstructs.h>
@@ -40,7 +35,8 @@ static void vesa_to_internal(struct VESA_FramebufferInfo *p_map, struct Framebuf
     out_framebuffer->bpp = p_map->framebuffer.bpp;
 }
 
-bool driver_video_load(void *p_data)
+
+bool video_load_driver(void *p_data)
 {
     struct Framebuffer fb;
     if (!p_data)
@@ -60,7 +56,6 @@ bool driver_video_load(void *p_data)
             LOG_ERROR("Vendor: %s", map->vendor_name);
             return false;
         }
-        a_driver_state.mode_opt = map->framebuffer.mode_id;
 
         // Use bochs driver on VMs if supported. Fallback to VESA if not virtualized or if bochs failed.
         if (cpuid_supports_feature(CPU_FEATURE_HYPERVISOR, 0) || arch_is_virtualized())
@@ -71,6 +66,8 @@ bool driver_video_load(void *p_data)
         {
             a_driver_state = a_vesa_driver;
         }
+        
+        a_driver_state.mode_opt = map->framebuffer.mode_id;
     }
 
     bool success = a_driver_state.init(&a_driver_state, &fb);
@@ -83,7 +80,7 @@ bool driver_video_load(void *p_data)
         }
 
         LOG_ERROR("Failed to load video driver %s, falling back to VGA support...", a_driver_state.name);
-        return driver_video_load((void *)0);
+        return video_load_driver((void *)0);
     }
     
     // Clear screen once done.
@@ -91,7 +88,14 @@ bool driver_video_load(void *p_data)
     return true;
 }
 
-void driver_video_clear()
+
+bool video_is_text_mode()
+{
+    return a_driver_state.mode_opt > 0 ? false : true;
+}
+
+
+void video_clear_screen()
 {
     if (a_driver_state.clear == 0)
     {
@@ -101,22 +105,14 @@ void driver_video_clear()
     a_driver_state.clear(0, 0, 0);
 }
 
-void driver_video_write_char(char c)
+
+void video_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b)
 {
-    if (arch_is_virtualized())
+    if (a_driver_state.mode_opt == -1)
     {
-        outb(0xe9, c);
-    }
-    
-    if (!a_driver_state.write_char)
-    {
-        // PANIC, write exclamation marks to the screen.
-        for (int i = 0; i < 24; i++)
-        {
-            vga_write_char('!');
-        }
+        a_driver_state.write_char(x);
         return;
     }
-    
-    a_driver_state.write_char(c);
+
+    a_driver_state.set_pixel(x, y, r, g, b);
 }

@@ -1,6 +1,7 @@
-#include "vga.h"
-
+#include <aurora/kdefs.h>
+#include <aurora/video/framebuffer.h>
 #include <string.h>
+
 
 static uint8_t *video_memory = (uint8_t *)0xb8000;
 

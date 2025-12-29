@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <aurora/video/videostructs.h>
+#include "videostructs.h"
 
 bool framebuffer_intialize(struct VideoDriver *out_driver, struct Framebuffer *p_info);
 
