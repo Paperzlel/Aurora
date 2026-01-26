@@ -3,7 +3,8 @@
 #include "disk.h"
 
 // Packed data structure that represents the layout of data in a FAT12 directory entry.
-struct __attribute__((packed)) FAT_DirectoryEntry {
+struct __attribute__((packed)) FAT_DirectoryEntry
+{
     uint8_t file_name[11];                          // ASCII file name for the file (if the name > 11 bytes, is a LFN). Not NULL terminated.
     uint8_t attribs;                                // Bitmask for file attributes
     uint8_t reserved;                               // Reserved value
@@ -19,7 +20,8 @@ struct __attribute__((packed)) FAT_DirectoryEntry {
 };
 
 // Structure that represents an entry in the FAT filesystem. 
-struct FAT_File {
+struct FAT_File
+{
     int handle;                 // Handle to the internal data of this entry.
     bool is_directory;          // Says whether the entry is a directory or a file.
     uint32_t size;              // The size of the entry in bytes; 0 for a directory.

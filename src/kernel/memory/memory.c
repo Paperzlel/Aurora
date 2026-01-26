@@ -140,6 +140,7 @@ void *kalloc(uint32_t p_size)
     header->parent_flags &= ~BIT_AVAILABLE;
     heap->available_space -= ALIGN32(p_size);
     heap->allocations++;
+    LOG_DEBUG("Allocating %d bytes of memory at address %x", p_size, (void *)header->virt_address);
     return (void *)header->virt_address;
 }
 
@@ -172,6 +173,7 @@ void kfree(void *p_mem)
     struct MemoryHeader *n = h->next;
     header->allocations--;
     header->available_space += ALIGN32(h->size);
+    LOG_DEBUG("Freed %d bytes from address %x", h->size, p_mem);
     // NOTE: Current implementation only works forwards, backwards sorting may be needed.
     while (n)
     {
@@ -248,6 +250,12 @@ bool kmap_range(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
 bool is_4kib_aligned(void *p_address)
 {
     return ((uint32_t)p_address & 0xfffff000) == (uint32_t)p_address;
+}
+
+
+void *pvirtual_to_physical(void *p_virtual)
+{
+    return (void *)virtual_to_physical((uint32_t)p_virtual);
 }
 
 

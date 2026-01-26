@@ -1,6 +1,7 @@
 #include "paging.h"
 
 #include <aurora/memdefs.h>
+#include <aurora/memory.h> // Maybe not a perfect include?
 #include <string.h>
 
 #define AUR_MODULE "paging"

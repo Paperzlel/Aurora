@@ -4,7 +4,7 @@ SOURCES_C = $(subst ./,,$(shell find -type f -name "*.c"))
 OBJECTS_C = $(patsubst %.c, $(BUILD_DIR)/libk/%.o, $(SOURCES_C))
 DIRECTORIES = $(subst .,,$(subst ./,/,$(subst $(BUILD_DIR),,$(shell find -type d))))
 
-TARGET_CFLAGS += -ffreestanding
+TARGET_CFLAGS += -ffreestanding -fstack-protector
 TARGET_CINCLUDES += -Iinclude
 TARGET_CDEFINES +=
 

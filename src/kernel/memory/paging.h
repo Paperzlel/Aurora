@@ -47,32 +47,3 @@ void *paging_allocate_region(uint32_t p_address, uint32_t p_size);
  * @param p_handle The handle to the page table to modify.
  */
 void paging_free_region(uint32_t p_virtual, uint32_t p_size);
-
-/**
- * @brief Converts a mapped virtual address to a physical one.
- * @param p_address The address to convert
- * @return The physical address, or 0 if the address couldn't be found. Since the BIOS is identity-mapped, please don't use it for that.
- */
-uint32_t virtual_to_physical(uint32_t p_address);
-
-/**
- * @brief Converts a physical address to its mapped counterpart, if it exists.
- * @param p_address The (physical) address to convert
- * @return The virtual address, or 0 if the physical address doesn't map correctly. 
- */
-uint32_t physical_to_virtual(uint32_t p_address);
-
-/**
- * @brief Checks to see if the given virtual address has a mapped physical address.
- * @param p_virtual The address to check for
- * @return `true` if yes, `false` if no.
- */
-bool is_valid_address(void *p_virtual);
-
-/**
- * @brief Checks to see if the given virtual address range is usable. Normally used in conjunction with other paging functions to map a range if needed
- * @param p_start The start address in the range
- * @param p_end The end address in the range
- * @return `true` if yes, `false` if no.
- */
-bool is_valid_range(uint32_t p_start, uint32_t p_end);

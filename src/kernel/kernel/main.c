@@ -13,6 +13,8 @@
 #include <asm/io.h>
 #include <aurora/hal/hal.h>
 
+#include <aurora/fs/vfs.h>
+
 #define AUR_MODULE "main"
 #include <aurora/debug.h>
 
@@ -20,6 +22,8 @@
 
 extern uint8_t __bss_start;
 extern uint8_t __end;
+
+extern bool terminal_initialize();
 
 static struct BootInfo info;
 
@@ -59,7 +63,19 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     hal_initialize(boot->boot_device);
     LOG_INFO("CPU features: %s", cpuid_get_features());
 
-    // Oh hey now we need to load our PSF somehow
+    // Init VFS so we can load some font resources
+    if (!vfs_initialize())
+    {
+        LOG_ERROR("Failed to initialize VFS.");
+        goto end;
+    }
+
+    // Setup terminal
+    if (!terminal_initialize())
+    {
+        LOG_ERROR("Failed to initialize terminal.");
+        goto end;
+    }
 
     // Load a basic graphics driver (Bochs VBE, VESA) to draw complex objects in.
     if (!video_load_driver((void *)&boot->framebuffer_map))

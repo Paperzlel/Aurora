@@ -41,14 +41,15 @@
 ### Filesystem
 - [ ] Abstract reading from disk and the filesystem
 - [ ] Add "mountpoints" where the non-boot drives host their files
-- [ ] Implement a basic FAT12 filesystem driver
-- [ ] Implement a VFS on top of the FAT12 driver
+- [x] Implement a basic FAT12 filesystem driver
+- [x] Implement a basic VFS on top of the FAT12 driver
 
 ### HAL
 - [ ] Add alternative timer settings that aren't PIT for specific systems
 - [x] Mask out unused IRQ lines until needed
 - [x] Implement CMOS retrieval of the floppy disk controller
 - [x] Add a timer sleep function that waits for a given period of time
+- [ ] Handle invalid CHS/LBA values in the floppy driver
 
 ### Memory
 - [x] Implement dynamic paging

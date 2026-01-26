@@ -325,14 +325,26 @@ static bool floppy_drive_begin_rw(uint8_t drive_id, uint16_t lba, void *start, s
 
 void floppy_initialize()
 {
-    // Set IRQ6 (floppy disk controller) and immediately enable for use
-    register_interrupt_handler(INT_IRQ_6, floppy_disk_handler);
-    unmask_irq(INT_IRQ_6);
+    if (fc.drive_count > 0)
+    {
+        return;
+    }
 
     // Find the number of floppy drives attached
     outb(0x70, 1 << 7 | 0x10);
     uint8_t drive_info = inb(0x71);
     fc.drive_count = (drive_info & 0x0f) > 0 ? 2 : 1;
+    
+    if (fc.drive_count == 0)
+    {
+        LOG_INFO("No floppy disk drives attached.");
+        return;
+    }
+
+    // Set IRQ6 (floppy disk controller) and immediately enable for use
+    register_interrupt_handler(INT_IRQ_6, floppy_disk_handler);
+    unmask_irq(INT_IRQ_6);
+
     fc.drives[0].exists = true;
     fc.drives[0].dsr_value = (drive_info >> 4) == 5 ? 3 : 0;
     fc.drives[1].exists = fc.drive_count == 2;
@@ -437,4 +449,19 @@ bool floppy_write(uint8_t p_drive, uint16_t p_lba, void *p_from, size_t p_size)
 
     LOG_ERROR("Failed to write information to disk.");
     return false;
+}
+
+
+uint8_t floppy_get_drive_count()
+{
+    uint8_t ret = 0;
+    for (int i = 0; i < fc.drive_count; i++)
+    {
+        if (fc.drives[i].exists)
+        {
+            ret++;
+        }
+    }
+
+    return ret;
 }

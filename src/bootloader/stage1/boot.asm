@@ -28,7 +28,7 @@ bpb_drive_number: db 0                      ; Physical drive number, is zero as 
 bpb_reserved: db 0                          ; Reserved value
 bpb_extended_boot_signature: db 0x29        ; Boot signature, needs to be 0x29 for the next 3 entries to exist.
 bpb_volume_id: db 0x12, 0x24, 0x36, 0x48    ; Volunme ID (serial number), can be anything we want :)
-bpb_volume_label: db 'AURORA      '         ; Partition label, 11 bytes and needs to be padded for space
+bpb_volume_label: db 'AURORA     '          ; Partition label, 11 bytes and needs to be padded for space
 bpb_file_system_type: db 'FAT12   '         ; File system type, 8 bytes and padded with space
 
 

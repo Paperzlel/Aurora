@@ -39,6 +39,36 @@ uint64_t hal_get_ticks()
     return pit_get_ticks();
 }
 
+
+uint8_t hal_get_drive_count()
+{
+    // Add HDD to this as well
+    return floppy_get_drive_count();
+}
+
+
+void *hal_read_bytes(uint8_t p_drive, uint16_t p_lba, void *p_to, size_t p_size)
+{
+    if (p_drive < 0x80)
+    {
+        return floppy_read(p_drive, p_lba, p_to, p_size);
+    }
+    
+    return NULL; // HDD reading
+}
+
+
+bool hal_write_bytes(uint8_t p_drive, uint16_t p_lba, void *p_from, size_t p_size)
+{
+    if (p_drive < 0x80)
+    {
+        return floppy_write(p_drive, p_lba, p_from, p_size);
+    }
+
+    return false;   // HDD writing
+}
+
+
 bool timer_get_time(timer_t *p_timer)
 {
     p_timer->ticks = pit_get_ticks();

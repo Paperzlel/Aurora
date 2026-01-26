@@ -47,6 +47,43 @@ void kfree(void *p_mem);
 bool kmap_range(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size);
 
 /**
+ * @brief Converts a mapped virtual address to a physical one.
+ * @param p_address The address to convert
+ * @return The physical address, or 0 if the address couldn't be found. Since the BIOS is identity-mapped, please don't use it for that.
+ */
+uint32_t virtual_to_physical(uint32_t p_address);
+
+/**
+ * @brief Converts a physical address to its mapped counterpart, if it exists.
+ * @param p_address The (physical) address to convert
+ * @return The virtual address, or 0 if the physical address doesn't map correctly. 
+ */
+uint32_t physical_to_virtual(uint32_t p_address);
+
+/**
+ * @brief Converts a mapped virtual address to a physical one, using `void *` instead of `uint32_t`.
+ * @param p_address The address to convert.
+ * @return The physical address, or 0 if the address couldn't be found.
+ */
+void *pvirtual_to_physical(void *p_virtual);
+
+/**
+ * @brief Checks to see if the given virtual address has a mapped physical address.
+ * @param p_virtual The address to check for
+ * @return `true` if yes, `false` if no.
+ */
+bool is_valid_address(void *p_virtual);
+
+/**
+ * @brief Checks to see if the given virtual address range is usable. Normally used in conjunction with other paging functions to map a range if needed
+ * @param p_start The start address in the range
+ * @param p_end The end address in the range
+ * @return `true` if yes, `false` if no.
+ */
+bool is_valid_range(uint32_t p_start, uint32_t p_end);
+
+
+/**
  * @brief Checks to see if the address is aligned to a 4KiB page.
  * @param p_address The address to check
  * @return `TRUE` if yes, `FALSE` if not.
