@@ -105,3 +105,24 @@ struct VFS_Handle *vfs_open(const char *p_path)
 
     return ret;
 }
+
+
+void *vfs_read(struct VFS_Handle *p_handle, uint32_t p_count)
+{
+    // Fail if any are true.
+    if (!p_handle || !p_handle->open || !p_count) return NULL;
+
+    void *ret = NULL;
+    if (fat_read_bytes((void *)p_handle->handle, p_count, &ret) != p_count)
+    {
+        LOG_ERROR("Failed to read %u bytes from the FAT system.", p_count);
+        return NULL;
+    }
+
+    // Update position and size
+    p_handle->pos = fat_get_position((void *)p_handle->handle);
+    p_handle->size = fat_get_size((void *)p_handle->handle);
+
+    return ret;
+}
+

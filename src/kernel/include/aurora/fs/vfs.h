@@ -27,4 +27,13 @@ bool vfs_initialize();
  */
 struct VFS_Handle *vfs_open(const char *p_path);
 
+/**
+ * @brief Reads N bytes from the given file handle into an output buffer, and returns a pointer to said buffer. NOTE: Data in this buffer
+ * is referenced and NOT copied, so any modifications must be passed into an allocated copy first.
+ * @param p_handle The corresponding file handle. Must be opened.
+ * @param p_count The number of bytes to read into the file. Must be between `1` and `EOF`.
+ * @return The pointer to the data, or `NULL` if retrieving the data failed.
+ */
+void *vfs_read(struct VFS_Handle *p_handle, uint32_t p_count);
+
 #endif // _AURORA_VFS_H

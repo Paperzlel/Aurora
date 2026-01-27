@@ -85,6 +85,6 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     }
 
 end:
-    LOG_INFO("%llu ticks since PIT initialized\n", hal_get_ticks());
+    LOG_INFO("%llu ticks since PIT initialized", hal_get_ticks());
     for(;;);
 }

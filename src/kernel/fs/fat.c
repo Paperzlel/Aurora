@@ -144,6 +144,10 @@ static uint8_t *fat_table = NULL;
 
 /* INTERNAL FUNCTIONS */
 
+// Forward-declare, used by internal functions
+
+uint32_t fat_read_bytes(void *p_handle, uint32_t p_bytes, void **out_buffer);
+
 
 static uint32_t fat_cluster_to_lba(struct FAT_DriveConfig *p_config, uint32_t p_current_cluster)
 {
@@ -205,119 +209,6 @@ static bool fat_is_eof(uint8_t type, uint32_t p_value)
 
 
 /**
- * @brief Reads a given number of bytes from memory into a given buffer. If the region of memory has not yet been loaded, it attempts
- * to load it from disk into a file buffer. 
- * @param p_file The corresponding file to load information about.
- * @param p_bytes The number of bytes requested to be loaded.
- * @param out_buffer The output buffer to load memory into.
- * @return The number of bytes read, which should always be equal to `p_bytes`.
- */
-static uint32_t fat_read_bytes(struct FAT_File *p_file, uint32_t p_bytes, void *out_buffer)
-{
-    if (!p_file)
-    {
-        LOG_ERROR("File pointer is null. Unable to allocate data.");
-        return 0;
-    }
-
-    uint8_t *bytes = (uint8_t *)out_buffer;
-    if (!bytes)
-    {
-        LOG_ERROR("Can't write bytes into a NULL pointer.");
-        return 0;
-    }
-
-    struct FAT_DriveConfig *cfg = info.drives[p_file->drive_id];            // Improper way of accessing it
-
-    if (!p_file->is_directory || (p_file->is_directory && p_file->size != 0))
-    {
-        if (p_bytes > p_file->size - p_file->position)
-        {
-            LOG_WARNING("Number of bytes input (%u) is greater than the number left in the file (%u)", p_bytes, p_file->size - p_file->position);
-        }
-
-        p_bytes = AMIN(p_bytes, p_file->size - p_file->position);
-    }
-
-    // The number of bytes to read is now either the one input or the number until the EOF.
-
-    // File position is reading loaded data, copy it in and return.
-    if (p_file->position + p_bytes <= p_file->loaded_size)
-    {
-        memcpy(bytes, p_file->data + p_file->position, p_bytes);
-        bytes += p_bytes;
-        p_file->position += p_bytes;
-        return bytes - (uint8_t *)out_buffer;
-    }
-
-    // File is reading partially or entirely unloaded data.
-    
-    // Reallocate the buffer handle if it has insufficient size.
-    // If NULL, then alloc p_bytes, else alloc loaded_size + p_bytes
-    p_file->data = realloc(p_file->data, p_file->loaded_size + p_bytes);
-    p_file->loaded_size += p_bytes;
-
-    while (p_bytes > 0)
-    {
-        // Use either a cluster's worth of bytes or the number of bytes remaining.
-        int bytes_per_cluster = cfg->bs.sectors_per_cluster * cfg->bs.bytes_per_sector;
-        int left_in_sector = bytes_per_cluster - (p_file->position % bytes_per_cluster);
-        // Number of bytes to read = bytes requested + current pos or the number left in the sector
-        int read = AMIN(p_bytes + p_file->position, left_in_sector);
-
-        /**
-         * - Number of bytes to read needs to be the current position + the number requested, or the number left in the sector.
-         * - This is then read to the data at the start of the buffer + the number of clusters passed * BPS, as data has to be
-         *   re-read under the FDC. 
-         * - Data is then copied to the output buffer, next cluster if found, repeat.
-         */
-
-        void *physaddr = pvirtual_to_physical(p_file->data + (p_file->current_cluster - p_file->first_cluster) * bytes_per_cluster);
-
-        if (p_file->is_root)
-        {
-            // Root directory, read directly rather than via other means
-            if (!hal_read_bytes(p_file->drive_id, p_file->current_cluster, physaddr, read))
-            {
-                LOG_ERROR("Error reading bytes for FAT file.");
-                break;
-            }
-        }
-        else
-        {
-            int lba = fat_cluster_to_lba(cfg, p_file->current_cluster);
-
-            if (!hal_read_bytes(p_file->drive_id, lba, physaddr, read))
-            {
-                LOG_ERROR("Error reading bytes for FAT file.");
-                break;
-            }
-        }
-
-        // When copying, use either the number of bytes read in the sector or the number of bytes requested.
-        int copyable_bytes = AMIN(p_bytes, read);
-        memcpy(bytes, (p_file->data + p_file->position), copyable_bytes);
-        bytes += copyable_bytes;
-        // Number of bytes to go = number of bytes read - position in the cluster
-        p_bytes -= read - (p_file->position % bytes_per_cluster);
-        p_file->position += copyable_bytes;
-
-        if (p_bytes <= 0) break; // Don't bother with the next bit
-
-        p_file->current_cluster = fat_find_next_cluster(cfg, p_file->current_cluster);
-        if (fat_is_eof(cfg->type, p_file->current_cluster))
-        {
-            // EOF
-            p_file->size = p_file->position;
-            break;
-        }
-    }
-
-    return bytes - (uint8_t *)out_buffer;
-}
-
-
-/**
  * @brief Checks to see if the given directory contains the directory entry pointed to by `p_name`.
  * @param out_entry The entry to output to the user if found
  * @param p_file The "file" (directory) to look in for if the entry exists.
@@ -359,7 +250,8 @@ static bool fat_dir_has_entry(struct FAT_DirectoryEntry *out_entry, struct FAT_F
         while (!end_reached)
         {
             struct FAT_DirectoryEntry entry;
-            if (!fat_read_bytes(p_file, sizeof(struct FAT_DirectoryEntry), &entry))
+            void *ref_entry = &entry;
+            if (!fat_read_bytes(p_file, sizeof(struct FAT_DirectoryEntry), &ref_entry))
             {
                 LOG_ERROR("Failed to read bytes from buffer.");
                 return false;
@@ -489,7 +381,7 @@ bool fat_initialize(uint8_t p_drive_no, void *p_bootsector)
     info.root.size = bs->root_dir_entry_count * sizeof(struct FAT_DirectoryEntry);
     info.root.data = calloc(bs->root_dir_entry_count, sizeof(struct FAT_DirectoryEntry));
  
-    if (!fat_read_bytes(&info.root, sizeof(struct FAT_DirectoryEntry) * bs->root_dir_entry_count, info.root.data))
+    if (!fat_read_bytes(&info.root, sizeof(struct FAT_DirectoryEntry) * bs->root_dir_entry_count, (void **)&info.root.data))
     {
         LOG_ERROR("Failed to read root directory into memory.");
         return false;
@@ -557,6 +449,129 @@ void *fat_open(const char *p_file, uint8_t p_drive_id)
     }
 
     return current;
+}
+
+
+uint32_t fat_read_bytes(void *p_handle, uint32_t p_bytes, void **out_buffer)
+{
+    struct FAT_File *p_file = (struct FAT_File *)p_handle;
+
+    if (!p_file)
+    {
+        LOG_ERROR("File pointer is null. Unable to allocate data.");
+        return 0;
+    }
+
+    uint8_t *bytes = (uint8_t *)(*out_buffer);
+    if (!out_buffer)
+    {
+        LOG_ERROR("Can't read data as the out_buffer pointer was NULL.");
+        return 0;
+    }
+
+    struct FAT_DriveConfig *cfg = info.drives[p_file->drive_id];            // Improper way of accessing it
+
+    if (!p_file->is_directory || (p_file->is_directory && p_file->size != 0))
+    {
+        if (p_bytes > p_file->size - p_file->position)
+        {
+            LOG_WARNING("Number of bytes input (%u) is greater than the number left in the file (%u)", p_bytes, p_file->size - p_file->position);
+        }
+
+        p_bytes = AMIN(p_bytes, p_file->size - p_file->position);
+    }
+
+    // The number of bytes to read is now either the one input or the number until the EOF.
+
+    // File position is reading loaded data, copy it in and return.
+    if (p_file->position + p_bytes <= p_file->loaded_size)
+    {
+        memcpy(bytes, p_file->data + p_file->position, p_bytes);
+        bytes += p_bytes;
+        p_file->position += p_bytes;
+        return bytes - (uint8_t *)(*out_buffer);
+    }
+
+    // File is reading partially or entirely unloaded data.
+    
+    // Use the same pointer for internal and external data to save space if the buffers are the same
+    bool reference_internal = false;
+    if (p_file->data == bytes || !bytes)
+    {
+        reference_internal = true;
+    }
+
+    // Reallocate the buffer handle if it has insufficient size.
+    // If NULL, then alloc p_bytes, else alloc loaded_size + p_bytes
+    p_file->data = realloc(p_file->data, p_file->loaded_size + p_bytes);
+    p_file->loaded_size += p_bytes;
+    // If using the same pointer, set it here.
+    if (reference_internal)
+    {
+        *out_buffer = p_file->data;
+        bytes = p_file->data;
+    }
+
+    while (p_bytes > 0)
+    {
+        // Use either a cluster's worth of bytes or the number of bytes remaining.
+        int bytes_per_cluster = cfg->bs.sectors_per_cluster * cfg->bs.bytes_per_sector;
+        int left_in_sector = bytes_per_cluster - (p_file->position % bytes_per_cluster);
+        // Number of bytes to read = bytes requested + current pos or the number left in the sector
+        int read = AMIN(p_bytes + p_file->position, left_in_sector);
+
+        /**
+         * - Number of bytes to read needs to be the current position + the number requested, or the number left in the sector.
+         * - This is then read to the data at the start of the buffer + the number of clusters passed * BPS, as data has to be
+         *   re-read under the FDC. 
+         * - Data is then copied to the output buffer, next cluster if found, repeat.
+         */
+
+        void *physaddr = pvirtual_to_physical(p_file->data + (p_file->current_cluster - p_file->first_cluster) * bytes_per_cluster);
+
+        if (p_file->is_root)
+        {
+            // Root directory, read directly rather than via other means
+            if (!hal_read_bytes(p_file->drive_id, p_file->current_cluster, physaddr, read))
+            {
+                LOG_ERROR("Error reading bytes for FAT file.");
+                break;
+            }
+        }
+        else
+        {
+            int lba = fat_cluster_to_lba(cfg, p_file->current_cluster);
+
+            if (!hal_read_bytes(p_file->drive_id, lba, physaddr, read))
+            {
+                LOG_ERROR("Error reading bytes for FAT file.");
+                break;
+            }
+        }
+
+        // When copying, use either the number of bytes read in the sector or the number of bytes requested.
+        int copyable_bytes = AMIN(p_bytes, read);
+        if (!reference_internal)
+        {
+            memcpy(bytes, (p_file->data + p_file->position), copyable_bytes);
+        }
+        bytes += copyable_bytes;
+        // Number of bytes to go = number of bytes read - position in the cluster
+        p_bytes -= read - (p_file->position % bytes_per_cluster);
+        p_file->position += copyable_bytes;
+
+        if (p_bytes <= 0) break; // Don't bother with the next bit
+
+        p_file->current_cluster = fat_find_next_cluster(cfg, p_file->current_cluster);
+        if (fat_is_eof(cfg->type, p_file->current_cluster))
+        {
+            // EOF
+            p_file->size = p_file->position;
+            break;
+        }
+    }
+
+    return bytes - (uint8_t *)(*out_buffer);
 }
 
 
