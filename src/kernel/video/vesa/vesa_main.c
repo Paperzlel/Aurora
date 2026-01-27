@@ -63,11 +63,6 @@ void vesa_draw_rect(int x, int y, int size_x, int size_y)
     }
 }
 
-void vesa_write_char(char c)
-{
-    vesa_draw_rect(0, 0, 100, 100);
-    return;
-}
 
 struct VideoDriver a_vesa_driver =
 {
@@ -77,5 +72,5 @@ struct VideoDriver a_vesa_driver =
     NULL,
     vesa_clear,
     NULL,
-    vesa_write_char,
+    NULL,
 };

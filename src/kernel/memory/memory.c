@@ -208,6 +208,8 @@ void *krealloc(void *ptr, size_t p_size)
 
     // NOTE: Since realloc() on a freed bit of memory is UB, we'll give the info a pass for the kernel, but should be warned about in any other context.
 
+    LOG_DEBUG("Reallocated pointer %x from %u bytes to %u bytes", h->virt_address, h->size, p_size);
+
     // Different block size, do something
     if (ALIGN32(h->size) != ALIGN32(p_size))
     {
@@ -216,8 +218,10 @@ void *krealloc(void *ptr, size_t p_size)
         {
             h->parent_flags |= BIT_AVAILABLE;
             header->allocations--;
+            // Allocate, copy and free memory
             void *ret = kalloc(p_size);
             memcpy(ret, (void *)h->virt_address, h->size);
+            kfree((void *)h->virt_address);
             return ret;
         }
         else

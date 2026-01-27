@@ -50,8 +50,3 @@ void framebuffer_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t
     data.address[pixel + 1] = g;
     data.address[pixel + 2] = r;
 }
-
-void framebuffer_write_char(char c)
-{
-    
-}

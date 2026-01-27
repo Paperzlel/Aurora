@@ -67,5 +67,5 @@ struct VideoDriver a_bochs_driver =
     NULL,
     framebuffer_clear,
     framebuffer_set_pixel,
-    framebuffer_write_char,
+    NULL,
 };

@@ -117,6 +117,7 @@ struct FAT_File
     uint8_t *data;                  // Buffer of all loaded data from the file.
     bool is_directory;              // Whether the item is a directory or a file
     bool is_root;                   // Whether the FD is the root directory, which is accessed differently.
+    bool is_in_use;                 // Whether the handle is being used or not. Set by allocation, cleared by freeing
     uint8_t drive_id;               // Drive ID for whatever device is being accessed.
     uint32_t size;                  // Size of the entry on disk (zero for directories)
     uint32_t loaded_size;           // Amount of memory in the data buffer. Compared with size to see if memory needs to be allocated.
@@ -289,16 +290,30 @@ static bool fat_dir_has_entry(struct FAT_DirectoryEntry *out_entry, struct FAT_F
  */
 static struct FAT_File *fat_file_open_entry(struct FAT_DirectoryEntry *p_entry)
 {
-    info.files = realloc(info.files, (info.file_count + 1) * sizeof(struct FAT_File));
-    info.file_count++;
+    struct FAT_File *ret = NULL;
+    for (int i = 0; i < info.file_count; i++)
+    {
+        if (!info.files[i].is_in_use)
+        {
+            ret = &info.files[i];
+            break;
+        }
+    }
 
-    struct FAT_File *ret = &info.files[info.file_count - 1];
+    if (ret == NULL)
+    {
+        info.files = realloc(info.files, (info.file_count + 1) * sizeof(struct FAT_File));
+        info.file_count++;
+        ret = &info.files[info.file_count - 1];
+    }
+
     ret->first_cluster = (p_entry->first_cluster_no_high << 16) + p_entry->first_cluster_no_low;
     ret->is_directory = p_entry->attribs & FAT_DIRECTORY;
+    ret->is_in_use = true;
+    ret->is_root = false;
     ret->size = p_entry->size;
     ret->loaded_size = 0;
     ret->data = NULL;
-    ret->is_root = false;
     ret->drive_id = 0;
     ret->current_cluster = ret->first_cluster;
     ret->position = 0;
@@ -380,14 +395,23 @@ bool fat_initialize(uint8_t p_drive_no, void *p_bootsector)
     // Allocate and load root dir, always needs to be loaded so it's faster to do so here.
     info.root.size = bs->root_dir_entry_count * sizeof(struct FAT_DirectoryEntry);
     info.root.data = calloc(bs->root_dir_entry_count, sizeof(struct FAT_DirectoryEntry));
- 
+    info.data_section_lba = bs->reserved_sector_count + (bs->fat_table_count * spf) + root_dir_sectors;
+
     if (!fat_read_bytes(&info.root, sizeof(struct FAT_DirectoryEntry) * bs->root_dir_entry_count, (void **)&info.root.data))
     {
         LOG_ERROR("Failed to read root directory into memory.");
         return false;
     }
-    
-    info.data_section_lba = bs->reserved_sector_count + (bs->fat_table_count * spf) + root_dir_sectors;
+
+    // Clean root directory up. It will be allocated at around 7168 bytes, which the majority of the space is empty and useless.
+    int new_count = 0;
+    uint8_t *dir = info.root.data;
+    while (*dir != 0)
+    {
+        dir += 32;
+        new_count += 32;
+    }
+    info.root.data = realloc(info.root.data, new_count);
 
     return true;
 }
@@ -449,6 +473,29 @@ void *fat_open(const char *p_file, uint8_t p_drive_id)
     }
 
     return current;
+}
+
+
+void fat_close(void *p_handle)
+{
+    if (!p_handle) return;
+
+    struct FAT_File *h = (struct FAT_File *)p_handle;
+    if (h->data)
+    {
+        free(h->data);
+    }
+
+    h->data = NULL;
+    h->first_cluster = 0;
+    h->current_cluster = 0;
+    h->is_root = false;
+    h->is_directory = false;
+    h->position = 0;
+    h->size = 0;
+    h->loaded_size = 0;
+    h->drive_id = 0;
+    h->is_in_use = false;
 }
 
 

@@ -13,6 +13,12 @@ extern bool fat_initialize(uint8_t p_drive_no, void *p_bootsector);
 extern void *fat_open(const char *p_file, uint8_t p_drive_id);
 
 /**
+ * @brief Closes the handle corresponding to the FAT file. Frees any data loaded by it and marks the file as closed.
+ * @param p_handle The handle to the FAT file we wish to close.
+ */
+extern void fat_close(void *p_handle);
+
+/**
  * @brief Reads a given number of bytes from memory into a given buffer. If the region of memory has not yet been loaded, it attempts
  * to load it from disk into a file buffer.
  * @param p_file The corresponding file to load information about.

@@ -28,6 +28,12 @@ bool vfs_initialize();
 struct VFS_Handle *vfs_open(const char *p_path);
 
 /**
+ * @brief Closes the VFS handle and cleans up any backend data being used.
+ * @param p_handle The corresponding handle to close.
+ */
+void vfs_close(struct VFS_Handle *p_handle);
+
+/**
  * @brief Reads N bytes from the given file handle into an output buffer, and returns a pointer to said buffer. NOTE: Data in this buffer
  * is referenced and NOT copied, so any modifications must be passed into an allocated copy first.
  * @param p_handle The corresponding file handle. Must be opened.

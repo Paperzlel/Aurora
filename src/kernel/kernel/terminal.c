@@ -93,6 +93,7 @@ bool terminal_initialize()
         return false;
     }
 
+    vfs_close(f);
     return true;
 }
 

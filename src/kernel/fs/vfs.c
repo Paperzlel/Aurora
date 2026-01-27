@@ -95,15 +95,41 @@ struct VFS_Handle *vfs_open(const char *p_path)
     if (h == NULL) return NULL;
 
     // Allocate new handle
-    cfg.allocated_handles++;
-    cfg.handles = realloc(cfg.handles, sizeof(struct VFS_Handle) * cfg.allocated_handles);
-    struct VFS_Handle *ret = &cfg.handles[cfg.allocated_handles - 1];
+    struct VFS_Handle *ret = NULL;
+    for (int i = 0; i < cfg.allocated_handles; i++)
+    {
+        if (!cfg.handles[i].open)
+        {
+            ret = &cfg.handles[i];
+            break;
+        }
+    }
+
+    if (ret == NULL)
+    {
+        cfg.allocated_handles++;
+        cfg.handles = realloc(cfg.handles, sizeof(struct VFS_Handle) * cfg.allocated_handles);
+        ret = &cfg.handles[cfg.allocated_handles - 1];
+    }
+
     ret->handle = (int)h;
     ret->open = true;
     ret->pos = 0;
     ret->size = fat_get_size(h);
 
     return ret;
+}
+
+
+void vfs_close(struct VFS_Handle *p_handle)
+{
+    if (!p_handle) return;
+    
+    fat_close((void *)p_handle->handle);
+    p_handle->open = false;
+    p_handle->pos = 0;
+    p_handle->size = 0;
+    p_handle->handle = 0;
 }
 
 
