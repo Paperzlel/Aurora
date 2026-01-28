@@ -1,5 +1,3 @@
-#include "vesa_set_mode.h"
-
 #include <stdint.h>
 #include <stdio.h>
 
@@ -14,6 +12,9 @@ static uint16_t V_HEIGHT = 0;
 static uint16_t V_DEPTH = 0;
 static uint16_t V_BPL = 0;
 static uint16_t V_BPP = 0;
+
+extern uint8_t __vesa_start;
+extern uint8_t __vesa_end;
 
 
 bool vesa_initialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)

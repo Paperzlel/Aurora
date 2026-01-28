@@ -1,5 +1,4 @@
 #include <aurora/hal/hal.h>
-#include "pit.h"
 
 #include "drives/floppy.h"
 
@@ -9,6 +8,10 @@
 
 extern void pic_initialize();
 extern void kbd_initialize();
+
+extern void pit_initialize();
+extern uint64_t pit_get_ticks();
+extern uint32_t pit_get_frequency();
 
 void hal_initialize(uint16_t p_driver_no)
 {

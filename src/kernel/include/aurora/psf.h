@@ -3,14 +3,21 @@
 
 #include <stdint.h>
 
+// Magic bytes at the beginning of a PSF1 file. PSF2 has different bytes and will be handled differently
 #define PSF1_MAGIC 0x0436
 
+// Flag that is enabled whenever there are 512 characters in the charset for the PSF file. If not, there are 256 characters.
 #define PSF1_MODE512    0x01
+// Flag if the PSF1 file has a table after the bitmaps. If not, then glyphs are stored in their sequential Unicode order.
 #define PSF1_MODEHASTAB 0x02
+// Same as `PSF1_MODEHASTAB`. If either are set then a table is present
 #define PSF1_MODESEQ    0x04
+// Max modes that are defined. Equal to `0101` in binary or having both 512 characters and a Unicode table at the end.
 #define PSF1_MAXMODE    0x05
 
+// The separator for different glyphs
 #define PSF1_SEPARATOR      0xffff
+// The beginning of a sequence of glyphs. Current implementations ignore this.
 #define PSF1_STARTSEQ       0xfffe
 
 

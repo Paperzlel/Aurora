@@ -139,7 +139,7 @@ void terminal_write_char(char c)
                     bits++;
                 }
 
-                ypos = 0;
+                ypos -= a_font_height;
                 xpos += 9;
             } break;
         }

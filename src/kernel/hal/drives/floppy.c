@@ -1,5 +1,4 @@
 #include "floppy.h"
-#include "floppy_dma.h"
 
 #include <aurora/arch/interrupts.h>
 #include <asm/io.h>

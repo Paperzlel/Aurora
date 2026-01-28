@@ -1,5 +1,3 @@
-#include "pit.h"
-
 #include <aurora/arch/interrupts.h>
 #include <asm/io.h>
 
@@ -37,7 +35,7 @@ void pit_initialize()
     
     // Set timer to tick every 100us (~119us)
     frequency = 10000;
-    uint16_t divisor = (uint16_t)((PIT_BASE_FREQUENCY / 10000) * 2);
+    uint16_t divisor = (uint16_t)((PIT_BASE_FREQUENCY / frequency) * 2);
     uint8_t low = (uint8_t)(divisor & 0xff);
     uint8_t high = (uint8_t)((divisor >> 8) & 0xff);
 

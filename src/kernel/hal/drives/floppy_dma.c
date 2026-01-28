@@ -1,4 +1,4 @@
-#include "floppy_dma.h"
+#include "floppy.h"
 
 #include <asm/io.h>
 

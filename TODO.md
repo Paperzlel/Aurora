@@ -6,6 +6,7 @@
 - [ ] Add support for FAT16/FAT32 file types
 - [ ] Add support for non-FAT file types
 - [x] Add video mode hint to VESA boot info
+- [ ] Move `kernel.elf` and/or `stage2.bin` into a `/boot` folder for cleaner root directory
 
 ### Stage 1
 - [x] Optimise file size for extra information
@@ -37,12 +38,15 @@
 ### Debugging
 - [ ] Implement a GDB stub for the OS to output info
 - [x] Add a `log_[error]()` macro that records the time (post-timer) and the error message to the screen
+- [ ] Create a log that's written to from OS startup to record system messages
+- [ ] Add debugging as a preprocessor flag that undefines certain functions or options
 
 ### Filesystem
-- [ ] Abstract reading from disk and the filesystem
+- [x] Abstract reading from disk and the filesystem
 - [ ] Add "mountpoints" where the non-boot drives host their files
 - [x] Implement a basic FAT12 filesystem driver
 - [x] Implement a basic VFS on top of the FAT12 driver
+- [ ] Implement writing to the floppy disk (requires RTC)
 
 ### HAL
 - [ ] Add alternative timer settings that aren't PIT for specific systems
@@ -69,16 +73,19 @@
 
 ### Roadmap
 - [x] Add paging
-- [ ] Add a virtual filesystem
+- [x] Add a virtual filesystem
 - [ ] Create module handling
 - [ ] Create a file reader command (e.g. `rdfile`)
+
+### Terminal
+- [ ] Implement currently unused `terminal_set_x_color` and `terminal_clear_x_color`
 
 ### Video
 - [ ] Create a VBE graphics driver for hardware (current one is non-functional)
 - [x] Move video drivers to use common resources like framebuffer info
 - [x] Make stdio.c reroute to loaded graphics drivers
 - [ ] Expose a video driver API for non-driver functions to use
-- [ ] Load a charlist and draw chars to the screen
+- [x] Load a charlist and draw chars to the screen
 
 ## Libc
 

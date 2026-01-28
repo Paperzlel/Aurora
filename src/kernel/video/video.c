@@ -15,7 +15,7 @@ extern struct VideoDriver a_vga_driver;
 extern struct VideoDriver a_vesa_driver;
 extern struct VideoDriver a_bochs_driver;
 
-static VideoDriver a_driver_state;
+static struct VideoDriver a_driver_state;
 
 static void vesa_to_internal(struct VESA_FramebufferInfo *p_map, struct Framebuffer *out_framebuffer)
 {
