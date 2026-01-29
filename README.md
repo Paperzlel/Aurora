@@ -32,6 +32,10 @@ The command(s) below will install the majority of the required packages for buil
 ```
 $ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo nasm mtools qemu-system-x86 alien autoconf2.69
 ```
+**Fedora-based:**
+```
+$ sudo dnf install patch gmp-devel libmpc-devel libmpfr-devel nasm make qemu mtools gcc g++ automake kernel-devel
+```
 (TODO: Update this package list for non-Debian distros; help is appreciated with updating this package list)
 
 ### Installing bochs

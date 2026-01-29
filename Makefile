@@ -23,11 +23,11 @@ export TARGET_CXX=$(TARGET)-g++
 export TARGET_LD=$(TARGET)-gcc --sysroot=$(SYSROOT) -isystem=$(USR_INCLUDE)
 export TARGET_OBJCOPY=$(TARGET)-objcopy
 export TARGET_AR=$(TARGET)-ar
-export TARGET_ASMFLAGS= 
+export TARGET_ASMFLAGS=
 export TARGET_CFLAGS=-std=c99 -g -MD -Wall -Wextra -Wno-sign-compare
 export TARGET_CINCLUDES=
 export TARGET_CDEFINES=-D__I386__ -D__x86__
-export TARGET_LDFLAGS= 
+export TARGET_LDFLAGS=
 export TARGET_LIBS=
 
 .PHONY: all scaffold install bootloader kernel floppy_image clean toolchain libc libk
@@ -128,10 +128,10 @@ $(PREFIX)/bin/$(TARGET)-ld: $(BINUTILS_SRC)
 	@$(MAKE) -C $(BINUTILS_BUILD) install
 
 
-$(BINUTILS_SRC):
+$(BINUTILS_SRC): $(TOOLS_DIR)/binutils-$(BINUTILS_VERSION).tar.xz
 	@mkdir -p $(TOOLS_DIR)
 	@cd $(TOOLS_DIR) && wget $(BINUTILS_URL)
-	@tar -xf binutils-$(BINUTILS_VERSION).tar.xz
+	@cd $(TOOLS_DIR) && tar -xf binutils-$(BINUTILS_VERSION).tar.xz
 
 GCC_VERSION=11.2.0
 GCC_URL=https://ftp.gnu.org/gnu/gcc/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.xz
@@ -155,10 +155,10 @@ $(PREFIX)/bin/$(TARGET)-gcc: $(PREFIX)/bin/$(TARGET)-ld $(GCC_SRC)
 	@$(MAKE) -j8 -C $(GCC_BUILD) all-gcc all-target-libgcc
 	@$(MAKE) -C $(GCC_BUILD) install-gcc install-target-libgcc
 
-$(GCC_SRC):
+$(GCC_SRC): $(TOOLS_DIR)/gcc-$(GCC_VERSION).tar.xz
 	@mkdir -p $(TOOLS_DIR)
 	@cd $(TOOLS_DIR) && wget $(GCC_URL)
-	@tar -xf gcc-$(GCC_VERSION).tar.xz
+	@cd $(TOOLS_DIR) && tar -xf gcc-$(GCC_VERSION).tar.xz
 
 clean_toolchain:
 	@rm -rf $(GCC_BUILD) $(GCC_SRC) $(BINUTILS_BUILD) $(BINUTILS_SRC)

@@ -1,0 +1,10 @@
+[
+  {
+    "label": "Run OS with QEMU",
+    "adapter": "GDB",
+    "request": "attach",
+    "program": "$ZED_WORKTREE_ROOT/build/kernel.elf",
+    "build": "Run (QEMU)",
+    "target": "localhost:1234",
+  },
+]

@@ -68,9 +68,19 @@
         {
             "label": "Run (bochs)",
             "type": "shell",
-            "command": "bochs -q -dbg -f bochs_config",
+            "command": "bochs -q -f bochs_config",
             "problemMatcher": [
                 "$gcc"
+            ]
+        },
+        {
+            "label": "Debug (bochs)",
+            "type": "shell",
+            // NOTE: Some versions of bochs come compiled without support for the debugger. If this is the case, then the
+            // debug command below will not work and bochs will throw an error.
+            "command": "bochs -q -dbg -f bochs_config",
+            "problemMatcher": [
+              "$gcc"
             ]
         }
     ]
