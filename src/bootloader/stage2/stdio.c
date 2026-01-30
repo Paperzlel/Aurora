@@ -19,9 +19,24 @@ const unsigned DEFAULT_COLOUR = 0x07;       // change bit 1 for background, bit 
 int p_screen_x = 0;
 int p_screen_y = 0;
 
+extern uint8_t __end;
+// Exposed to main.c
+uint32_t buf_size = 0;
+
+static void logchr(char c)
+{
+    *((char *)(&__end + buf_size)) = c;
+    buf_size++;
+}
+
 void putchr(int x, int y, char c)
 {
     video_memory[2 * (y * SCREEN_WIDTH + x)] = c; // y * scr_width + x is cell offset, mul by two because of the two-byte size
+    // Log if not null
+    if (c > 0)
+    {
+        logchr(c);
+    }
 }
 
 void putcolour(int x, int y, uint8_t colour)
@@ -72,6 +87,7 @@ void putc(char c)
         case '\n':
             p_screen_x = 0;
             p_screen_y++;
+            logchr(c);
             break;
         case '\t':
             for (int i = 0; i < 4 - (p_screen_x % 4); i++)
@@ -110,6 +126,9 @@ void puts(const char *str)
         putc(*str);
         str++;
     }
+
+    // Log NULL terminator here
+    logchr(0);
 }
 
 static bool a_is_captial = false;
@@ -126,7 +145,7 @@ void print_num_unsigned(uint64_t number, int base)
         uint64_t rem = number % base;
         number /= base;
         buf[pos++] = a_is_captial ? a_hex_uppercase[rem] : a_hex_lowercase[rem];
-    } 
+    }
     while (number > 0);
 
     while (--pos >= 0)

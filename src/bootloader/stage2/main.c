@@ -15,6 +15,9 @@ typedef void (*kmain)(struct BootInfo *);
 
 static struct BootInfo boot = { 0 };
 
+extern uint8_t __end;
+extern uint32_t buf_size;
+
 /**
  * @brief Start function for the C part of the bootloader. Obtains basic information about the system, then loads the kernel and passes control over to it.
  * @param boot_drive The drive that the bootloader was selected from
@@ -59,7 +62,7 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
         printf("Could not load the kernel to address 0x%x as there was no memory available.\n", KERNEL_BASE_ADDR);
         goto end;
     }
-    
+
     // There is a small chance we COULD run the OS without any framebuffer information, but since we need it for everything else we're going to throw
     // an error here instead.
     if (!VESA_get_framebuffer(&boot.framebuffer_map))
@@ -85,14 +88,14 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
     // Load kernel into buffer
     uint32_t read = fat_read(&out_disk, file, KERNEL_LOAD_SIZE, kernel_load_buf);
     fat_close(file);
-    
+
     if (!read)
     {
         printf("Stage 2: Failed to read the FAT data into memory.\n");
         goto end;
     }
     printf("Loading %d bytes from the kernel...\n", read);
-    
+
     kmain kernel_start = NULL;
     if (elf_is_elf(kernel_load_buf))
     {
@@ -130,9 +133,12 @@ void __attribute__((cdecl)) start(uint16_t boot_drive)
         kernel_start = (kmain)kernel;
     }
 
+    boot.log_output_buffer = (char *)&__end;
+    boot.log_output_size = buf_size;
+
     printf("Stage 2: Entering kernel...\n");
     kernel_start(&boot);
-    
+
 end:
     for (;;);
 }

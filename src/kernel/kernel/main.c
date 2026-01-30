@@ -1,7 +1,5 @@
 #include <stdint.h>
-
 #include <string.h>
-#include <stdio.h>
 
 #include <boot/bootstructs.h>
 
@@ -36,10 +34,10 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     // Load architecture information (IDT, GDT, ISRs).
     if (!arch_init())
     {
-        printf("Could not load an architecure backend.\n");
+        LOG_FATAL("Could not load an architecure backend.");
         goto end;
     }
-    
+
     // "Load" VGA driver. We do this first because otherwise any architecture-loading errors will fail silently.
     if (!video_load_driver(NULL))
     {
@@ -50,14 +48,14 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     struct CPU_Config cfg;
     if (!cpuid_initialize(&cfg))
     {
-        printf("Could not initialize CPUID information.\n");
+        LOG_FATAL("Could not initialize CPUID information.");
         goto end;
     }
 
     // Initialize memory info.
     if (!initialize_memory(&boot->memory_map, boot->kernel_size))
     {
-        printf("Failed to initialize memory.\n");
+        LOG_FATAL("Failed to initialize memory.");
         goto end;
     }
     hal_initialize(boot->boot_device);
@@ -85,6 +83,6 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
     }
 
 end:
-    LOG_DEBUG("Here's a fancy message\n\tthat appears on the screen!");
+    LOG_DEBUG("Here's a fancy message\n\t\tthat appears on the screen!");
     for(;;);
 }

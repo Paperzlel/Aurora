@@ -11,7 +11,7 @@ struct MemoryRegion
     uint32_t extended_attribs;      // Extended optional attributes about the memory region
 };
 
-// Structure that defines the overall memory map for the system. 
+// Structure that defines the overall memory map for the system.
 struct MemoryMap
 {
     int region_count;                      // Number of total regions
@@ -41,7 +41,7 @@ struct VESA_Framebuffer
     uint16_t width;                 // The width of the screen
     uint16_t height;                // The height of the screen
     uint8_t bpp;                    // The number of bits per pixel, usually 32 for RGBA8 values
-    
+
     uint16_t bytes_per_line;        // Number of bytes per scan line, may be greater than width * bpp due to padding
     uint16_t mode_id;               // The ID of the VESA video mode that will be enabled by the kernel
 };
@@ -61,4 +61,6 @@ struct BootInfo
     uint32_t kernel_size;                               // Size of the kernel in bytes
     struct MemoryMap memory_map;                        // Map of the physical system memory
     struct VESA_FramebufferInfo framebuffer_map;        // Strucure containing the desired framebuffer map
+    char *log_output_buffer;                            // Address of the log output buffer
+    uint32_t log_output_size;                           // The size of the log output buffer when passing into the kernel
 };

@@ -34,11 +34,13 @@ $ sudo apt install build-essential make bison flex libgmp3-dev libmpc-dev libmpf
 ```
 **Fedora-based:**
 ```
-$ sudo dnf install patch gmp-devel libmpc-devel libmpfr-devel nasm make qemu mtools gcc g++ automake kernel-devel
+$ sudo dnf install patch gmp-devel libmpc-devel libmpfr-devel nasm make qemu mtools gcc g++ automake kernel-devel bochs
 ```
-(TODO: Update this package list for non-Debian distros; help is appreciated with updating this package list)
+If your distro is not listed here, open an issue and we will attempt to get it added.
 
 ### Installing bochs
+On certain distros, the version of `bochs` available via the package manager is out of date and we require to obtain `bochs` from elsewhere. If you are running on Debian-based distros, the below works for you.
+
 To install `bochs`, go to [here](https://sourceforge.net/projects/bochs/) and grab the latest RPM package (I personally recommend 3.0). Then once it's installed, go to its downloaded folder and type the following commands:
 ```
 sudo alien bochs-3.0-1.x86_64.rpm
@@ -66,7 +68,7 @@ For any extra references, see [this link](https://stackoverflow.com/questions/14
 
 ## Running with bochs
 
-1. Run bochs using the command list (Ctrl+Shift+# in VS Code)
+1. Run bochs using the command list (Ctrl+Shift+# in VS Code, Alt+Shift+T in Zed)
 2. Navigate to View - Disassemble (or press Ctrl+D) and type `0x7C00` and press OK on both prompts
 3. Double-click on the first instruction to set a breakpoint. The line should turn red.
 4. Press Continue
