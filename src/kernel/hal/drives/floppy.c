@@ -116,7 +116,7 @@ bool floppy_disk_handler(struct Registers *p_regs)
     return true;
 }
 
-static void floppy_write_command(char command)
+static void floppy_write_command(uint8_t command)
 {
     // Check every N times to see if the drive is up to speed.
     for (int i = 0; i < 120; i++)

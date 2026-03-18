@@ -328,7 +328,7 @@ bool apic_initialize()
     int entry_count = (root_table->header.length - sizeof(root_table->header)) / 4;         // If XSDT, should be 8
     for (int i = 0; i < entry_count; i++)
     {
-        struct RSDT_Header *next = (struct SDT_Header *)root_table->other_tables[i];
+        struct RSDT_Header *next = (struct RSDT_Header *)root_table->other_tables[i];
         
         // if (!check_rsdt_header_checksum(next)) {
         //     continue;

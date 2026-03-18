@@ -304,7 +304,7 @@ static void _a_mmap_create(struct MemoryMap *map)
     // Allocate a memory region
     
     a_mmap_info = (struct AuMemoryInfo *)((void *)a_mmap_header->virt_address);
-    a_mmap_info->regions = (struct AuMemoryRegion *)(a_mmap_info + sizeof(struct AuMemoryInfo));
+    a_mmap_info->regions = (struct AuMemoryRegion *)((void *)a_mmap_info + sizeof(struct AuMemoryInfo));
     // TODO: Notify heap of allocation changes
     a_mmap_header->size = sizeof(struct AuMemoryInfo);
 

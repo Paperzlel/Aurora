@@ -1,0 +1,7 @@
+If:
+    PathMatch: [.*\.h, .*\.c]
+Completion:
+    AllScopes: Yes
+    ArgumentLists: FullPlaceholders
+    HeaderInsertion: Never
+    CodePatterns: All

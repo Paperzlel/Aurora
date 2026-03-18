@@ -60,7 +60,6 @@
         "driver_common.h": "c",
         "videostructs.h": "c"
     },
-
     "todohighlight.isEnable": true,
     "todohighlight.isCaseSensitive": false,
     "todohighlight.keywords": [
@@ -99,7 +98,6 @@
     "clangd.arguments": [
         "-header-insertion=never"
     ],
-
     "C_Cpp.default.cppStandard": "c++98",
     "C_Cpp.default.cStandard": "c99",
     "C_Cpp.default.defines": [
@@ -109,4 +107,12 @@
     "C_Cpp.doxygen.generatedStyle": "/**",
     "C_Cpp.doxygen.generateOnType": true,
     "C_Cpp.formatting": "clangFormat",
+    "clang-format.executable.linux": "/usr/bin/clang-format",
+    "editor.formatOnSave": true,
+    "editor.indentSize": "tabSize",
+    "editor.insertSpaces": false,
+    "editor.tabSize": 4,
+    "editor.detectIndentation": true,
+    "editor.useTabStops": true,
+    "editor.autoIndent": "full",
 }
