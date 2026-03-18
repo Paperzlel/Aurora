@@ -1,5 +1,9 @@
 If:
     PathMatch: [.*\.h, .*\.c]
+CompileFlags:
+    Add:
+        - -ferror-limit=100
+        - -Wno-unused-parameter
 Completion:
     AllScopes: Yes
     ArgumentLists: FullPlaceholders

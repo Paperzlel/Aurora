@@ -9,7 +9,6 @@ bool framebuffer_intialize(struct VideoDriver *out_driver, struct Framebuffer *p
 	{
 		return false;
 	}
-	out_driver->mode_opt = 0;
 
 	data.address = p_info->address;
 	data.width	 = p_info->width;

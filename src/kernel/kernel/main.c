@@ -84,5 +84,6 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
 end:
 	LOG_DEBUG("Here's a fancy message\n\t\tthat appears on the screen!");
 	for (;;)
-		;
+	{
+	}
 }

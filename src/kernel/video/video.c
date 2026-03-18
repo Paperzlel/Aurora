@@ -105,7 +105,7 @@ void video_clear_screen()
 
 void video_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b)
 {
-	if (a_driver_state.mode_opt == -1)
+	if (a_driver_state.mode_opt <= 0)
 	{
 		a_driver_state.write_char(x);
 		return;
