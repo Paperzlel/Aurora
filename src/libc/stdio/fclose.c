@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include "stdio.h"
 
 int fclose(FILE *stream)
 {
-    return -1;
+	return -1;
 }

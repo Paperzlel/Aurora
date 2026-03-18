@@ -1,8 +1,9 @@
 #ifndef _AURORA_ARCH_H
 #define _AURORA_ARCH_H
 
+#include "archdefs.h" // IWYU pragma: keep Needed for most implementations of architecture functions.
+
 #include <aurora/kdefs.h>
-#include "archdefs.h"
 
 /**
  * @brief Checks CPU architecture and loads the resepective backend for it.

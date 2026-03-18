@@ -11,5 +11,4 @@ typedef int pid_t;
 }
 #endif // __cplusplus
 
-
 #endif // _SYS_TYPES_H

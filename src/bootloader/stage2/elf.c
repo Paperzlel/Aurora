@@ -8,59 +8,59 @@
 
 struct ELF_ProgramHeader 
 {
-    uint32_t type;
-    uint32_t offset;
-    uint32_t virtual_address;
-    uint32_t physical_address;
-    uint32_t file_size;
-    uint32_t memory_size;
-    uint32_t flags;
-    uint32_t align;
+	uint32_t type;
+	uint32_t offset;
+	uint32_t virtual_address;
+	uint32_t physical_address;
+	uint32_t file_size;
+	uint32_t memory_size;
+	uint32_t flags;
+	uint32_t align;
 };
 
 enum ELF_ProgHeaderType 
 {
-    ELF_NULL = 0,
-    ELF_LOAD = 1,
-    ELF_DYNAMIC = 2,
-    ELF_INTERPRETER = 3,
-    ELF_NOTE = 4
+	ELF_NULL = 0,
+	ELF_LOAD = 1,
+	ELF_DYNAMIC = 2,
+	ELF_INTERPRETER = 3,
+	ELF_NOTE = 4
 };
 
 struct ELF_SectionHeader 
 {
-    uint32_t name_offset;
-    uint32_t type;
-    uint32_t flags;
-    uint32_t virtual_address;
-    uint32_t offset;
-    uint32_t size;
-    uint32_t section_link_index;
-    uint32_t extra_information;
-    uint32_t alignment;
-    uint32_t entry_size;
+	uint32_t name_offset;
+	uint32_t type;
+	uint32_t flags;
+	uint32_t virtual_address;
+	uint32_t offset;
+	uint32_t size;
+	uint32_t section_link_index;
+	uint32_t extra_information;
+	uint32_t alignment;
+	uint32_t entry_size;
 };
 
 enum ELF_SectionInfo 
 {
-    ELF_SECTION_NULL = 0,
-    ELF_SECTION_PROGBITS = 1,
-    ELF_SECTION_SYMTAB = 2,
-    ELF_SECTION_STRTAB = 3,
-    ELF_SECTION_RELOCATION = 4,
-    ELF_SECTION_HASH_TABLE = 5,
-    ELF_SECTION_DYNAMIC = 6,
-    ELF_SECTION_NOTES = 7,
-    ELF_SECTION_NOBITS = 8,
+	ELF_SECTION_NULL = 0,
+	ELF_SECTION_PROGBITS = 1,
+	ELF_SECTION_SYMTAB = 2,
+	ELF_SECTION_STRTAB = 3,
+	ELF_SECTION_RELOCATION = 4,
+	ELF_SECTION_HASH_TABLE = 5,
+	ELF_SECTION_DYNAMIC = 6,
+	ELF_SECTION_NOTES = 7,
+	ELF_SECTION_NOBITS = 8,
 };
 
 enum ELF_SectionFlags 
 {
-    ELF_TYPE_WRITABLE = 0x1,
-    ELF_TYPE_ALLOC = 0x2,
-    ELF_TYPE_EXECUTE = 0x4,
-    ELF_TYPE_MERGE = 0x10,
-    ELF_TYPE_STRINGS = 0x20,
+	ELF_TYPE_WRITABLE = 0x1,
+	ELF_TYPE_ALLOC = 0x2,
+	ELF_TYPE_EXECUTE = 0x4,
+	ELF_TYPE_MERGE = 0x10,
+	ELF_TYPE_STRINGS = 0x20,
 };
 
 
@@ -68,82 +68,82 @@ uint8_t magic[4] = {0x7f, 0x45, 0x4c, 0x46};
 
 bool elf_is_elf(uint8_t *p_file) 
 {
-    return memcmp(p_file, &magic, 4) == 0;
+	return memcmp(p_file, &magic, 4) == 0;
 }
 
 bool elf_is_valid_format(struct ELF_Header *p_file) 
 {
-    if (p_file->bit_size != ELF_32BIT)
-    {
-        // Currently only parsing ELF32
-        printf("ELF: Cannot parse 64-bit header files.\n");
-        return false;
-    }
-    
-    struct ELF_Header *elf = p_file;
+	if (p_file->bit_size != ELF_32BIT)
+	{
+		// Currently only parsing ELF32
+		printf("ELF: Cannot parse 64-bit header files.\n");
+		return false;
+	}
+	
+	struct ELF_Header *elf = p_file;
 
-    if (elf->endianess != ELF_LE)
-    {
-        printf("ELF: Endianness is not little-endian, is format %u.\n", elf->endianess);
-        return false;
-    }
+	if (elf->endianess != ELF_LE)
+	{
+		printf("ELF: Endianness is not little-endian, is format %u.\n", elf->endianess);
+		return false;
+	}
 
-    if (elf->os_abi_target != ELF_SYSTEMV)
-    {
-        printf("ELF: ABI format is not set to that of System V, unknown format %x.\n", elf->os_abi_target);
-        return false;
-    }
+	if (elf->os_abi_target != ELF_SYSTEMV)
+	{
+		printf("ELF: ABI format is not set to that of System V, unknown format %x.\n", elf->os_abi_target);
+		return false;
+	}
 
-    if (elf->object_type != ELF_EXECUTABLE)
-    {
-        printf("ELF: Object file type is invalid, unknown format %x.\n", elf->object_type);
-    }
+	if (elf->object_type != ELF_EXECUTABLE)
+	{
+		printf("ELF: Object file type is invalid, unknown format %x.\n", elf->object_type);
+	}
 
-    switch (elf->target_isa)
-    {
-        case ELF_X86:
-        case ELF_POWERPC32:
-        case ELF_POWERPC64:
-        case ELF_ARM32:
-        case ELF_IA64:
-        case ELF_AMD64:
-        case ELF_ARM64:
-        case ELF_RISCV:
-            break;
-        default:
-            printf("ELF: ISA format is invalid, unknown format %x.\n", elf->target_isa);
-            return false;
-    }
+	switch (elf->target_isa)
+	{
+		case ELF_X86:
+		case ELF_POWERPC32:
+		case ELF_POWERPC64:
+		case ELF_ARM32:
+		case ELF_IA64:
+		case ELF_AMD64:
+		case ELF_ARM64:
+		case ELF_RISCV:
+			break;
+		default:
+			printf("ELF: ISA format is invalid, unknown format %x.\n", elf->target_isa);
+			return false;
+	}
 
-    return true;
+	return true;
 }
 
 bool elf_read(struct ELF_Header *p_header, uint8_t *p_buffer, uint32_t *p_out_size, void **p_out_entry_point) 
 {
-    *p_out_size = 0;
-    // First load program headers at their desired addresses (PH)
-    uint16_t header_size = p_header->program_header_entry_size;
-    for (int i = 0; i < p_header->program_header_entry_count; i++)
-    {
-        struct ELF_ProgramHeader ph;
-        memcpy(&ph, p_buffer + p_header->prog_header_offset + (header_size * i), header_size);
+	*p_out_size = 0;
+	// First load program headers at their desired addresses (PH)
+	uint16_t header_size = p_header->program_header_entry_size;
+	for (int i = 0; i < p_header->program_header_entry_count; i++)
+	{
+		struct ELF_ProgramHeader ph;
+		memcpy(&ph, p_buffer + p_header->prog_header_offset + (header_size * i), header_size);
 
-        if (ph.type != ELF_LOAD)
-        {
-            printf("ELF: Error parsing program header as its type is not of ELF_LOAD, is type %x.\n", ph.type);
-            return false;
-        }
+		if (ph.type != ELF_LOAD)
+		{
+			printf("ELF: Error parsing program header as its type is not of ELF_LOAD, is type %x.\n", ph.type);
+			return false;
+		}
 
-        memset((uint32_t *)ph.physical_address, 0, ph.memory_size);
-        memcpy((uint32_t *)ph.physical_address, p_buffer + ph.offset, ph.memory_size);
-        *p_out_size += ALIGN(ph.memory_size, ph.align);
-    }
+		memset((uint32_t *)ph.physical_address, 0, ph.memory_size);
+		memcpy((uint32_t *)ph.physical_address, p_buffer + ph.offset, ph.memory_size);
+		*p_out_size += ALIGN(ph.memory_size, ph.align);
+	}
 
-    // Pre-emptively get the section header name
-    // ELF_SectionHeader *sh_name = (ELF_SectionHeader *)(p_buffer + p_header->sect_header_offset + 
-    //             (p_header->section_header_entry_section_names * p_header->section_header_entry_size));
+	// Pre-emptively get the section header name
+	// ELF_SectionHeader *sh_name = (ELF_SectionHeader *)(p_buffer + p_header->sect_header_offset + 
+	//             (p_header->section_header_entry_section_names * p_header->section_header_entry_size));
 
-    // Finally, set the entry point to whatever it needs to be;
-    *p_out_entry_point = (void *)p_header->entry_point;
-    return true;
+	// Finally, set the entry point to whatever it needs to be;
+	*p_out_entry_point = (void *)p_header->entry_point;
+	return true;
 }

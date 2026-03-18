@@ -5,46 +5,46 @@
 // Packed data structure that represents the layout of data in a FAT12 directory entry.
 struct __attribute__((packed)) FAT_DirectoryEntry
 {
-    uint8_t file_name[11];                          // ASCII file name for the file (if the name > 11 bytes, is a LFN). Not NULL terminated.
-    uint8_t attribs;                                // Bitmask for file attributes
-    uint8_t reserved;                               // Reserved value
-    uint8_t creation_time;                          // Length of creation time for the file, in hundreths of a second (between 0-199)
-    uint16_t creation_time_hms;                     // Creation date's hour, mintue and second (hour first 5 bits, minute next 6, second last 5 * 2)
-    uint16_t creation_time_ymd;                     // Creation date's year, month and day (year first 7 bits, month next 4, day next 5)
-    uint16_t last_accessed;                         // Last accessed dat. Same format as creation date.
-    uint16_t first_cluster_no_high;                 // Higher 16 bits of this entry's first cluster number. In FAT12/FAT16, always 0.
-    uint16_t last_modification_time;                // Last modification time. Same format as creation time.
-    uint16_t last_modification_date;                // Last modification date. Same format as creation date.
-    uint16_t first_cluster_no_low;                  // Lower 16 bits of this entry's first cluster number. Used to find the first cluster for this entry.
-    uint32_t size;                                  // Size of the file in bytes.
+	uint8_t file_name[11];                          // ASCII file name for the file (if the name > 11 bytes, is a LFN). Not NULL terminated.
+	uint8_t attribs;                                // Bitmask for file attributes
+	uint8_t reserved;                               // Reserved value
+	uint8_t creation_time;                          // Length of creation time for the file, in hundreths of a second (between 0-199)
+	uint16_t creation_time_hms;                     // Creation date's hour, mintue and second (hour first 5 bits, minute next 6, second last 5 * 2)
+	uint16_t creation_time_ymd;                     // Creation date's year, month and day (year first 7 bits, month next 4, day next 5)
+	uint16_t last_accessed;                         // Last accessed dat. Same format as creation date.
+	uint16_t first_cluster_no_high;                 // Higher 16 bits of this entry's first cluster number. In FAT12/FAT16, always 0.
+	uint16_t last_modification_time;                // Last modification time. Same format as creation time.
+	uint16_t last_modification_date;                // Last modification date. Same format as creation date.
+	uint16_t first_cluster_no_low;                  // Lower 16 bits of this entry's first cluster number. Used to find the first cluster for this entry.
+	uint32_t size;                                  // Size of the file in bytes.
 };
 
 // Structure that represents an entry in the FAT filesystem. 
 struct FAT_File
 {
-    int handle;                 // Handle to the internal data of this entry.
-    bool is_directory;          // Says whether the entry is a directory or a file.
-    uint32_t size;              // The size of the entry in bytes; 0 for a directory.
-    uint32_t position;          // The offset from the initial position of the entry in memory.
+	int handle;                 // Handle to the internal data of this entry.
+	bool is_directory;          // Says whether the entry is a directory or a file.
+	uint32_t size;              // The size of the entry in bytes; 0 for a directory.
+	uint32_t position;          // The offset from the initial position of the entry in memory.
 };
 
 // Enum that represents the different attributes an entry can have, in a bitmask.
 enum FAT_Attributes
 {
-    // The FAT entry is in read-only mode
-    FAT_READ_ONLY = 0x01,
-    // The FAT entry is not visible to the regular user
-    FAT_HIDDEN =    0x02,
-    // The FAT entry is a system entry and may require elevated privelidges to open
-    FAT_SYSTEM =    0x04,
-    // The FAT entry is a volume index, i.e. it is the name for the drive
-    FAT_VOLUME_ID = 0x08,
-    // The FAT entry is a directory
-    FAT_DIRECTORY = 0x10,
-    // The FAT entry is in an archival format
-    FAT_ARCHIVE =   0x20,
-    // The FAT entry has a long file name (> 11 bytes) and needs to be read accordingly
-    FAT_LFN = FAT_READ_ONLY | FAT_HIDDEN | FAT_SYSTEM | FAT_VOLUME_ID
+	// The FAT entry is in read-only mode
+	FAT_READ_ONLY = 0x01,
+	// The FAT entry is not visible to the regular user
+	FAT_HIDDEN =    0x02,
+	// The FAT entry is a system entry and may require elevated privelidges to open
+	FAT_SYSTEM =    0x04,
+	// The FAT entry is a volume index, i.e. it is the name for the drive
+	FAT_VOLUME_ID = 0x08,
+	// The FAT entry is a directory
+	FAT_DIRECTORY = 0x10,
+	// The FAT entry is in an archival format
+	FAT_ARCHIVE =   0x20,
+	// The FAT entry has a long file name (> 11 bytes) and needs to be read accordingly
+	FAT_LFN = FAT_READ_ONLY | FAT_HIDDEN | FAT_SYSTEM | FAT_VOLUME_ID
 };
 
 /**

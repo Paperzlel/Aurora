@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "stdio.h"
 
 #if defined(__is_libk)
 #include <aurora/terminal.h>
@@ -9,8 +9,8 @@
 void putc(char c)
 {
 #if defined(__is_libk)
-    terminal_write_char(c);
+	terminal_write_char(c);
 #else
-    // Do system calls
+	// Do system calls
 #endif
 }

@@ -15,8 +15,7 @@ int atoi(const char *ptr);
 
 char *getenv(const char *name);
 
-__attribute__((__noreturn__))
-void abort();
+__attribute__((__noreturn__)) void abort();
 
 void free(void *ptr);
 

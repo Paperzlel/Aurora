@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include "stdlib.h"
 
 #if defined(__is_libk)
 #include <stdio.h>
@@ -6,16 +6,17 @@
 
 #endif
 
-__attribute__((__noreturn__))
-void abort()
+__attribute__((__noreturn__)) void abort()
 {
 #if defined(__is_libk)
-    printf("Fatal error has occured, aborting...\n");
-    __asm__("cli");
-    __asm__("hlt");
+	printf("Fatal error has occured, aborting...\n");
+	__asm__("cli");
+	__asm__("hlt");
 #else
-    
+
 #endif
-    while (1) { }
-    __builtin_unreachable();
+	while (1)
+	{
+	}
+	__builtin_unreachable();
 }

@@ -5,3 +5,5 @@ Completion:
     ArgumentLists: FullPlaceholders
     HeaderInsertion: Never
     CodePatterns: All
+Documentation:
+  CommentFormat: Doxygen

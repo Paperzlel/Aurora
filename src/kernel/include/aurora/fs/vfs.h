@@ -8,10 +8,10 @@
  */
 struct VFS_Handle
 {
-    bool        open;               // Whether the file is opened (i.e. data can be read to and from it) or not.
-    int         handle;             // The handle to the driver-specific file, as a signed 32-bit integer.
-    uint32_t    pos;                // The position of the handle into the file (i.e. what position it last read from)
-    uint32_t    size;               // The size of the file in bytes.
+	bool open;	   // Whether the file is opened (i.e. data can be read to and from it) or not.
+	int handle;	   // The handle to the driver-specific file, as a signed 32-bit integer.
+	uint32_t pos;  // The position of the handle into the file (i.e. what position it last read from)
+	uint32_t size; // The size of the file in bytes.
 };
 
 /**
@@ -34,8 +34,8 @@ struct VFS_Handle *vfs_open(const char *p_path);
 void vfs_close(struct VFS_Handle *p_handle);
 
 /**
- * @brief Reads N bytes from the given file handle into an output buffer, and returns a pointer to said buffer. NOTE: Data in this buffer
- * is referenced and NOT copied, so any modifications must be passed into an allocated copy first.
+ * @brief Reads N bytes from the given file handle into an output buffer, and returns a pointer to said buffer. NOTE:
+ * Data in this buffer is referenced and NOT copied, so any modifications must be passed into an allocated copy first.
  * @param p_handle The corresponding file handle. Must be opened.
  * @param p_count The number of bytes to read into the file. Must be between `1` and `EOF`.
  * @return The pointer to the data, or `NULL` if retrieving the data failed.

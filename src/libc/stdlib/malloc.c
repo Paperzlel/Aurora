@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include "stdlib.h"
 
 #if defined(__is_libk)
 #include <aurora/memory.h>
@@ -9,8 +9,8 @@
 void *malloc(size_t size)
 {
 #if defined(__is_libk)
-    return kalloc(size);
+	return kalloc(size);
 #else
-    return NULL;
+	return NULL;
 #endif
 }

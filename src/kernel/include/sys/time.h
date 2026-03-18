@@ -3,11 +3,12 @@
 
 #include <aurora/kdefs.h>
 
-typedef struct {
-    uint64_t ticks;
-    uint32_t time_ms;
-    uint8_t time_us;
-} timer_t;          // (this is allowed to be typedef'd as it is a standard OS structure)
+typedef struct
+{
+	uint64_t ticks;
+	uint32_t time_ms;
+	uint8_t time_us;
+} timer_t; // (this is allowed to be typedef'd as it is a standard OS structure)
 
 bool timer_get_time(timer_t *p_timer);
 

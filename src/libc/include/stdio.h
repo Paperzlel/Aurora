@@ -1,20 +1,29 @@
 #ifndef _STDIO_H
 #define _STDIO_H
 
+#include <stdarg.h>
 #define __need_NULL
 #define __need_size_t
 #include <stddef.h>
-#include <stdarg.h>
 
 #define SEEK_SET 2
 
-typedef struct { int unused; } FILE;
+typedef struct FILE
+{
+	int unused;
+} FILE;
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
+// Standard error output.
 extern FILE *stderr;
+// Standard write output.
+extern FILE *stdout;
+
+#define stderr stderr
+#define stdout stdout
 
 int fclose(FILE *stream);
 int fflush(FILE *file);
@@ -30,7 +39,6 @@ void setbuf(FILE *restrict stream, char *restrict buf);
 
 int fprintf(FILE *stream, const char *fmt, ...);
 
-
 /**
  * @brief Prints an inputted ASCII character to the current output stream.
  * @param c The character to print
@@ -38,21 +46,30 @@ int fprintf(FILE *stream, const char *fmt, ...);
 void putc(char c);
 
 /**
- * @brief Prints a null-terminated ACII string to the current output stream. Non-null-terminated strings WILL read beyond their allocated
- * position and read invalid memory.
+ * @brief Prints a null-terminated ACII string to the current output stream. Non-null-terminated strings WILL read
+ * beyond their allocated position and read invalid memory.
  * @param str The string to print into the console.
  */
 void puts(const char *str);
 
 /**
- * @brief Formats and prints a null-terminated string to the console. Format can include decimal/hexadecimal/octal numbers, characters, strings,
- * pointers and so on.
- * @param fmt The format string. To add a character from the varargs, add a % symbol followed by its type in command codes.
+ * @brief Formats and prints a null-terminated string to the console. Format can include decimal/hexadecimal/octal
+ * numbers, characters, strings, pointers and so on.
+ * @param fmt The format string. To add a character from the varargs, add a % symbol followed by its type in command
+ * codes.
  * @param ... Variadic arguments, for specifying non-character inputs into the string.
- * @returns The number of characters transmitted (sent) to stdout, or a negative value if an encoding error occured.
+ * @returns The number of characters transmitted (sent) to stdout, or a negative
+ * value if an encoding error occured.
  */
 int printf(const char *restrict fmt, ...);
 
+/**
+ * @brief Formats data and writes the output to the given buffer. Does not allocate memory to the buffer.
+ * @param s The buffer to write data into
+ * @param format The format string to write data into
+ * @param ... Variadic arguments that are formatted into the
+ * @return The number of characters written into the array, or a negative value on failure.
+ */
 int sprintf(char *restrict s, const char *restrict format, ...);
 
 int vfprintf(FILE *restrict stream, const char *restrict format, va_list args);

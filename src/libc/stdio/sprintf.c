@@ -1,17 +1,21 @@
-#include <stdio.h>
+#include "stdio.h"
 
 int sprintf(char *restrict s, const char *restrict format, ...)
 {
-    va_list args;
-    
-    va_start(args, format);
-    int count = vsprintf(s, format, args);
-    va_end(args);
+	va_list args;
 
-    if (count < 0)
-    {
-        // TODO: Set errno
-    }
+	va_start(args, format);
+	int count = vsprintf(s, format, args);
+	va_end(args);
 
-    return count;
+	if (count < 0)
+	{
+		// TODO: Set errno
+	}
+	else
+	{
+		s[count] = 0;
+	}
+
+	return count;
 }

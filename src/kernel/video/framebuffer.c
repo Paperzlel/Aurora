@@ -1,52 +1,52 @@
-#include <aurora/video/framebuffer.h>
-
 #include <aurora/memory.h>
+#include <aurora/video/framebuffer.h>
 
 static struct Framebuffer data;
 
 bool framebuffer_intialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)
 {
-    if (!p_info || !p_info->address || data.address != 0)
-    {
-        return false;
-    }
+	if (!p_info || !p_info->address || data.address != 0)
+	{
+		return false;
+	}
+	out_driver->mode_opt = 0;
 
-    data.address = p_info->address;
-    data.width = p_info->width;
-    data.height = p_info->height;
-    data.bpp = p_info->bpp;
+	data.address = p_info->address;
+	data.width	 = p_info->width;
+	data.height	 = p_info->height;
+	data.bpp	 = p_info->bpp;
 
-    // Page allocate the FB to address 0xb0000000
-    if (!kmap_range((uint32_t)data.address, 0xb0000000, data.width * data.height * (data.bpp / 8)))
-    {
-        return false;
-    }
-    // Re-assign if successful.
-    data.address = (uint8_t *)0xb0000000;
+	// Page allocate the FB to address 0xb0000000
+	if (!kmap_range((uint32_t)data.address, 0xb0000000, data.width * data.height * (data.bpp / 8)))
+	{
+		return false;
+	}
+	// Re-assign if successful.
+	data.address = (uint8_t *)0xb0000000;
 
-    return true;
+	return true;
 }
 
 void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b)
 {
-    uint8_t bytes_per_pixel = data.bpp / 8;
+	uint8_t bytes_per_pixel = data.bpp / 8;
 
-    for (int y = 0; y < data.height; y++)
-    {
-        for (int x = 0; x < data.width; x++)
-        {
-            int pixel = (x + y * data.width) * bytes_per_pixel;
-            data.address[pixel] = b;
-            data.address[pixel + 1] = g;
-            data.address[pixel + 2] = r;
-        }
-    }
+	for (int y = 0; y < data.height; y++)
+	{
+		for (int x = 0; x < data.width; x++)
+		{
+			int pixel				= (x + y * data.width) * bytes_per_pixel;
+			data.address[pixel]		= b;
+			data.address[pixel + 1] = g;
+			data.address[pixel + 2] = r;
+		}
+	}
 }
 
 void framebuffer_set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b)
 {
-    int pixel = (x + y * data.width) * (data.bpp / 8);
-    data.address[pixel] = b;
-    data.address[pixel + 1] = g;
-    data.address[pixel + 2] = r;
+	int pixel				= (x + y * data.width) * (data.bpp / 8);
+	data.address[pixel]		= b;
+	data.address[pixel + 1] = g;
+	data.address[pixel + 2] = r;
 }

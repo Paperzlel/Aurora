@@ -2,33 +2,33 @@
 
 const char *strchr(const char *str, char c)
 {
-    if (!str)
-    {
-        return NULL;
-    }
+	if (!str)
+	{
+		return NULL;
+	}
 
-    while (*str)
-    {
-        if (*str == c)
-        {
-            return str;
-        }
+	while (*str)
+	{
+		if (*str == c)
+		{
+			return str;
+		}
 
-        ++str;
-    }
+		++str;
+	}
 
-    return NULL;
+	return NULL;
 }
 
 unsigned strlen(const char *str)
 {
-    unsigned len = 0;
+	unsigned len = 0;
 
-    while (*str)
-    {
-        ++len;
-        ++str;
-    }
+	while (*str)
+	{
+		++len;
+		++str;
+	}
 
-    return len;
+	return len;
 }

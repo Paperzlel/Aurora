@@ -6,10 +6,10 @@
 // Represents a floppy disk, which is used to load data using the interrupt INT 0x13 for our kernel
 struct DISK 
 {
-    uint8_t drive_id;           // The drive number (0x0 --> 0x7F for floppy disks, 0x80+ for hard drives/SSDs)
-    uint16_t cylinders;         // No. of cylinders
-    uint16_t sectors;           // No. of sectors
-    uint16_t heads;             // No. of heads
+	uint8_t drive_id;           // The drive number (0x0 --> 0x7F for floppy disks, 0x80+ for hard drives/SSDs)
+	uint16_t cylinders;         // No. of cylinders
+	uint16_t sectors;           // No. of sectors
+	uint16_t heads;             // No. of heads
 };
 
 /**

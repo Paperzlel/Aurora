@@ -28,7 +28,8 @@ void *memcpy(void *dest, const void *src, int size);
 void *memset(void *dest, int value, int length);
 
 /**
- * @brief Compares n bytes in the first pointer to the same n bytes in the second pointer and returns the difference between the two.
+ * @brief Compares n bytes in the first pointer to the same n bytes in the second pointer and returns the difference
+ * between the two.
  * @param str1 The first pointer
  * @param str2 The second pointer
  * @param n The number of bytes to compare
@@ -43,7 +44,8 @@ int memcmp(const void *str1, const void *str2, int n);
 size_t strlen(const char *s);
 
 /**
- * @brief Copies the contents of `s2` into the string represented by `s1`. Does not reallocate memory if the size of the two strings is different.
+ * @brief Copies the contents of `s2` into the string represented by `s1`. Does not reallocate memory if the size of
+ * the two strings is different.
  * @param s1 The string to copy into
  * @param s2 The string to copy from
  * @returns The value of `s1` after being written to.
@@ -51,7 +53,8 @@ size_t strlen(const char *s);
 char *strcpy(char *restrict s1, const char *restrict s2);
 
 /**
- * @brief Concatenates two strings together, adding the string `s2` to the string `s1`. Does not reallocate memory if the string size is different.
+ * @brief Concatenates two strings together, adding the string `s2` to the string `s1`. Does not reallocate memory if
+ * the string size is different.
  * @param s1 The string to concatenate onto
  * @param s2 The string to concatenate from
  * @returns The result of concatenating the two strings.
@@ -59,8 +62,8 @@ char *strcpy(char *restrict s1, const char *restrict s2);
 char *strcat(char *restrict s1, const char *restrict s2);
 
 /**
- * @brief Finds the first instance of the character `c` in the given string and returns the string up to that point. Returns `NULL` if no characters 
- * of the given type could be found.
+ * @brief Finds the first instance of the character `c` in the given string and returns the string up to that point.
+ * Returns `NULL` if no characters of the given type could be found.
  * @param s The string to look in
  * @param c The character to look for
  * @returns The string up to the first instance of the character being found.

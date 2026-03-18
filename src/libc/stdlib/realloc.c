@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include "stdlib.h"
 
 #if defined(__is_libk)
 #include <aurora/memory.h>
@@ -9,8 +9,8 @@
 void *realloc(void *ptr, size_t size)
 {
 #if defined(__is_libk)
-    return krealloc(ptr, size);
+	return krealloc(ptr, size);
 #else
-    return NULL;
+	return NULL;
 #endif
 }

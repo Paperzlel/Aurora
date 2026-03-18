@@ -1,33 +1,32 @@
-#include "isr.h"
 #include "idt.h"
+#include "isr.h"
 
 #include <stdio.h>
 
 // List of error codes that we can handle
 const char *a_exception_errors[22] = {
-    "Divide by zero error",
-    "Debug exception",
-    "NMI Interrupt",
-    "Breakpoint",
-    "Overflow",
-    "Bound range exceeded",
-    "Invalid opcode",
-    "Math coprocessor not available",
-    "Double fault",
-    "Coprocessor segment overrun",
-    "Invalid TSS",
-    "Segment not found",
-    "Stack-segment fault",
-    "General protection fault",
-    "Page fault",
-    "",
-    "Floating-point error",
-    "Alignment fault",
-    "Machine check",
-    "SIMD floating-point exception",
-    "Virtualization exception",
-    "Control process exception"
-};
+	"Divide by zero error",
+	"Debug exception",
+	"NMI Interrupt",
+	"Breakpoint",
+	"Overflow",
+	"Bound range exceeded",
+	"Invalid opcode",
+	"Math coprocessor not available",
+	"Double fault",
+	"Coprocessor segment overrun",
+	"Invalid TSS",
+	"Segment not found",
+	"Stack-segment fault",
+	"General protection fault",
+	"Page fault",
+	"",
+	"Floating-point error",
+	"Alignment fault",
+	"Machine check",
+	"SIMD floating-point exception",
+	"Virtualization exception",
+	"Control process exception"};
 
 // Array of all interrupt handlers, same as the number of interrupts.
 InterruptHandler a_handlers[256];
@@ -48,58 +47,58 @@ void __attribute__((cdecl)) i386_panic();
  */
 void __attribute__((cdecl)) i386_interrupt_handler(struct Registers *p_regs)
 {
-    // First launch into the handled interrupt, if it exists
-    if (a_handlers[p_regs->interrupt] != NULL)
-    {
-        bool ret = a_handlers[p_regs->interrupt](p_regs);
-        if (ret)
-        {
-            return;
-        }
-    }
+	// First launch into the handled interrupt, if it exists
+	if (a_handlers[p_regs->interrupt] != NULL)
+	{
+		bool ret = a_handlers[p_regs->interrupt](p_regs);
+		if (ret)
+		{
+			return;
+		}
+	}
 
-    if (p_regs->interrupt < 22)
-    {
-        printf("Unhandled exception %d: %s\n", p_regs->interrupt, a_exception_errors[p_regs->interrupt]);
-    }
-    else
-    {
-        printf("Unhandled exception %d\n", p_regs->interrupt);
-    }
+	if (p_regs->interrupt < 22)
+	{
+		printf("Unhandled exception %d: %s\n", p_regs->interrupt, a_exception_errors[p_regs->interrupt]);
+	}
+	else
+	{
+		printf("Unhandled exception %d\n", p_regs->interrupt);
+	}
 
-    printf("  eax=%x  ebx=%x  ecx=%x  edx=%x\n", p_regs->eax, p_regs->ebx, p_regs->ecx, p_regs->edx);
-    printf("  esi=%x  edi=%x\n", p_regs->esi, p_regs->edi);
-    printf("  esp=%x  ebp=%x  eip=%x\n", p_regs->esp, p_regs->ebp, p_regs->eip);
-    printf("  eflags=%x  cs=%x ds=%x ss=%x\n", p_regs->eflags, p_regs->cs, p_regs->ds, p_regs->ss);
-    printf("  interrupt=%x error_code=%x\n", p_regs->interrupt, p_regs->error);
+	printf("  eax=%x  ebx=%x  ecx=%x  edx=%x\n", p_regs->eax, p_regs->ebx, p_regs->ecx, p_regs->edx);
+	printf("  esi=%x  edi=%x\n", p_regs->esi, p_regs->edi);
+	printf("  esp=%x  ebp=%x  eip=%x\n", p_regs->esp, p_regs->ebp, p_regs->eip);
+	printf("  eflags=%x  cs=%x ds=%x ss=%x\n", p_regs->eflags, p_regs->cs, p_regs->ds, p_regs->ss);
+	printf("  interrupt=%x error_code=%x\n", p_regs->interrupt, p_regs->error);
 
-    printf("KERNEL PANIC\n");
-    
-    i386_panic();
+	printf("KERNEL PANIC\n");
+
+	i386_panic();
 }
 
 void i386_isr_initialize()
 {
-    i386_idt_register_isrs();
+	i386_idt_register_isrs();
 
-    for (int i = 0; i < 256; i++)
-    {
-        i386_idt_enable_isr(i);
-    }
+	for (int i = 0; i < 256; i++)
+	{
+		i386_idt_enable_isr(i);
+	}
 }
 
 bool i386_isr_register_handler(int p_interrupt, InterruptHandler p_handler)
 {
-    if (a_handlers[p_interrupt] != NULL)
-    {
-        return false;
-    }
+	if (a_handlers[p_interrupt] != NULL)
+	{
+		return false;
+	}
 
-    a_handlers[p_interrupt] = p_handler;
-    return true;
+	a_handlers[p_interrupt] = p_handler;
+	return true;
 }
 
 void i386_isr_unregister_handler(int p_interrupt)
 {
-    a_handlers[p_interrupt] = NULL;
+	a_handlers[p_interrupt] = NULL;
 }

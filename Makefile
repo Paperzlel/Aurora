@@ -15,6 +15,8 @@ export USR_INCLUDE=/usr/include
 export USR_LIB=/usr/lib
 export INCLUDEDIR=$(SYSROOT)$(USR_INCLUDE)
 export LIBDIR=$(SYSROOT)$(USR_LIB)
+export COMPILEFLAGS_SH=$(abspath scripts/write_cflags.sh)
+export PRECOMPILER_OPTS=--sysroot=$(SYSROOT) -isystem=$(USR_INCLUDE)
 
 export TARGET=i686-aurora
 export TARGET_ARCH=i686				# Use -march=[this] to load a specific architecture, add to both GCC and LD
@@ -24,7 +26,7 @@ export TARGET_LD=$(TARGET)-gcc --sysroot=$(SYSROOT) -isystem=$(USR_INCLUDE)
 export TARGET_OBJCOPY=$(TARGET)-objcopy
 export TARGET_AR=$(TARGET)-ar
 export TARGET_ASMFLAGS=
-export TARGET_CFLAGS=-std=c99 -g -MD -Wall -Wextra -Wno-sign-compare
+export TARGET_CFLAGS=-std=c99 -g -MD -Wall -Wextra -m32 -Wno-sign-compare -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast
 export TARGET_CINCLUDES=
 export TARGET_CDEFINES=-D__I386__ -D__x86__
 export TARGET_LDFLAGS=

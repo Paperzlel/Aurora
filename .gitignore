@@ -15,4 +15,5 @@ toolchain/*
 build/*
 *.tar.xz
 compile_commands.json
+compile_flags.txt
 .cache/*

@@ -1,29 +1,83 @@
 ---
-BasedOnStyle: LLVM
-Language: C
-AlignAfterOpenBracket: true
+Language: Cpp
+AlignAfterOpenBracket: AlwaysBreak
 AlignArrayOfStructures: Right
-AlignConsecutiveMacros:
+AlignConsecutiveAssignments:
   Enabled: true
-  Consecutive: true
   AcrossEmptyLines: false
   AcrossComments: false
-  AcrossEmptyLinesAndComments: false
+  AlignCompound: false
+  AlignFunctionDeclarations: false
+  AlignFunctionPointers: false
+  PadOperators: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
 AlignEscapedNewlines: LeftWithLastLine
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
+  AlignPPAndNotPP: true 
 AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortFunctionsOnASingleLine: Empty
 BinPackArguments: false
-BinPackParameters: OnePerLine
-BreakBeforeBraces: Allman
+BinPackParameters: OnePerLine 
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: true
+  BeforeLambdaBody: true
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakAfterOpenBracketFunction: false
+BreakAfterReturnType: Automatic
+BreakBeforeBraces: Custom
 BreakBeforeCloseBracketFunction: true
+ColumnLimit: 119
+EnumTrailingComma: Leave
+IncludeBlocks: Regroup
+# Group includes in files.
+IncludeCategories:
+  - Regex: ^<aurora/.*\.*>$
+    Priority: 1
+  - Regex: ^<boot/.*>$
+    Priority: 3
+  - Regex: ^<sys/.*>$
+    Priority: 4
+  - Regex: ^<asm/.*>$
+    Priority: 5
+  - Regex: ^<.*\.h>$
+    Priority: 6
+  - Regex: ^<.*>$
+    Priority: 7
+  - Regex: ^".*"$
+    Priority: 0
 IndentCaseLabels: true
+IndentExternBlock: false
+IndentGotoLabels: false
 IndentWidth: 4
-IndentPPDirectives: Never
+IndentWrappedFunctionNames: false
+IndentPPDirectives: None
 LineEnding: LF
 KeepEmptyLinesAtTheStartOfBlocks: false
 KeepEmptyLinesAtEOF: true
 MaxEmptyLinesToKeep: 1
+PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Right
 TabWidth: 4
 UseTab: Always

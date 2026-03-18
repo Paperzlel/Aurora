@@ -8,11 +8,11 @@
 
 enum LogLevel
 {
-    LEVEL_FATAL,
-    LEVEL_ERROR,
-    LEVEL_WARNING,
-    LEVEL_INFO,
-    LEVEL_DEBUG
+	LEVEL_FATAL,
+	LEVEL_ERROR,
+	LEVEL_WARNING,
+	LEVEL_INFO,
+	LEVEL_DEBUG
 };
 
 void log_message(enum LogLevel p_level, const char *p_module, const char *p_message, ...);

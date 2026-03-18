@@ -19,6 +19,7 @@ scaffold:
 	@mkdir -p $(BUILD_DIR)/kernel/c
 	@mkdir -p $(addprefix $(BUILD_DIR)/kernel/asm,$(DIRECTORIES))
 	@mkdir -p $(addprefix $(BUILD_DIR)/kernel/c,$(DIRECTORIES))
+	@$(COMPILEFLAGS_SH) $(PRECOMPILER_OPTS) $(TARGET_CFLAGS) $(TARGET_CINCLUDES) $(TARGET_CDEFINES) $(TARGET_LDFLAGS) $(TARGET_LIBS)
 
 kernel: $(BUILD_DIR)/kernel.elf
 

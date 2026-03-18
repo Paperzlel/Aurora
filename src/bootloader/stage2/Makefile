@@ -16,6 +16,7 @@ all: scaffold stage2
 scaffold:
 	@mkdir -p $(BUILD_DIR)/stage2/asm
 	@mkdir -p $(BUILD_DIR)/stage2/c
+	@$(COMPILEFLAGS_SH) $(TARGET_CFLAGS) $(TARGET_CINCLUDES) $(TARGET_CDEFINES) $(TARGET_LDFLAGS) $(TARGET_LIBS)
 
 stage2: $(BUILD_DIR)/stage2.bin $(BUILD_DIR)/stage2_debug.elf
 

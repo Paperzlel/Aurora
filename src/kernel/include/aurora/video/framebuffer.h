@@ -1,8 +1,9 @@
 #pragma once
 
+#include "videostructs.h"
+
 #include <stdbool.h>
 #include <stdint.h>
-#include "videostructs.h"
 
 bool framebuffer_intialize(struct VideoDriver *out_driver, struct Framebuffer *p_info);
 

@@ -79,3 +79,12 @@ To view memory at any given time, press F7 and type in the address you wish to o
 
 ## Contributing
 Anyone wishing to contribute code is welcome to do so, however do bear in mind that the project in its current form is still missing a vast majority of features and each feature will need to be considered heavily before being implemented. Contributing guidelines, pull reqest formatting, proposals and so forth will be formalized when there is need for such a process.
+
+### Clang-format and Clangd
+`clang-format` and `clangd` are used as our formatters. By default, we expect you to have versions 22 or later for clangd. These can be installed on your system (if you are running a Debian one) with the following code snippet:
+```
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+sudo ./llvm.sh 22
+```
+This will install clangd-22 and clang-format-22 as root commands which can be called by our VSCode debuggers. We suggest installing the script in your home directory to avoid confusion. You may need to call `sudo apt-get install clang-format-22` manually once installed.
