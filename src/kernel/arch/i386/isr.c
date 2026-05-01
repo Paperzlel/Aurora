@@ -50,21 +50,29 @@ void __attribute__((cdecl)) i386_interrupt_handler(struct Registers *p_regs)
 	// First launch into the handled interrupt, if it exists
 	if (a_handlers[p_regs->interrupt] != NULL)
 	{
-		bool ret = a_handlers[p_regs->interrupt](p_regs);
-		if (ret)
+		bool can_return_safely = a_handlers[p_regs->interrupt](p_regs);
+		if (can_return_safely)
 		{
 			return;
 		}
 	}
 
-	if (p_regs->interrupt < 22)
+	if (!a_handlers[p_regs->interrupt])
 	{
-		printf("Unhandled exception %d: %s\n", p_regs->interrupt, a_exception_errors[p_regs->interrupt]);
+		if (p_regs->interrupt < 22)
+		{
+			printf("Unhandled exception %d: %s\n", p_regs->interrupt, a_exception_errors[p_regs->interrupt]);
+		}
+		else
+		{
+			printf("Unhandled exception %d\n", p_regs->interrupt);
+		}
 	}
 	else
 	{
-		printf("Unhandled exception %d\n", p_regs->interrupt);
+		printf("Unrecoverable situation occurred (register dump):\n");
 	}
+
 
 	printf("  eax=%x  ebx=%x  ecx=%x  edx=%x\n", p_regs->eax, p_regs->ebx, p_regs->ecx, p_regs->edx);
 	printf("  esi=%x  edi=%x\n", p_regs->esi, p_regs->edi);

@@ -24,13 +24,7 @@ bool vesa_initialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)
 	}
 	a_frame_info = p_info;
 
-	vmem	 = (uint32_t *)a_frame_info->address;
-	V_WIDTH	 = a_frame_info->width;
-	V_HEIGHT = a_frame_info->height;
-	V_DEPTH	 = a_frame_info->bpp / 8;
-	V_BPP	 = a_frame_info->bpp;
-
-	uint8_t mode = out_driver->mode_opt;
+	uint16_t mode = out_driver->mode_opt;
 
 	if (!arch_run_v86_task(&__vesa_start, &__vesa_end, &mode, 1))
 	{
@@ -38,6 +32,14 @@ bool vesa_initialize(struct VideoDriver *out_driver, struct Framebuffer *p_info)
 		return false;
 	}
 
+	// Set if the above task succeeded.
+	vmem	 = (uint32_t *)a_frame_info->address;
+	V_WIDTH	 = a_frame_info->width;
+	V_HEIGHT = a_frame_info->height;
+	V_DEPTH	 = a_frame_info->bpp / 8;
+	V_BPP	 = a_frame_info->bpp;
+
+	framebuffer_intialize(out_driver, p_info);
 	return true;
 }
 
@@ -68,7 +70,7 @@ struct VideoDriver a_vesa_driver = {
 	-1,
 	vesa_initialize,
 	NULL,
-	vesa_clear,
-	NULL,
+	framebuffer_clear,
+	framebuffer_set_pixel,
 	NULL,
 };

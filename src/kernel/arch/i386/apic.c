@@ -56,6 +56,81 @@ struct __attribute__((packed)) RSDT
 	uint32_t other_tables[]; // Pointer to the other ACPI tables. Amount is read from the header.
 };
 
+// FADT
+
+struct __attribute__((packed)) GenericACPIAddress
+{
+	uint8_t address_space;
+	uint8_t bit_width;
+	uint8_t bit_offset;
+	uint8_t access_size;
+	uint64_t address;
+};
+
+struct __attribute__((packed)) FADT
+{
+	struct RSDT_Header header;
+	uint32_t firmware_control;
+	uint32_t dsdt;
+	uint8_t reserved; // Deprecated
+	uint8_t preferred_power_management_profile;
+	uint16_t sci_interrupt;
+	uint32_t smi_command_port;
+	uint8_t acpi_enable;
+	uint8_t acpi_disable;
+	uint8_t s4bios_request;
+	uint8_t pstate_control;
+	uint32_t pm1a_event_block;
+	uint32_t pm1b_event_block;
+	uint32_t pm1a_control_block;
+	uint32_t pm1b_control_block;
+	uint32_t pm2_control_block;
+	uint32_t pm_timer_block;
+	uint32_t gpe0_block;
+	uint32_t gpe1_block;
+	uint8_t pm1_event_length;
+	uint8_t pm1_control_length;
+	uint8_t pm2_control_length;
+	uint8_t pm_timer_length;
+	uint8_t gpe0_length;
+	uint8_t gpe1_length;
+	uint8_t gpe1_base;
+	uint8_t c_state_control;
+	uint16_t worst_c2_latency;
+	uint16_t worst_c3_latency;
+	uint16_t flush_size;
+	uint16_t flush_stride;
+	uint8_t duty_offset;
+	uint8_t duty_width;
+	uint8_t day_alarm;
+	uint8_t month_alarm;
+	uint8_t century;
+
+	// ACPI 2.0+ only
+	uint16_t boot_architecture_flags;
+
+	uint8_t reserved_2;
+	uint32_t flags;
+
+	struct GenericACPIAddress reset_register;
+
+	uint8_t reset_value;
+	uint8_t reserved_3[3];
+
+	// ACPI 2.0+ only
+	uint64_t x_firmware_control;
+	uint64_t x_dsdt;
+
+	struct GenericACPIAddress x_pm1a_event_block;
+	struct GenericACPIAddress x_pm1b_event_block;
+	struct GenericACPIAddress x_pm1a_control_block;
+	struct GenericACPIAddress x_pm1b_control_block;
+	struct GenericACPIAddress x_pm2_control_block;
+	struct GenericACPIAddress x_pm_timer_block;
+	struct GenericACPIAddress x_gpe0_block;
+	struct GenericACPIAddress x_gpe1_block;
+};
+
 // MADT
 
 struct __attribute__((packed)) MADT_Data
@@ -315,8 +390,8 @@ bool apic_initialize()
 		return false;
 	}
 
-	// Look for MADT
-	void *madt		= NULL;
+	// Look for FADT
+	void *fadt		= NULL;
 	int entry_count = (root_table->header.length - sizeof(root_table->header)) / 4; // If XSDT, should be 8
 	for (int i = 0; i < entry_count; i++)
 	{
@@ -326,20 +401,20 @@ bool apic_initialize()
 		//     continue;
 		// }
 
-		if (next && memcmp(next, table_names[RSDT_MADT], 4) == 0)
+		if (next && memcmp(next, table_names[RSDT_FADT], 4) == 0)
 		{
-			madt = (void *)next;
+			fadt = (void *)next;
 			break;
 		}
 	}
 
-	if (!madt)
+	if (!fadt)
 	{
 		return false;
 	}
 
 	// Parse MADT
-	if (!apic_parse_madt(madt))
+	if (!apic_parse_madt(fadt))
 	{
 		return false;
 	}

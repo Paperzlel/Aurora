@@ -7,16 +7,14 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <stdio.h>
+
+#include <aurora/memory.h>
 
 #define AUR_MODULE "v86"
 #include <aurora/debug.h>
 
 // Variable that all registers are saved to whenever the OS enters V86 and is loaded whenever the V86 program wants to exit
 static struct Registers a_reg_state;
-
-static uint8_t *a_arglist = 0;
-static int a_argc = 0;
 
 /**
  * @brief Obtains the byte at the given segment:offset.
@@ -203,19 +201,18 @@ void v86_monitor_initialize()
     // Do nothing for now
 }
 
-bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc)
+bool v86_run_task(void *p_task_start, void *p_task_end, uint16_t *p_args, int p_arg_count)
 {
+
+    ktoggle_page_usermode(0, 0x100000, true);
+
     // Load task into code segment
     uint32_t size = p_task_end - p_task_start;
-    memset((void *)(V86_CODE_SEGMENT << 4), 0, size);
     memcpy((void *)(V86_CODE_SEGMENT << 4), p_task_start, size);
 
-    a_arglist = p_args;
-    a_argc = p_argc;
-
-    for (int i = 0; i < p_argc; i++)
+    for (int i = 0; i < p_arg_count; i++)
     {
-        *((uint8_t *)(V86_STACK_SEGMENT << 4) + i * 2) = p_args[i];
+        *((uint16_t *)(V86_STACK_SEGMENT << 4) + i) = p_args[i];
     }
 
     // Enable exception handler hook and entry handler hook
@@ -224,10 +221,12 @@ bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_a
 
     // Call to ASM to set SS, SP, CS, IP, then boot into task
     // Set offset depending on argument count (SP gets messed with otherwise)
-    v86_enter_v86_handler(V86_STACK_SEGMENT, 0x0000 + (p_argc * 2) - 2, V86_CODE_SEGMENT, 0x0000);
+    v86_enter_v86_handler(V86_STACK_SEGMENT, 0x0000, V86_CODE_SEGMENT, 0x0000);
 
     // Pass result into end pointer
-    uint8_t *result = (uint8_t *)((V86_STACK_SEGMENT << 4) + 2);
+    uint16_t *result = (uint16_t *)((V86_STACK_SEGMENT << 4));
+
+    ktoggle_page_usermode(0, 0x100000, false);
 
     // Unregister handlers
     i386_isr_unregister_handler(0xfd);

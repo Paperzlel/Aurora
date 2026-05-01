@@ -41,14 +41,60 @@ void *krealloc(void *ptr, size_t p_size);
 void kfree(void *p_mem);
 
 /**
- * @brief Maps a range of memory, usually that of memory-mapped peripherals, to a given virtual address. Preferred over
- * calling `paging_map_region()` as it checks in advance if the range is already being used by something else.
- * @param p_physical The physical address where memory is located
- * @param p_virtual The virtual address where memory is used
- * @param p_size The size of the memory to map (4 KiB aligned)
- * @return
+ * @brief Maps a range of memory, usually that of memory-mapped peripherals, to a given virtual address. If the range is already in use, throws an
+ * error and returns.
+ * @param p_physical The physical address where memory is currently located.
+ * @param p_virtual The virtual address where memory wants to appear as. Memory can thus appear non-contingous.
+ * @param p_size The size of the memory to map (4 KiB aligned, hopefully.)
+ * @return `true` on success, and `false` if the address range is already in use or if the pager was unable to map the memory properly.
  */
-bool kmap_range(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size);
+bool kmap_range(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size, bool p_userspace_range);
+
+/**
+ * @brief Unmaps a given range, if the range is valid.
+ * @param p_virtual The starting pointer of a given range of virtual memory to unmap.
+ * @param p_size The number of bytes to unmap. Should be 4 KiB aligned.
+ */
+void kunmap_range(uint32_t p_virtual, size_t p_size);
+
+/**
+ * @brief Toggles whether a given page is a userspace or kernel page. Pages that are set to usermode can be run with lower priviledge, but be wary
+ * of letting userspace actually get hold of this information. Ideally, these code blocks would never be interruptible.
+ * @param p_virtual The virtual address to translate. Can exist inside of a page.
+ * @param p_size The number of bytes to translate. Rounded from the initial address.
+ * @param p_value Whether to enable a userspace page or revert it to the kernel.
+ */
+void ktoggle_page_usermode(uint32_t p_virtual, size_t p_size, bool p_value);
+
+/**
+ * @brief Creates a userspace heap for userspace code to use. Since program initialization needs a heap for process space, we do so here.
+ * Other options will be added in future.
+ * @return A pointer to the new heap structure on success, and `NULL` on failure. This pointer should be used for any userspace heap allocations
+ * for the given process.
+ */
+void *kmake_user_heap();
+
+/**
+ * @brief Destroys and removes any data correlating to the given heap. Since there is no freeing yet, this does nothing and should not be used.
+ * @param p_heap A pointer to the heap to destroy data for.
+ */
+void kdestroy_user_heap(void *p_heap);
+
+/**
+ * @brief Allocates N bytes of memory on the userspace heap provided.
+ * @param p_heap The heap in question to allocate for. Held by the processor.
+ * @param p_size The number of bytes to allocate.
+ * @return A pointer to the heap on success, and `NULL` on failure.
+ */
+void *kuserheap_alloc(void *p_heap, size_t p_size);
+
+/**
+ * @brief Frees the data corresponding to the given pointer on the heap. The address must be a direct match to that of the allocated one for this 
+ * to work.
+ * @param p_heap The heap to free data from. Held in the process information.
+ * @param p_ptr A pointer that was previously allocated.
+ */
+void kuserheap_free(void *p_heap, void *p_ptr);
 
 /**
  * @brief Converts a mapped virtual address to a physical one.

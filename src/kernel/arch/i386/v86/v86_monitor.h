@@ -15,11 +15,11 @@
  */
 
 // Macro that defines the code segment that V86 runs
-#define V86_CODE_SEGMENT 0x1000
+#define V86_CODE_SEGMENT 0x07e0
 // Macro that defines the data segment that V86 runs
 #define V86_DATA_SEGMENT 0x0000
 // Macro that defines the stack segment that V86 runs
-#define V86_STACK_SEGMENT 0x8000
+#define V86_STACK_SEGMENT 0x07b0
 
 /**
  * @brief Initializes the V86 monitor. Does nothing for now.
@@ -27,8 +27,10 @@
 void v86_monitor_initialize();
 
 /**
- * @brief Loads the V86 task into memory and begins execution.
+ * @brief Loads the V86 task into memory and begins execution. To ensure working condition, tasks MUST be compiled for 16-bit processors.
  * @param p_task_start Starting memory location of the task
  * @param p_task_end End memory location of the task
+ * @param p_args Pointer to an array of words that can be used on the stack.
+ * @param p_arg_count The argument count to pass.
  */
-bool v86_run_task(void *p_task_start, void *p_task_end, uint8_t *p_args, int p_argc);
+bool v86_run_task(void *p_task_start, void *p_task_end, uint16_t *p_args, int p_arg_count);

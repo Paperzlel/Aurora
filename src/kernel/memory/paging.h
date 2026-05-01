@@ -30,7 +30,7 @@ void paging_initialize(uint32_t *p_phys_mem_start);
  * @param p_size The number of bytes to directly map. Higher numbers (ideally multiples of 4096) should be used.
  * @return `true` if the function succeeded, and `false` if it was unable to map the area.
  */
-bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size);
+bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size, uint32_t p_flags);
 
 /**
  * @brief Allocates N 4KiB blocks of virtual memory to the given memory range. Should be used in most cases of memory
@@ -42,7 +42,7 @@ bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
  * moron maintainer who limited the allocated pages to 255 because of space requirements should be notified of this and
  * have their stupid-ass code updated to take care of this issue.
  */
-void *paging_allocate_region(uint32_t p_address, uint32_t p_size);
+void *paging_allocate_region(uint32_t p_address, uint32_t p_size, uint32_t p_flags);
 
 /**
  * @brief Frees the data associated to the given handle. Handles should not be created manually as they are generated

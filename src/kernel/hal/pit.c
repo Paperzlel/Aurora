@@ -2,8 +2,6 @@
 
 #include <asm/io.h>
 
-#include <stdio.h>
-
 #define PIT_DATA_CHANNEL_0	 0x40
 #define PIT_DATA_CHANNEL_1	 0x41
 #define PIT_DATA_CHANNEL_2	 0x42

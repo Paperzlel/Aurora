@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 
+// forward-declare the page fault handler.
+extern void register_page_fault_handler();
+
 // Macro to align a memory address to N number of bytes. m_bytes must be a power
 // of 2.
 #define ALIGN(m_addr, m_bytes) ((m_addr + (m_bytes - 1)) & ~(m_bytes - 1))
@@ -53,7 +56,8 @@ struct MemoryConfig
 	uint64_t available_memory;
 	uint64_t reserved_memory;
 	uint32_t physical_mem_start;
-	uint32_t next_free_physical_address;
+	uint32_t next_free_physical_kernel_address;
+	uint32_t next_free_physical_userspace_address;
 };
 
 STATIC_ASSERT(sizeof(struct HeapHeader) % 16 == 0, "HeapHeader must be aligned to a 16-byte boundary.");
@@ -64,8 +68,60 @@ STATIC_ASSERT(sizeof(struct MemoryHeader) == 16, "MemoryHeader must be 16 bytes 
 static struct HeapHeader *heap_root = NULL;
 static struct MemoryConfig memcfg	= {0};
 
-static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_address);
-static struct MemoryHeader *_a_header_alloc(size_t p_size);
+static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_address, bool p_is_user_mode);
+static struct MemoryHeader *_a_header_alloc(size_t p_size, bool p_is_user_mode);
+
+// Gets the next heap in the list. Allocates if none can fit.
+struct HeapHeader *_a_heap_get_next(size_t p_size, bool p_user_mode)
+{
+	struct HeapHeader *heap = heap_root;
+	while (heap)
+	{
+		if (heap->available_space > p_size && 
+			!(heap->flags & BIT_HEADERS) && 
+			((bool)(heap->flags & BIT_KERNEL) != p_user_mode))
+				break;
+		heap = heap->next;
+	}
+
+	if (!heap)
+	{
+		heap = _a_heap_alloc(0x04, 0x00, p_user_mode);
+		if (!heap)
+		{
+			LOG_ERROR("Failed to allocate a new heap.");
+			return NULL;
+		}
+	}
+
+	return heap;
+}
+
+// Gets the next header in the list. Allocates if none can fit.
+struct MemoryHeader *_a_header_get_next(struct HeapHeader *p_heap, size_t p_size, bool p_user_mode)
+{
+	struct MemoryHeader *header = p_heap->list;
+	while (header)
+	{
+		if (header->parent_flags & BIT_AVAILABLE &&
+			header->size >= p_size && 
+			((header->parent_flags & BIT_KERNEL) != p_user_mode))
+			break;
+		header = header->next;
+	}
+
+	if (!header)
+	{
+		header = _a_header_alloc(p_size, p_user_mode);
+		if (!header)
+		{
+			LOG_ERROR("Failed to allocate a new header.");
+			return NULL;
+		}
+	}
+
+	return header;
+}
 
 /* MEMORY MANAGEMENT */
 
@@ -74,6 +130,10 @@ static bool _a_mmap_is_valid_physical_address(uint32_t p_address);
 
 bool initialize_memory(struct MemoryMap *p_map, uint32_t p_kernel_size)
 {
+	// Call to register the page fault handler here. It's not something that needs to happen here (no data uses heaps or anything) 
+	// but later expansions WILL be reading page info and priviledge levels and that should be accessed here.
+	register_page_fault_handler();
+
 	// Already mapped memory, return
 	if (heap_root && is_valid_address(heap_root) && heap_root->size != 0)
 	{
@@ -81,13 +141,15 @@ bool initialize_memory(struct MemoryMap *p_map, uint32_t p_kernel_size)
 	}
 
 	memcfg.physical_mem_start		  = KERNEL_PHYSICAL_ADDRESS + p_kernel_size;
-	memcfg.next_free_physical_address = memcfg.physical_mem_start;
+	memcfg.next_free_physical_kernel_address = memcfg.physical_mem_start;
+	// Map userland heap to a whole other page directory (for simplicity)
+	memcfg.next_free_physical_userspace_address = memcfg.physical_mem_start + 0x400000;
 
 	// Setup paging first
 	paging_initialize(&memcfg.physical_mem_start);
 
 	// Allocate root heap (1 MiB, for heaps themselves)
-	struct HeapHeader *heap = _a_heap_alloc(0x01, 0x00);
+	struct HeapHeader *heap = _a_heap_alloc(0x01, 0x00, false);
 
 	if (!heap)
 	{
@@ -110,40 +172,8 @@ bool initialize_memory(struct MemoryMap *p_map, uint32_t p_kernel_size)
 
 void *kalloc(uint32_t p_size)
 {
-	struct HeapHeader *heap = heap_root;
-	while (heap)
-	{
-		if (heap->available_space > p_size && !(heap->flags & BIT_HEADERS))
-			break;
-		heap = heap->next;
-	}
-
-	if (!heap)
-	{
-		heap = _a_heap_alloc(0x04, 0x00);
-		if (!heap)
-		{
-			LOG_ERROR("Failed to allocate a new heap.");
-			return NULL;
-		}
-	}
-
-	struct MemoryHeader *header = heap->list;
-	while (header->next)
-	{
-		if (header->parent_flags & BIT_AVAILABLE && header->size >= p_size)
-			break;
-		header = header->next;
-	}
-
-	if (!header->next)
-	{
-		header->next = _a_header_alloc(p_size);
-		if (!header->next)
-			return NULL;
-
-		header = header->next;
-	}
+	struct HeapHeader *heap = _a_heap_get_next(p_size, false);
+	struct MemoryHeader *header = _a_header_get_next(heap, p_size, false);
 
 	// Clear available bit
 	header->parent_flags &= ~BIT_AVAILABLE;
@@ -158,7 +188,7 @@ void kfree(void *p_mem)
 	struct HeapHeader *header = heap_root;
 	while (header)
 	{
-		if (!(header->flags & BIT_HEADERS) && header->virt_address < (uint32_t)p_mem &&
+		if (!(header->flags & BIT_HEADERS) && header->flags & BIT_KERNEL && header->virt_address < (uint32_t)p_mem &&
 			header->virt_address + header->size > (uint32_t)p_mem)
 			break;
 		header = header->next;
@@ -260,10 +290,107 @@ void *krealloc(void *ptr, size_t p_size)
 	return ptr;
 }
 
-bool kmap_range(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
+bool kmap_range(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size, bool p_userspace_range)
 {
 	// TODO: Add more here
-	return paging_map_region(p_physical, p_virtual, p_size);
+	return paging_map_region(p_physical, p_virtual, p_size, p_userspace_range);
+}
+
+void kunmap_range(uint32_t p_virtual, size_t p_size)
+{
+	if (!is_valid_address((void *)p_virtual))
+	{
+		LOG_ERROR("Range was not a valid address.");
+		return;
+	}
+
+	paging_free_region(p_virtual, p_size);
+}
+
+void *kmake_user_heap()
+{
+	struct HeapHeader *userheap = _a_heap_alloc(0x08, 0, true);
+	if (!userheap)
+	{
+		LOG_ERROR("Failed to create a userspace heap.");
+		return NULL;
+	}
+	return userheap;
+}
+
+GCC_PUSH_WARNING
+GCC_WARNING_IGNORE("-Wunused-parameter")
+void kdestroy_user_heap(void *p_heap)
+{
+	// TODO: !!
+}
+GCC_POP_WARNING
+
+void *kuserheap_alloc(void *p_heap, size_t p_size)
+{
+	if (!p_heap) return NULL;
+	struct HeapHeader *userheap = (struct HeapHeader *)p_heap;
+	if (userheap->flags & BIT_KERNEL)
+	{
+		LOG_ERROR("Userspace heap allocation attempted to obtain a kernel heap.");
+		return NULL;
+	}
+
+	struct MemoryHeader *header = _a_header_get_next(userheap, p_size, true);
+	if (header->parent_flags & BIT_KERNEL)
+	{
+		LOG_ERROR("Userspace header allocation attempted to obtain a kernel header.");
+		return NULL;
+	}
+
+	header->parent_flags &= ~BIT_AVAILABLE;
+	userheap->available_space -= ALIGN32(p_size);
+	userheap->allocations++;
+	LOG_DEBUG("Allocated %x bytes to the userspace heap %x", p_size, userheap);
+	return (void *)header->virt_address;
+}
+
+void kuserheap_free(void *p_heap, void *p_ptr)
+{
+	if (!p_heap) return;
+	struct HeapHeader *header = heap_root;
+	while (header)
+	{
+		if (!(header->flags & BIT_HEADERS) && !(header->flags & BIT_KERNEL) && header->virt_address < (uint32_t)p_ptr &&
+			header->virt_address + header->size > (uint32_t)p_ptr)
+			break;
+		header = header->next;
+	}
+
+	// Trawl allocation list
+	struct MemoryHeader *h = header->list;
+	while (h)
+	{
+		if (h->virt_address == (uint32_t)p_ptr)
+			break;
+		h = h->next;
+	}
+
+	if (h->parent_flags & BIT_AVAILABLE)
+	{
+		LOG_ERROR("Double free attempted.");
+		return;
+	}
+
+	h->parent_flags |= BIT_AVAILABLE;
+	struct MemoryHeader *n = h->next;
+	header->allocations--;
+	header->available_space += ALIGN32(h->size);
+	LOG_DEBUG("Freed %d bytes from address %x", h->size, p_ptr);
+	// NOTE: Current implementation only works forwards, backwards sorting may be
+	// needed.
+	while (n)
+	{
+		if (!(n->parent_flags & BIT_AVAILABLE))
+			break;
+		h->size += n->size;
+		n = n->next;
+	}
 }
 
 bool is_4kib_aligned(void *p_address)
@@ -308,7 +435,7 @@ static void _a_mmap_create(struct MemoryMap *map)
 {
 	// We manage our blocklist here by raw-allocating with no checks to if the
 	// memory is valid whatsoever. Still need a header though, so we get one here.
-	a_mmap_header		= _a_header_alloc(0x20);
+	a_mmap_header		= _a_header_alloc(0x20, false);
 	a_mmap_header->size = 0; // Zero size to fix allocation issues
 	a_mmap_header->parent_flags &= ~BIT_AVAILABLE;
 	((struct HeapHeader *)(a_mmap_header->parent_flags & 0xfffffff0))->allocations++;
@@ -345,7 +472,7 @@ static void _a_mmap_create(struct MemoryMap *map)
 		// Map regions if needed
 		if ((mr.type == MEMORY_REGION_ACPI_NVS ||
 			 (mr.type == MEMORY_REGION_RESERVED && !is_valid_address((void *)((uint32_t)mr.base_address)))) &&
-			!paging_map_region(mr.base_address, mr.base_address, mr.length))
+			!paging_map_region(mr.base_address, mr.base_address, mr.length, PAGE_FLAG_SUPERVISOR))
 		{
 			LOG_ERROR("Failed to map region %x (size %x)", mr.base_address, mr.length);
 			continue;
@@ -506,7 +633,7 @@ static void *_a_heap_reserve_memory(size_t p_size)
 	return next;
 }
 
-static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_address)
+static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_address, bool p_is_user_mode)
 {
 	if (!p_mibibyte_count)
 	{
@@ -518,7 +645,7 @@ static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_addres
 	if (!heap_root)
 	{
 		// Setup root header which hold all the pages for memory allocations
-		heap_root = (struct HeapHeader *)paging_allocate_region(memcfg.physical_mem_start, p_mibibyte_count);
+		heap_root = (struct HeapHeader *)paging_allocate_region(memcfg.physical_mem_start, p_mibibyte_count, PAGE_FLAG_SUPERVISOR);
 		if (!heap_root)
 		{
 			LOG_ERROR("Failed to allocate root heap properly.");
@@ -531,7 +658,7 @@ static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_addres
 		heap_root->size			   = p_mibibyte_count;
 		heap_root->available_space = p_mibibyte_count - sizeof(struct HeapHeader);
 		heap_root->allocations	   = 1;
-		heap_root->flags		   = BIT_KERNEL | BIT_AVAILABLE | BIT_HEADERS;
+		heap_root->flags		   = (p_is_user_mode ? BIT_USERSPACE : BIT_KERNEL) | BIT_AVAILABLE | BIT_HEADERS;
 		heap_root->virt_address	   = (uint32_t)heap_root;
 		return heap_root;
 	}
@@ -544,7 +671,7 @@ static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_addres
 
 	if (!p_address)
 	{
-		p_address = memcfg.next_free_physical_address;
+		p_address = p_is_user_mode ? memcfg.next_free_physical_userspace_address : memcfg.next_free_physical_kernel_address;
 	}
 
 	if (!_a_mmap_is_valid_physical_address(p_address))
@@ -557,15 +684,22 @@ static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_addres
 		}
 	}
 
-	void *nhp = paging_allocate_region(p_address, p_mibibyte_count);
+	void *nhp = paging_allocate_region(p_address, p_mibibyte_count, p_is_user_mode ? PAGE_FLAG_USER : PAGE_FLAG_SUPERVISOR);
 	if (!nhp)
 	{
 		LOG_ERROR("Failed to allocate new heap in memory.");
 		return NULL;
 	}
 
-	// Change free phys address TODO: Check if the new address is valid.
-	memcfg.next_free_physical_address += p_mibibyte_count;
+	// Change free phys address TODO: Check if the new address is valid AND check for userspace conflicts
+	if (p_is_user_mode)
+	{
+		memcfg.next_free_physical_userspace_address += p_mibibyte_count;
+	}
+	else
+	{
+		memcfg.next_free_physical_kernel_address += p_mibibyte_count;
+	}
 
 	struct HeapHeader h = {0};
 	h.prev				= mem;
@@ -574,7 +708,7 @@ static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_addres
 	h.size				= p_mibibyte_count;
 	h.available_space	= p_mibibyte_count;
 	h.allocations		= 0;
-	h.flags				= BIT_KERNEL | BIT_AVAILABLE | BIT_FREE_MEM; // NOTE: Need to say when it's a header
+	h.flags				= (p_is_user_mode ? BIT_USERSPACE : BIT_KERNEL) | BIT_AVAILABLE | BIT_FREE_MEM; // NOTE: Need to say when it's a header
 	h.virt_address		= (uint32_t)nhp;
 
 	struct HeapHeader *ptr = (struct HeapHeader *)_a_heap_reserve_memory(sizeof(struct HeapHeader));
@@ -589,27 +723,9 @@ static struct HeapHeader *_a_heap_alloc(size_t p_mibibyte_count, size_t p_addres
 	return ptr;
 }
 
-static struct MemoryHeader *_a_header_alloc(size_t p_size)
+static struct MemoryHeader *_a_header_alloc(size_t p_size, bool p_is_user_mode)
 {
-	struct HeapHeader *heap = heap_root;
-	while (heap)
-	{
-		if (!(heap->flags & BIT_HEADERS) && heap->available_space > p_size)
-			break;
-		heap = heap->next;
-	}
-
-	// Allocate heap if needed
-	if (!heap)
-	{
-		heap = _a_heap_alloc(0x04, 0);
-		if (!heap)
-		{
-			LOG_ERROR("Failed to allocate heap.");
-			return NULL;
-		}
-	}
-
+	struct HeapHeader *heap = _a_heap_get_next(p_size, p_is_user_mode);
 	struct MemoryHeader *mem = _a_heap_reserve_memory(sizeof(struct MemoryHeader));
 	if (!mem)
 	{
@@ -620,7 +736,7 @@ static struct MemoryHeader *_a_header_alloc(size_t p_size)
 	mem->next		  = NULL;
 	mem->size		  = p_size;
 	mem->virt_address = heap->virt_address + heap->size - heap->available_space;
-	mem->parent_flags = ((uint32_t)heap & 0xfffffff0) | BIT_AVAILABLE | BIT_KERNEL;
+	mem->parent_flags = ((uint32_t)heap & 0xfffffff0) | BIT_AVAILABLE | (p_is_user_mode ? BIT_USERSPACE : BIT_KERNEL);
 
 	// Create first memory header, if non-existent
 	if (!heap->list)

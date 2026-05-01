@@ -3,6 +3,29 @@
 
 #include <aurora/kdefs.h>
 
+// Various flags available from the EFLAGS register.
+enum EFLAGS_Options {
+	EFLAGS_CARRY 		= 1 << 0,		// Set whenever a math operation has to carry a bit over.
+	EFLAGS_PARITY 		= 1 << 2,		// Set if the number of bits set in the least significant byte of the last operation is even.
+	EFLAGS_AUXILIARY 	= 1 << 4,		// Set if the last 4 significant bits in the previous operation required a carry.
+	EFLAGS_ZERO 		= 1 << 6,		// Set if the last arithmetic operation result was 0.
+	EFLAGS_SIGN 		= 1 << 7,		// Set if the last arithmetic operation was negative.
+	EFLAGS_TRAP 		= 1 << 8,		// Set if the CPU permits single-step mode, used in many debuggers.
+	EFLAGS_INTERRUPT 	= 1 << 9,		// Set if the CPU will respond to hardware interrupts (such as the PIT or floppy disk controller)
+	EFLAGS_DIRECTION 	= 1 << 10,		// Set if the CPU will inrcement upwards on string opcodes. This should always be set.
+	EFLAGS_OVERFLOW 	= 1 << 11,		// Set if the last arithmetic operation caused an integer overflow.
+	EFLAGS_IOPL 		= 3 << 12,		// The current priviledge level of the CPU. Use an OR for this as it has a value of 0-3.
+	EFLAGS_NESTED 		= 1 << 14,		// Set whenever a task that was just running is interrupted by another interrupt.
+	EFLAGS_RESUME		= 1 << 16,		// Set if breakpoints can be ignored. Don't really bother with this.
+	EFLAGS_V86			= 1 << 17,		// Set if the CPU is running in Virtual 8086 mode.
+	EFLAGS_ALIGNMENT	= 1 << 18,		// Set if you want to ensure memory access is aligned properly (to 4-byte boundaries).
+	EFLAGS_VIRTINT		= 1 << 19,		// Enabled if the VME flag in CR4 is set. If enabled, VME tasks will treat this flag as IF if the IOPL < 3.
+	EFLAGS_VIRTPENDING 	= 1 << 20,		// Enabled if the VME flag in CR4 is set. If set, will generate a GPF to be handled.
+	EFLAGS_CPUID		= 1 << 21,		// Set if the CPUID instruction exists. Pentium and higher only.
+};
+
+
+
 #ifdef __I386__
 
 // Struct defining the different registers that are pushed to the stack during an interrupt. Contains both 16 and 32

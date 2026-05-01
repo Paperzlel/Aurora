@@ -27,6 +27,43 @@
 
 #define PIC_EOI 0x20
 
+// I don't know how to feel about this.
+extern void __attribute__((cdecl)) i386_interrupt_handler(struct Registers *p_regs);
+
+static uint32_t spurious_irqs_sent = 0;
+
+
+static bool spurious_irq_handler(struct Registers *registers)
+{
+	uint8_t interrupt = 0;
+
+	if (registers->interrupt == INT_IRQ_7)
+	{
+		outb(PIC_1_COMMAND, 0x0b);
+		interrupt = inb(PIC_1_COMMAND);
+		if (!interrupt)
+		{
+			spurious_irqs_sent++;
+			return true;
+		}
+	}
+	else if (registers->interrupt == INT_IRQ_15)
+	{
+		outb(PIC_2_COMMAND, 0x0b);
+		interrupt = inb(PIC_2_COMMAND);
+		if (!interrupt)
+		{
+			send_end_of_interrupt(INT_IRQ_0);
+			return true;
+		}
+	}
+
+	// Override and send the interrupt manually.
+	registers->interrupt = interrupt;
+	i386_interrupt_handler(registers);
+	return true;
+}
+
 void send_end_of_interrupt(uint8_t p_irq)
 {
 	p_irq -= 0x20;
@@ -59,6 +96,10 @@ void pic_initialize()
 	// Disable ALL interrupts, only allow handled ones through.
 	outb(PIC_1_DATA, 0xff);
 	outb(PIC_2_DATA, 0xff);
+
+	// Set spurious IRQ handles.
+	register_interrupt_handler(INT_IRQ_7, spurious_irq_handler);
+	register_interrupt_handler(INT_IRQ_15, spurious_irq_handler);
 }
 
 void mask_irq(uint8_t p_irq)

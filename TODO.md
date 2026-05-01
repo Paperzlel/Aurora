@@ -81,7 +81,7 @@
 - [ ] Implement currently unused `terminal_set_x_color` and `terminal_clear_x_color`
 
 ### Video
-- [ ] Create a VBE graphics driver for hardware (current one is non-functional)
+- [x] Create a VBE graphics driver for hardware (current one is non-functional)
 - [x] Move video drivers to use common resources like framebuffer info
 - [x] Make stdio.c reroute to loaded graphics drivers
 - [ ] Expose a video driver API for non-driver functions to use

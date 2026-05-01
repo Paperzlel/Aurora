@@ -1,14 +1,14 @@
-[bits 32]
+[bits 16]
 
 global __vesa_start
 __vesa_start:
-    pop ebx
+    pop bx              ; Args are pushed onto the stack
     push cs
     pop ds
 
-    mov eax, 0x4f02
-    or ebx, 0x4000      ; Assume linear framebuffer
-    xor ebx, 0x8000     ; Clear screen flag
+    mov ax, 0x4f02
+    or bx, 0x4000       ; Assume linear framebuffer
+    xor bx, 0x8000      ; Clear screen flag
     int 0x10
 
     cmp al, 0x4f
@@ -18,8 +18,7 @@ __vesa_start:
     xor al, al
 .end:
     
-    pop ebx
-    push eax
+    push ax             ; Push return code
     int 0xfe
 
 global __vesa_end

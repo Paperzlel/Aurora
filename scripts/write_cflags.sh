@@ -12,9 +12,9 @@ for arg in $@; do
         if [ $arg = $last ]; then 
             var=$var$arg
         else 
-            var=$var$arg"\\n"
+            var=$var$arg$'\n'
         fi;
     fi;
 done
 
-echo $var > compile_flags.txt
+echo "$var" > compile_flags.txt

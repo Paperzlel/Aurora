@@ -60,7 +60,7 @@ uint32_t ceil(uint32_t x, uint32_t y)
 	return x % y == 0 ? x / y : (x / y) + 1;
 }
 
-struct PageTable *_alloc_new_table()
+struct PageTable *_alloc_new_table(uint32_t p_flags)
 {
 	if (config->available_tables == 0)
 	{
@@ -89,7 +89,7 @@ struct PageTable *_alloc_new_table()
 	config->available_tables--;
 	config->available_space -= 4096;
 	// Set active
-	config->page_info[idx] = BIT_USED | BIT_KERNEL;
+	config->page_info[idx] = BIT_USED | (p_flags & PAGE_FLAG_USER ? BIT_USERSPACE : BIT_KERNEL);
 
 	for (int i = idx; i < PAGE_TABLE_COUNT; i++)
 	{
@@ -154,9 +154,9 @@ int _get_directory_count(uint32_t p_virtual, uint32_t p_size)
 	return ceil(p_size, 0x400000) + 1;
 }
 
-uint32_t find_next_free_region(uint32_t p_size)
+uint32_t find_next_free_region(uint32_t p_size, bool p_userspace)
 {
-	uint32_t ret = config->kernel_vmem_start;
+	uint32_t ret = p_userspace ? config->user_vmem_start : config->kernel_vmem_start;
 	int i = 0, j = 0;
 	struct PageTable *pt = NULL;
 	for (i = (ret & 0xffc00000) >> 22; i < 1024; i++)
@@ -236,7 +236,7 @@ void paging_initialize(uint32_t *p_phys_mem_start)
 	config->user_vmem_start	  = USER_ALLOC_VIRTUAL_ADDRESS;
 
 	uint32_t additional_mem_size = KERNEL_VIRTUAL_ADDRESS - 0xc00f0000;
-	if (!paging_map_region(*p_phys_mem_start, 0xc00f0000, additional_mem_size))
+	if (!paging_map_region(*p_phys_mem_start, 0xc00f0000, additional_mem_size, PAGE_FLAG_SUPERVISOR))
 	{
 		LOG_FATAL("Failed to initialize paging, unable to plug memory hole.");
 	}
@@ -244,7 +244,7 @@ void paging_initialize(uint32_t *p_phys_mem_start)
 	*p_phys_mem_start += additional_mem_size;
 }
 
-bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
+bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size, uint32_t p_flags)
 {
 	// Already mapped, no need to remap
 	if (is_valid_range(p_virtual, p_virtual + p_size))
@@ -265,12 +265,12 @@ bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
 			if (used_table_count >= PAGE_TABLE_COUNT)
 			{
 				LOG_ERROR("Number of tables used now exceeds the valid page table count. The mapped memory may not be "
-						  "entirely usable.s");
+						  "entirely usable.");
 				return false;
 			}
 
 			// Need a new table, get one
-			table = _alloc_new_table();
+			table = _alloc_new_table(p_flags);
 		}
 		else
 		{
@@ -310,12 +310,12 @@ bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
 				return false;
 			}
 
-			uint32_t ptr	= (p_physical & 0xfffff000) | 3;
+			uint32_t ptr	= (p_physical & 0xfffff000) | (p_flags & PAGE_FLAG_USER ? PAGE_FLAG_USER : PAGE_FLAG_SUPERVISOR) | PAGE_FLAG_READ_WRITE | 1;
 			table->entry[j] = ptr;
 		}
 
 		uint32_t pt_phys = virtual_to_physical((uint32_t)table);
-		uint32_t pde	 = ((uint32_t)pt_phys & 0xfffff000) | 3;
+		uint32_t pde	 = ((uint32_t)pt_phys & 0xfffff000) | (p_flags & PAGE_FLAG_USER ? PAGE_FLAG_USER : PAGE_FLAG_SUPERVISOR) | PAGE_FLAG_READ_WRITE | 1;;
 
 		// Set PDE here to avoid invalid entries
 		page_directory[page_index + i] = pde;
@@ -324,7 +324,7 @@ bool paging_map_region(uint32_t p_physical, uint32_t p_virtual, uint32_t p_size)
 	return true;
 }
 
-void *paging_allocate_region(uint32_t p_address, uint32_t p_size)
+void *paging_allocate_region(uint32_t p_address, uint32_t p_size, uint32_t p_flags)
 {
 	uint32_t virtual = physical_to_virtual(p_address);
 	if (virtual && is_valid_range(virtual, virtual + p_size))
@@ -334,13 +334,13 @@ void *paging_allocate_region(uint32_t p_address, uint32_t p_size)
 	}
 
 	// Look out for the next valid address
-	virtual = find_next_free_region(p_size);
+	virtual = find_next_free_region(p_size, p_flags & PAGE_FLAG_USER);
 	if (!virtual)
 	{
 		return NULL;
 	}
 
-	if (!paging_map_region(p_address, virtual, p_size))
+	if (!paging_map_region(p_address, virtual, p_size, p_flags))
 	{
 		return NULL;
 	}
@@ -519,4 +519,63 @@ bool is_valid_range(uint32_t p_start, uint32_t p_end)
 	}
 
 	return true;
+}
+
+void ktoggle_page_usermode(uint32_t p_virtual, size_t p_size, bool p_value)
+{
+	if (!is_valid_address((void *)p_virtual) && p_virtual != 0)
+		return;
+
+	int directory_count = _get_directory_count(p_virtual, p_size);
+	uint16_t page_index = (p_virtual & 0xffc00000) >> 22;
+
+	for (int i = 0; i < directory_count; i++)
+	{
+		if (!(page_directory[page_index + i] & 1)) continue;
+
+		__tlb_flush((void *)p_virtual);
+		struct PageTable *table = (struct PageTable *)(page_directory[page_index + i] & 0xfffff000);
+		if (!table) continue;
+
+		uint16_t table_start = 0;
+		uint16_t table_end	 = 1024;
+		if (i == 0)
+		{
+			table_start = ((uint32_t)p_virtual & 0x003ff000) >> 12;
+		}
+
+		if (i == directory_count - 1)
+		{
+			// End of table must be 1 less than the full size as here we map 4096 bytes INCLUDING byte 0.
+			table_end = ceil((((uint32_t)p_virtual + p_size - 1) % 0x400000), 4096);
+			table_end = (table_end > 1024) ? 1024 : table_end;
+		}
+
+		for (int j = table_start; j < table_end; j++)
+		{
+			if (table->entry[j] == 0)
+			{
+				continue;
+			}
+
+			// Toggle userspace bit
+			if (p_value)
+			{
+				table->entry[j] |= BIT_USERSPACE;
+			}
+			else
+			{
+				table->entry[j] &= ~BIT_USERSPACE;
+			}
+		}
+
+		if (p_value)
+		{
+			page_directory[page_index + i] |= BIT_USERSPACE;
+		}
+		else
+		{
+			page_directory[page_index + i] &= ~BIT_USERSPACE;
+		}
+	}
 }

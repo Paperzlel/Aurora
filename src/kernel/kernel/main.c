@@ -21,6 +21,7 @@ extern uint8_t __bss_start;
 extern uint8_t __end;
 
 extern bool terminal_initialize();
+extern bool apic_initialize();
 
 static struct BootInfo info;
 
@@ -80,6 +81,12 @@ void __attribute__((cdecl)) cstart(struct BootInfo *boot)
 		LOG_ERROR("Failed to load a non-VGA video driver. Graphics options will not be available.");
 		goto end;
 	}
+
+	// if (!apic_initialize())
+	// {
+	// 	LOG_ERROR("Unable to load the ACPI tables");
+	// 	goto end;
+	// }
 
 end:
 	LOG_DEBUG("Here's a fancy message\n\t\tthat appears on the screen!");

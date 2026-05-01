@@ -44,6 +44,7 @@ bool arch_init()
 	i386_isr_initialize();
 	i386_idt_initialize();
 	i386_check_is_virtual();
+	v86_monitor_initialize(); // NOTE: May have to move
 	return true;
 }
 
@@ -52,7 +53,7 @@ bool arch_is_virtualized()
 	return a_is_virtual;
 }
 
-bool arch_run_v86_task(void *p_start, void *p_end, uint8_t *p_args, int p_argc)
+bool arch_run_v86_task(void *p_start, void *p_end, uint16_t *p_args, int p_argc)
 {
 	return v86_run_task(p_start, p_end, p_args, p_argc);
 }

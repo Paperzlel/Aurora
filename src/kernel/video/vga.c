@@ -33,7 +33,7 @@ void vga_scrlscr(int p_amount)
 
 	for (int x = 0; x < SCREEN_WIDTH; x++)
 	{
-		vga_putchr('\0', SCREEN_HEIGHT - 1, '\0');
+		vga_putchr('\0', x, SCREEN_HEIGHT - 1);
 	}
 }
 

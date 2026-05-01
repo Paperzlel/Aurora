@@ -14,7 +14,6 @@
 
 extern struct VideoDriver a_vga_driver;
 extern struct VideoDriver a_vesa_driver;
-extern struct VideoDriver a_bochs_driver;
 
 static struct VideoDriver a_driver_state;
 
@@ -39,9 +38,11 @@ static void vesa_to_internal(struct VESA_FramebufferInfo *p_map, struct Framebuf
 bool video_load_driver(void *p_data)
 {
 	struct Framebuffer fb;
+	struct VideoDriver new_state;
+
 	if (!p_data)
 	{
-		a_driver_state = a_vga_driver;
+		new_state = a_vga_driver;
 	}
 	else
 	{
@@ -57,20 +58,12 @@ bool video_load_driver(void *p_data)
 			return false;
 		}
 
-		// Use bochs driver on VMs if supported. Fallback to VESA if not virtualized or if bochs failed.
-		if (cpuid_supports_feature(CPU_FEATURE_HYPERVISOR, 0) || arch_is_virtualized())
-		{
-			a_driver_state = a_bochs_driver;
-		}
-		else
-		{
-			a_driver_state = a_vesa_driver;
-		}
-
-		a_driver_state.mode_opt = map->framebuffer.mode_id;
+		// Assume VESA support. Requires proper Virtual 8086 support, which we now have.
+		new_state = a_vesa_driver;
+		new_state.mode_opt = map->framebuffer.mode_id;
 	}
 
-	bool success = a_driver_state.init(&a_driver_state, &fb);
+	bool success = new_state.init(&new_state, &fb);
 
 	if (!success)
 	{
@@ -79,10 +72,12 @@ bool video_load_driver(void *p_data)
 			return false;
 		}
 
-		LOG_ERROR("Failed to load video driver %s, falling back to VGA support...", a_driver_state.name);
-		return video_load_driver((void *)0);
+		LOG_ERROR("Failed to load the \'%s\' video driver. Remaining on VGA graphics.", a_driver_state.name);
+		return false;
 	}
 
+	// Copy driver state over if it succeeded in loading.
+	a_driver_state = new_state;
 	// Clear screen once done.
 	a_driver_state.clear(0, 0, 0);
 	return true;
