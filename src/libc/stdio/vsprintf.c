@@ -156,12 +156,15 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args)
 			case PRINT_STATE_SPACE_COUNT:
 			{
 				a_format_count = *format - 48;
-				if (a_format_count == 0 || a_format_count > 9)
+				if (a_format_count > 9)
 				{
 					a_format_count = 0;
 					format--;
 					break;
 				}
+
+				if (a_format_count == 0)
+					a_are_zeroes = true;
 
 				a_prepend_chars = true;
 				state			= PRINT_STATE_IDENTIFIER;
@@ -225,10 +228,6 @@ int vsprintf(char *restrict s, const char *restrict format, va_list args)
 						is_num	  = true;
 						break;
 					case '0':
-						state		 = PRINT_STATE_SPACE_COUNT;
-						a_are_zeroes = true;
-						format++;
-						continue;
 					case '1':
 					case '2':
 					case '3':
