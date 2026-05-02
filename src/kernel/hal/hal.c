@@ -69,34 +69,46 @@ bool hal_write_bytes(uint8_t p_drive, uint16_t p_lba, void *p_from, size_t p_siz
 
 bool timer_get_time(timer_t *p_timer)
 {
-	p_timer->ticks		  = pit_get_ticks();
-	uint32_t frequency_ms = pit_get_frequency() / 1000;
-	if (frequency_ms == 0)
+	p_timer->ticks = pit_get_ticks();
+	// Safeguard against getting time prior to PIT being set up
+	if (pit_get_frequency() == 0)
+	{
+		return false;
+	}
+	uint32_t time_us = (p_timer->ticks * 1000000) / pit_get_frequency();
+	// If no ticks have yet to pass.
+	if (time_us == 0)
 	{
 		return false;
 	}
 
-	// If 10 ticks pass, then 1 / 10000 * 10 = 1 / 1000 = 0.001s = 1ms has passed
-	// Number of MS is equal to the tick count divided by the frequency divided by 1000
-	// Number of us is equal to the tick count mod the frequency divided by 1000
-	p_timer->time_ms = p_timer->ticks / frequency_ms;
-	p_timer->time_us = p_timer->ticks % frequency_ms;
+	// For 1ms to pass, the number of seconds (s) must be 0.001.
+	// Each tick is N Hz of time, or 1 / N seconds.
+	// 1ms = 1000 / N
+	// n ms = (1000 * ticks) / N
+	// If 1000 / N < 1, then the timer cannot count with us precision.
+
+	p_timer->time_ms = time_us / 1000;
+	p_timer->time_us = (time_us % 1000) > 0 ? (time_us / 100) % 10 : 0;
 
 	return true;
 }
 
 void timer_sleep(uint64_t p_ms)
 {
-	uint64_t ticks_start  = pit_get_ticks();
-	uint32_t frequency_ms = pit_get_frequency() / 1000;
-	if (!frequency_ms)
+	// Get tick count
+	uint64_t ticks_start = pit_get_ticks();
+	// do ms and frequency multiplier first to avoid floating-point division
+	uint32_t ticks_to_count = (p_ms * pit_get_frequency()) / 1000;
+	if (ticks_to_count == 0)
 	{
 		return;
 	}
 
+	// Spin until the tick count is satisfied
 	while (true)
 	{
-		if (((pit_get_ticks() - ticks_start) / frequency_ms) >= p_ms)
+		if ((pit_get_ticks() - ticks_start) >= ticks_to_count)
 		{
 			break;
 		}
